@@ -20,16 +20,8 @@ export default async function TodayPage() {
     `${h.get('x-forwarded-proto') ?? 'http'}://${h.get('host')}/api/today`,
     { headers: { cookie: h.get('cookie') ?? '' }, cache: 'no-store' },
   );
-  if (!res.ok) {
-    return (
-      <main className="phone" style={{ paddingTop: 60 }}>
-        <p className="display h1">Not connected yet</p>
-        <p className="body" style={{ color: 'var(--ink-muted)' }}>
-          You need someone on the other side before the daily check-in means anything.
-        </p>
-      </main>
-    );
-  }
+  // Signed in but no partner yet -> pairing, not a dead end.
+  if (!res.ok) redirect('/pair');
   const today = (await res.json()) as TodayResponse;
 
   return (
