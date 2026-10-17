@@ -1,0 +1,1232 @@
+{
+  "info": {
+    "name": "Corner Backend (local)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Run the folders top to bottom. Auth is dev-mode headers (X-Dev-User-*), so no Supabase or frontend is needed.\n\nStart the server: `uv run uvicorn app.main:app --reload`"
+  },
+  "item": [
+    {
+      "name": "0 \u00b7 Meta",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Admin-Token",
+                "value": "{{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "status"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "1 \u00b7 Pairing",
+      "item": [
+        {
+          "name": "A \u00b7 who am I",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Dev-User-Id",
+                "value": "{{userA}}"
+              },
+              {
+                "key": "X-Dev-User-Email",
+                "value": "{{userA}}@dev.local"
+              },
+              {
+                "key": "X-Dev-User-Name",
+                "value": "{{userAName}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A \u00b7 create pair",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Dev-User-Id",
+                "value": "{{userA}}"
+              },
+              {
+                "key": "X-Dev-User-Email",
+                "value": "{{userA}}@dev.local"
+              },
+              {
+                "key": "X-Dev-User-Name",
+                "value": "{{userAName}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pairs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pairs"
+              ]
+            },
+            "description": "Saves invite_code and pair id into the environment."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "const j = pm.response.json(); pm.environment.set('inviteCode', j.invite_code); pm.environment.set('pairId', j.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B \u00b7 join pair",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Dev-User-Id",
+                "value": "{{userB}}"
+              },
+              {
+                "key": "X-Dev-User-Email",
+                "value": "{{userB}}@dev.local"
+              },
+              {
+                "key": "X-Dev-User-Name",
+                "value": "{{userBName}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pairs/join",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pairs",
+                "join"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"invite_code\": \"{{inviteCode}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('partner is A', () => pm.expect(pm.response.json().partner.display_name).to.eql(pm.environment.get('userAName')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A \u00b7 my pair",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Dev-User-Id",
+                "value": "{{userA}}"
+              },
+              {
+                "key": "X-Dev-User-Email",
+                "value": "{{userA}}@dev.local"
+              },
+              {
+                "key": "X-Dev-User-Name",
+                "value": "{{userAName}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pairs/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pairs",
+                "me"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('complete', () => pm.expect(pm.response.json().complete).to.be.true);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2 \u00b7 Diary",
+      "item": [
+        {
+          "name": "A \u00b7 write today",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Dev-User-Id",
+                "value": "{{userA}}"
+              },
+              {
+                "key": "X-Dev-User-Email",
+                "value": "{{userA}}@dev.local"
+              },
+              {
+                "key": "X-Dev-User-Name",
+                "value": "{{userAName}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/diary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "diary"
+              ]
+            },
+            "description": "Upserts today's entry (author's timezone). Saves `day` to the environment.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Today I felt a bit ignored at dinner. I still love our evening walks and I want to tell them that.\",\n  \"mood\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.environment.set('day', pm.response.json().day);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B \u00b7 write today",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Dev-User-Id",
+                "value": "{{userB}}"
+              },
+              {
+                "key": "X-Dev-User-Email",
+                "value": "{{userB}}@dev.local"
+              },
+              {
+                "key": "X-Dev-User-Name",
+                "value": "{{userBName}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/diary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "diary"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Work was brutal and I zoned out at dinner. I want more quiet weekend time together.\",\n  \"mood\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A \u00b7 update today (same day = overwrite)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Dev-User-Id",
+                "value": "{{userA}}"
+              },
+              {
+                "key": "X-Dev-User-Email",
+                "value": "{{userA}}@dev.local"
+              },
+              {
+                "key": "X-Dev-User-Name",
+                "value": "{{userAName}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/diary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "diary"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Today I felt a bit ignored at dinner. I still love our evening walks. Edited after a walk, feeling calmer.\",\n  \"mood\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A \u00b7 write a specific day",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-Dev-User-Id",
+                "value": "{{userA}}"
+              },
+              {
+                "key": "X-Dev-User-Email",
+                "value": "{{userA}}@dev.local"
+              },
+              {
+                "key": "X-Dev-User-Name",
+                "value": "{{userAName}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/diary/2026-10-15",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "diary",
+                "2026-10-15"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Backfilled entry for the 15th.\",\n  \"mood\": 4\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A \u00b7 get today",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Dev-User-Id",
+                "value": "{{userA}}"
+              },
+              {
+                "key": "X-Dev-User-Email",
+                "value": "{{userA}}@dev.local"
+              },
+              {
+                "key": "X-Dev-User-Name",
+                "value": "{{userAName}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/diary/today",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "diary",
+                "today"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A \u00b7 list recent",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Dev-User-Id",
+                "value": "{{userA}}"
+              },
+              {
+                "key": "X-Dev-User-Email",
+                "value": "{{userA}}@dev.local"
+              },
+              {
+                "key": "X-Dev-User-Name",
+                "value": "{{userAName}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/diary?limit=14",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "diary"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "14"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B \u00b7 get A's day (should only ever see own)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Dev-User-Id",
+                "value": "{{userB}}"
+              },
+              {
+                "key": "X-Dev-User-Email",
+                "value": "{{userB}}@dev.local"
+              },
+              {
+                "key": "X-Dev-User-Name",
+                "value": "{{userBName}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/diary/{{day}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "diary",
+                "{{day}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('B sees only B text', () => pm.expect(pm.response.json().text).to.include('Work was brutal'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Future day is rejected",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-Dev-User-Id",
+                "value": "{{userA}}"
+              },
+              {
+                "key": "X-Dev-User-Email",
+                "value": "{{userA}}@dev.local"
+              },
+              {
+                "key": "X-Dev-User-Name",
+                "value": "{{userAName}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/diary/2099-01-01",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "diary",
+                "2099-01-01"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"nope\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 422', () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3 \u00b7 Run the nightly analysis now",
+      "item": [
+        {
+          "name": "Admin \u00b7 analyze {{day}} for all pairs",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Admin-Token",
+                "value": "{{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/analyze",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "analyze"
+              ]
+            },
+            "description": "With LLM_PROVIDER=mock this is instant. With gemini it takes a few seconds.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"day\": \"{{day}}\",\n  \"force\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('run done', () => pm.expect(pm.response.json()[0].status).to.eql('done'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin \u00b7 analyze one pair, force re-run",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Admin-Token",
+                "value": "{{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/analyze",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "analyze"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pair_id\": \"{{pairId}}\",\n  \"day\": \"{{day}}\",\n  \"force\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin \u00b7 recent runs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Admin-Token",
+                "value": "{{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/runs?limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "runs"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4 \u00b7 Feedback",
+      "item": [
+        {
+          "name": "A \u00b7 latest feedback",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Dev-User-Id",
+                "value": "{{userA}}"
+              },
+              {
+                "key": "X-Dev-User-Email",
+                "value": "{{userA}}@dev.local"
+              },
+              {
+                "key": "X-Dev-User-Name",
+                "value": "{{userAName}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/feedback/latest",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "feedback",
+                "latest"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('no partner quote leaked', () => pm.expect(JSON.stringify(pm.response.json())).to.not.include('zoned out at dinner'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B \u00b7 latest feedback",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Dev-User-Id",
+                "value": "{{userB}}"
+              },
+              {
+                "key": "X-Dev-User-Email",
+                "value": "{{userB}}@dev.local"
+              },
+              {
+                "key": "X-Dev-User-Name",
+                "value": "{{userBName}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/feedback/latest",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "feedback",
+                "latest"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('no partner quote leaked', () => pm.expect(JSON.stringify(pm.response.json())).to.not.include('ignored at dinner'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A \u00b7 feedback for {{day}}",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Dev-User-Id",
+                "value": "{{userA}}"
+              },
+              {
+                "key": "X-Dev-User-Email",
+                "value": "{{userA}}@dev.local"
+              },
+              {
+                "key": "X-Dev-User-Name",
+                "value": "{{userAName}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/feedback/{{day}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "feedback",
+                "{{day}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A \u00b7 feedback history",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Dev-User-Id",
+                "value": "{{userA}}"
+              },
+              {
+                "key": "X-Dev-User-Email",
+                "value": "{{userA}}@dev.local"
+              },
+              {
+                "key": "X-Dev-User-Name",
+                "value": "{{userAName}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/feedback?limit=14",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "feedback"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "14"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A \u00b7 entry now shows summary + locked",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Dev-User-Id",
+                "value": "{{userA}}"
+              },
+              {
+                "key": "X-Dev-User-Email",
+                "value": "{{userA}}@dev.local"
+              },
+              {
+                "key": "X-Dev-User-Name",
+                "value": "{{userAName}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/diary/{{day}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "diary",
+                "{{day}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('analyzed', () => pm.expect(pm.response.json().analyzed).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A \u00b7 editing an analysed day is rejected",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Dev-User-Id",
+                "value": "{{userA}}"
+              },
+              {
+                "key": "X-Dev-User-Email",
+                "value": "{{userA}}@dev.local"
+              },
+              {
+                "key": "X-Dev-User-Name",
+                "value": "{{userAName}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/diary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "diary"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"late edit\",\n  \"day\": \"{{day}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 409', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5 \u00b7 Live events (SSE)",
+      "item": [
+        {
+          "name": "A \u00b7 subscribe /events",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Dev-User-Id",
+                "value": "{{userA}}"
+              },
+              {
+                "key": "X-Dev-User-Email",
+                "value": "{{userA}}@dev.local"
+              },
+              {
+                "key": "X-Dev-User-Name",
+                "value": "{{userAName}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/events",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "events"
+              ]
+            },
+            "description": "Postman v10.7+ renders text/event-stream. Keep this open, then fire '3 \u00b7 analyze ... force re-run' in another tab; you will see `event: feedback.published`. A `: keep-alive` comment arrives every 15s."
+          }
+        }
+      ]
+    },
+    {
+      "name": "6 \u00b7 Cookie session (how the browser will do it)",
+      "item": [
+        {
+          "name": "A \u00b7 dev-login (sets corner_session cookie)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/dev-login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "dev-login"
+              ]
+            },
+            "description": "In production the frontend calls POST /auth/session with a Supabase access_token instead. Both set the same httpOnly cookie.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{userA}}\",\n  \"email\": \"{{userA}}@dev.local\",\n  \"display_name\": \"{{userAName}}\",\n  \"timezone\": \"America/Los_Angeles\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "me via cookie only (no dev headers)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
