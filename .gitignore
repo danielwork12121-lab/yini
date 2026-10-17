@@ -1,0 +1,39 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.*
+.yarn/*
+
+# next.js
+.next/
+out/
+build/
+dist/
+
+# env — NEVER COMMIT REAL KEYS
+.env
+.env.*
+!.env.example
+
+# vercel / typescript
+.vercel
+*.tsbuildinfo
+next-env.d.ts
+
+# testing / logs
+coverage/
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# supabase local
+supabase/.branches
+supabase/.temp
+
+# os / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.tmp-selftest/

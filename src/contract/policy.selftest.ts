@@ -1,0 +1,17 @@
+import { decideDelivery, derivePetState, isVerbatimSpan, localDateFor } from './policy';
+const c = (id:string, sev:0|1|2|3, held=0) => ({id, distilled_text:'x', theme:'affection' as const, severity:sev, times_held:held, first_raised_at:'2026-10-10'});
+const base = {open_concerns:[c('big',3),c('small',1)], already_delivered_today:false, mediation_paused:false};
+const show = (label:string, d:any) => console.log(label.padEnd(34), d.deliver ? `SEND ${d.concern_id}` : `HOLD ${d.hold_reason}`);
+show('good day', decideDelivery({...base, recipient_state:'good', recipient_recent_states:['good']}));
+show('rough day, 1st', decideDelivery({...base, recipient_state:'rough', recipient_recent_states:['good']}));
+show('rough day, 2nd', decideDelivery({...base, recipient_state:'rough', recipient_recent_states:['strained','good']}));
+show('3rd rough -> stack override', decideDelivery({...base, recipient_state:'rough', recipient_recent_states:['rough','strained','good']}));
+show('already delivered', decideDelivery({...base, recipient_state:'good', recipient_recent_states:[], already_delivered_today:true}));
+show('safety halt', decideDelivery({...base, recipient_state:'good', recipient_recent_states:[], mediation_paused:true}));
+show('nothing waiting', decideDelivery({...base, open_concerns:[], recipient_state:'good', recipient_recent_states:[]}));
+console.log('\npet @0 ', JSON.stringify(derivePetState({name:'Mochi',species:'blob',total_half_days:0,you_fed_today:false,both_fed_today:false})));
+console.log('pet @1 ', JSON.stringify(derivePetState({name:'Mochi',species:'blob',total_half_days:1,you_fed_today:true,both_fed_today:false})));
+console.log('pet @8 ', JSON.stringify(derivePetState({name:'Mochi',species:'blob',total_half_days:8,you_fed_today:true,both_fed_today:true})));
+console.log('\nverbatim ok   ', isVerbatimSpan('he made me coffee', 'honestly he made me coffee without asking'));
+console.log('verbatim fake ', isVerbatimSpan('he always supports me', 'honestly he made me coffee'));
+console.log('localDate LA  ', localDateFor('America/Los_Angeles', new Date('2026-10-18T05:30:00Z')));
