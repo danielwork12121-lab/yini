@@ -1,0 +1,26 @@
+# Root-level guards for the monorepo. Each package keeps its own .gitignore too;
+# this one exists so a stray file at the root is never an accident away from
+# being committed.
+
+# secrets — never commit, in any package
+.env
+.env.*
+!.env.example
+*.pem
+
+node_modules/
+.next/
+out/
+dist/
+build/
+
+# generated
+next-env.d.ts
+*.tsbuildinfo
+
+# os / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
