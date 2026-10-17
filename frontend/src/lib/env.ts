@@ -27,6 +27,13 @@ export const env = {
   openaiKey: () => opt('OPENAI_API_KEY'),
   geminiKey: () => opt('GEMINI_API_KEY'),
 
+  hasKeyFor(p: 'anthropic' | 'openai' | 'gemini' | 'mock'): boolean {
+    return p === 'mock' ? true
+      : p === 'anthropic' ? Boolean(this.anthropicKey())
+      : p === 'openai' ? Boolean(this.openaiKey())
+      : Boolean(this.geminiKey());
+  },
+
   /**
    * Resolution order: explicit LLM_PROVIDER, else the first provider with a key,
    * else 'mock'. The mock keeps the whole vertical path runnable with no key at
@@ -34,7 +41,10 @@ export const env = {
    */
   llmProvider(): 'anthropic' | 'openai' | 'gemini' | 'mock' {
     const explicit = opt('LLM_PROVIDER') as 'anthropic' | 'openai' | 'gemini' | 'mock' | null;
-    if (explicit) return explicit;
+    // A named provider with no key would throw on every call and silently fall
+    // back anyway, one failed round-trip at a time. Degrade up front instead.
+    if (explicit === 'mock') return 'mock';
+    if (explicit && this.hasKeyFor(explicit)) return explicit;
     if (this.geminiKey()) return 'gemini';
     if (this.anthropicKey()) return 'anthropic';
     if (this.openaiKey()) return 'openai';
@@ -48,7 +58,8 @@ export const env = {
    */
   leakCheckProvider(): 'anthropic' | 'openai' | 'gemini' | 'mock' {
     const explicit = opt('LEAKCHECK_PROVIDER') as 'anthropic' | 'openai' | 'gemini' | 'mock' | null;
-    if (explicit) return explicit;
+    if (explicit === 'mock') return 'mock';
+    if (explicit && this.hasKeyFor(explicit)) return explicit;
     const writer = this.llmProvider();
     const others = (['openai', 'anthropic', 'gemini'] as const)
       .filter((p) => p !== writer)

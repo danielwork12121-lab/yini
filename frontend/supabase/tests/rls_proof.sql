@@ -15,12 +15,15 @@
 do $$
 declare avery uuid; sam uuid; conn uuid; e_avery uuid; e_sam uuid; c1 uuid; n1 uuid;
 begin
-  delete from auth.users;
-  delete from public.connections;
-  insert into auth.users (raw_user_meta_data) values ('{"display_name":"Avery"}') returning id into avery;
-  insert into auth.users (raw_user_meta_data) values ('{"display_name":"Sam"}')   returning id into sam;
+  -- Scoped teardown: only this test's own fixture, never the whole table.
+  delete from public.connections where invite_code = 'RLSTST';
+  delete from auth.users where email in ('rls-avery@corner.test','rls-sam@corner.test');
+  insert into auth.users (id, email, raw_user_meta_data)
+    values (gen_random_uuid(), 'rls-avery@corner.test', '{"display_name":"RLSTEST Avery"}') returning id into avery;
+  insert into auth.users (id, email, raw_user_meta_data)
+    values (gen_random_uuid(), 'rls-sam@corner.test',   '{"display_name":"RLSTEST Sam"}')   returning id into sam;
 
-  insert into public.connections (invite_code) values ('CORNER') returning id into conn;
+  insert into public.connections (invite_code) values ('RLSTST') returning id into conn;
   insert into public.connection_members (connection_id, user_id) values (conn, avery), (conn, sam);
   update public.profiles set default_connection_id = conn;
   insert into public.pets (connection_id, name) values (conn, 'Egg');
@@ -62,7 +65,12 @@ returns void language plpgsql as $$
 declare got text;
 begin
   begin
-    perform set_config('test.uid', as_user::text, true);
+    -- Real Supabase auth.uid() reads the JWT claim off the request; a local
+    -- sandbox stub reads test.uid. Set both so this file is one file.
+    perform set_config('request.jwt.claim.sub', coalesce(as_user::text, ''), true);
+    perform set_config('request.jwt.claims',
+      case when as_user is null then '' else json_build_object('sub', as_user::text, 'role', 'authenticated')::text end, true);
+    perform set_config('test.uid', coalesce(as_user::text, ''), true);
     execute 'set local role authenticated';
     execute query into got;
     got := coalesce(got, 'NULL');
@@ -72,9 +80,9 @@ begin
   end;
   execute 'reset role';
   if got = expected then
-    perform set_config('test.pass', (coalesce(current_setting('test.pass', true),'0')::int + 1)::text, false);
+    perform set_config('test.pass', (coalesce(nullif(current_setting('test.pass', true), ''),'0')::int + 1)::text, false);
   else
-    perform set_config('test.fail', (coalesce(current_setting('test.fail', true),'0')::int + 1)::text, false);
+    perform set_config('test.fail', (coalesce(nullif(current_setting('test.fail', true), ''),'0')::int + 1)::text, false);
   end if;
   raise notice '%  %  (got %)',
     case when got = expected then ' ok ' else 'FAIL' end, rpad(label, 52), got;
@@ -115,7 +123,7 @@ perform pg_temp.expect('kind_words: surfaced praise about him', sam,
 perform pg_temp.expect('pet: the shared object', sam,
   'select count(*)::text from public.pets', '1');
 perform pg_temp.expect('peers: Avery''s NAME only', sam,
-  'select display_name from public.connection_peers where user_id = ' || quote_literal(avery), 'Avery');
+  'select display_name from public.connection_peers where user_id = ' || quote_literal(avery), 'RLSTEST Avery');
 
 raise notice '';
 raise notice '── Avery''s side ──';
@@ -132,9 +140,9 @@ perform pg_temp.expect('anon: no entries', null,
   'select count(*)::text from public.entries', '0');
 raise notice '─────────────────────────────────────────────────────────';
 raise notice '%  passed, %  failed',
-  coalesce(current_setting('test.pass', true),'0'),
-  coalesce(current_setting('test.fail', true),'0');
-if coalesce(current_setting('test.fail', true),'0')::int > 0 then
+  coalesce(nullif(current_setting('test.pass', true), ''),'0'),
+  coalesce(nullif(current_setting('test.fail', true), ''),'0');
+if coalesce(nullif(current_setting('test.fail', true), ''),'0')::int > 0 then
   raise exception 'RLS PROOF FAILED';
 end if;
 raise notice '';
