@@ -1,13 +1,15 @@
 /**
  * Corner — HTTP contract. This is the file the screens build against.
  *
- * Rule for every response shape here: if a field could tell you something about
- * your partner that they did not choose to send you, it is not in the shape.
- * There is no `partner_checked_in`, no `partner_streak`, no `partner_state`.
- * Omissions in this file are features.
+ * Rule for every shape here: if a field could tell you something about your partner
+ * that they did not choose to send you, it is not in the shape. There is no
+ * `partner_checked_in`, no `partner_streak`, no `partner_state`, no `last_seen`.
+ * The omissions are the product.
  */
 import { z } from 'zod';
-import { INPUT_MODES, NUDGE_KINDS, THEMES } from './enums';
+import {
+  CONCERN_STATUSES, CONNECTION_KINDS, INPUT_MODES, NUDGE_KINDS, NUDGE_STATUSES, THEMES,
+} from './enums';
 import { PetStateSchema } from './models';
 
 const zUuid = z.string().uuid();
@@ -17,44 +19,58 @@ const zLocalDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 export const ApiErrorSchema = z.object({
   error: z.string(),
   code: z.enum([
-    'unauthenticated', 'not_paired', 'already_checked_in', 'invalid_input',
+    'unauthenticated', 'no_connection', 'already_checked_in', 'invalid_input',
     'transcription_failed', 'model_failed', 'rate_limited', 'server_error',
   ]),
-  /** True when the client should keep the user's text and let them retry. */
+  /** True when the client should keep the user's text and offer a retry. */
   recoverable: z.boolean().default(true),
 });
 export type ApiError = z.infer<typeof ApiErrorSchema>;
 
 /* ── sanitized wire views ───────────────────────────────────────────── */
 
-/** A row in "Things to work on". Carries no ids or text that trace back to an entry. */
+/** A row in Problems. No ids or text that trace back to an entry. */
 export const NudgeViewSchema = z.object({
   id: zUuid,
   kind: z.enum(NUDGE_KINDS),
   body_text: z.string(),
   theme: z.enum(THEMES).nullable(),
   delivered_on: zLocalDate,
-  acted: z.boolean(),
+  status: z.enum(NUDGE_STATUSES),
 });
 export type NudgeView = z.infer<typeof NudgeViewSchema>;
 
-/** A row in "Kind words". Verbatim partner text, by design. */
+/** A row in Compliments. Verbatim partner text, by design. */
 export const KindWordViewSchema = z.object({
   id: zUuid,
   text: z.string(),
   from_name: z.string(),
   surfaced_on: zLocalDate,
-  /** Set when this is the reciprocity reveal tied to something you did. */
-  paired_nudge_id: zUuid.nullable(),
 });
 export type KindWordView = z.infer<typeof KindWordViewSchema>;
 
+/**
+ * The author's own view of what they raised. "Waiting for a good moment" —
+ * never silence, never a black hole. Only ever visible to the person who raised it.
+ */
+export const PendingConcernViewSchema = z.object({
+  id: zUuid,
+  distilled_text: z.string(),
+  theme: z.enum(THEMES),
+  status: z.enum(CONCERN_STATUSES),
+  status_label: z.string(),
+  first_raised_at: z.string(),
+});
+export type PendingConcernView = z.infer<typeof PendingConcernViewSchema>;
+
 /* ── POST /api/transcribe ───────────────────────────────────────────── */
-// Request: multipart/form-data, field `audio` (webm/mp4/wav), ≤ 25MB.
+// multipart/form-data, field `audio` (webm/mp4/wav), ≤25MB.
+// The audio is saved BEFORE transcription is attempted; a failure never loses the entry.
 export const TranscribeResponseSchema = z.object({
   text: z.string(),
   duration_ms: z.number().int().nonnegative(),
   audio_path: z.string().nullable(),
+  failed: z.boolean().default(false),
 });
 export type TranscribeResponse = z.infer<typeof TranscribeResponseSchema>;
 
@@ -64,29 +80,33 @@ export const CheckinRequestSchema = z.object({
   /** The user's own words. Required either way — voice arrives already transcribed. */
   text: z.string().min(1).max(8000),
   input_mode: z.enum(INPUT_MODES),
+  connection_id: zUuid.nullable().default(null),   // null = the default connection
   audio_path: z.string().nullable().default(null),
   audio_duration_ms: z.number().int().nonnegative().nullable().default(null),
   transcript_failed: z.boolean().default(false),
-  /** Computed client-side from the device clock. Server validates against the profile tz. */
+  /** Computed client-side from the device clock; server validates against the profile tz. */
   local_date: zLocalDate,
 });
 export type CheckinRequest = z.infer<typeof CheckinRequestSchema>;
 
-/** What the one vertical path returns. This is the screen after you hit send. */
+/** The screen after you hit send. This is the one vertical path. */
 export const CheckinResponseSchema = z.object({
   entry_id: zUuid,
-  /** Your mood face for the calendar. Yours only. */
   mood_face: z.number().int().min(1).max(5),
 
   reply: z.object({
     acknowledgement: z.string(),
     for_you: z.string(),
+    /** What they quietly did for you. Null when nothing was logged — say nothing. */
+    reveal: z.string().nullable(),
     /** Null means nothing was carried today. The UI must not imply something is missing. */
     partner_item: z.string().nullable(),
     nudge_id: zUuid.nullable(),
   }),
 
   pet: PetStateSchema,
+  /** True on the check-in that completes the first shared day. Fire the hatch animation. */
+  pet_hatched_now: z.boolean().default(false),
 
   /** Non-null ONLY for the user who tripped it. Mediation is already halted. */
   safety: z.object({
@@ -101,40 +121,82 @@ export type CheckinResponse = z.infer<typeof CheckinResponseSchema>;
 export const TodayResponseSchema = z.object({
   you_checked_in: z.boolean(),
   local_date: zLocalDate,
-  pet: PetStateSchema,
-  today_nudge: NudgeViewSchema.nullable(),
   display_name: z.string(),
   partner_display_name: z.string(),
+  connection_kind: z.enum(CONNECTION_KINDS),
+  pet: PetStateSchema,
+  today_nudge: NudgeViewSchema.nullable(),
+  /** Shared, milestone-only. Breaks quietly; nobody is told whose fault it was. */
+  shared_streak: z.number().int().nonnegative(),
 });
 export type TodayResponse = z.infer<typeof TodayResponseSchema>;
 
 /* ── GET /api/drawers ───────────────────────────────────────────────── */
 export const DrawersResponseSchema = z.object({
-  things_to_work_on: z.array(NudgeViewSchema),
-  kind_words: z.array(KindWordViewSchema),
+  /** Never rendered as a badge count. A drawer you open, not a guilt number. */
+  problems: z.array(NudgeViewSchema),
+  compliments: z.array(KindWordViewSchema),
+  /** What YOU raised and where it stands. Yours only. */
+  your_pending: z.array(PendingConcernViewSchema),
 });
 export type DrawersResponse = z.infer<typeof DrawersResponseSchema>;
 
-/* ── POST /api/nudges/[id]/acted ────────────────────────────────────── */
-export const ActedRequestSchema = z.object({
+/* ── PATCH /api/nudges/[id] ─────────────────────────────────────────── */
+export const NudgeUpdateRequestSchema = z.object({
+  status: z.enum(NUDGE_STATUSES),
+  /** Required when moving to `done`: the recipient's own words about what they did. */
   note: z.string().max(2000).default(''),
 });
-export type ActedRequest = z.infer<typeof ActedRequestSchema>;
+export type NudgeUpdateRequest = z.infer<typeof NudgeUpdateRequestSchema>;
 
-/** The reciprocity beat: what your partner quietly logged while you were struggling. */
-export const ActedResponseSchema = z.object({
-  reveal: z.array(KindWordViewSchema),
-  /** True when there is genuinely nothing logged. The UI says so plainly, invents nothing. */
-  nothing_logged: z.boolean(),
+export const NudgeUpdateResponseSchema = z.object({
+  nudge: NudgeViewSchema,
+  pet: PetStateSchema,
+  /** XP awarded for follow-through. Setting something down awards nothing and costs nothing. */
+  xp_gained: z.number().int().nonnegative(),
 });
-export type ActedResponse = z.infer<typeof ActedResponseSchema>;
+export type NudgeUpdateResponse = z.infer<typeof NudgeUpdateResponseSchema>;
+
+/* ── POST /api/nudges/[id]/chat ─────────────────────────────────────── */
+// "How do I actually move forward on this?" Never reaches the partner, either way.
+export const NudgeChatRequestSchema = z.object({ message: z.string().min(1).max(2000) });
+export type NudgeChatRequest = z.infer<typeof NudgeChatRequestSchema>;
+
+export const NudgeChatResponseSchema = z.object({
+  messages: z.array(z.object({
+    id: zUuid,
+    role: z.enum(['user', 'coach']),
+    body: z.string(),
+    created_at: z.string(),
+  })),
+});
+export type NudgeChatResponse = z.infer<typeof NudgeChatResponseSchema>;
 
 /* ── GET /api/calendar?month=YYYY-MM ────────────────────────────────── */
 export const CalendarResponseSchema = z.object({
   month: z.string().regex(/^\d{4}-\d{2}$/),
-  days: z.array(z.object({ local_date: zLocalDate, mood_face: z.number().int().min(1).max(5) })),
+  days: z.array(z.object({
+    local_date: zLocalDate,
+    mood_face: z.number().int().min(1).max(5),
+    note: z.string().nullable(),
+  })),
 });
 export type CalendarResponse = z.infer<typeof CalendarResponseSchema>;
+
+/* ── quests ─────────────────────────────────────────────────────────── */
+export const QuestViewSchema = z.object({
+  id: zUuid,
+  prompt_text: z.string(),
+  completed: z.boolean(),
+});
+export type QuestView = z.infer<typeof QuestViewSchema>;
+
+export const QuestSubmitRequestSchema = z.object({
+  quest_id: zUuid,
+  /** Each becomes a banked compliment for the partner. The user's own words, always. */
+  answers: z.array(z.string().min(1).max(300)).min(1).max(5),
+});
+export type QuestSubmitRequest = z.infer<typeof QuestSubmitRequestSchema>;
 
 /* ── pairing + demo ─────────────────────────────────────────────────── */
 export const JoinRequestSchema = z.object({ invite_code: z.string().length(6) });

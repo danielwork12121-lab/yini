@@ -37,3 +37,7 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 .tmp-selftest/
+
+# local transfer artifacts
+*.tar.gz
+tsconfig.tsbuildinfo
