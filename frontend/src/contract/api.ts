@@ -9,7 +9,7 @@
 import { z } from 'zod';
 import {
   ANALYSIS_STATUSES, CONCERN_STATUSES, CONNECTION_KINDS, EMOTIONAL_STATES, INPUT_MODES,
-  NUDGE_KINDS, NUDGE_STATUSES, THEMES,
+  NUDGE_KINDS, NUDGE_STATUSES, PET_SPECIES, THEMES,
 } from './enums';
 import { PetStateSchema } from './models';
 
@@ -212,7 +212,11 @@ export const ConnectionStatusResponseSchema = z.object({
 export type ConnectionStatusResponse = z.infer<typeof ConnectionStatusResponseSchema>;
 
 /** POST /api/connection */
-export const CreateConnectionRequestSchema = z.object({ display_name: zDisplayName });
+export const CreateConnectionRequestSchema = z.object({
+  display_name: zDisplayName,
+  /** The buddy picked at sign-up. Optional so older clients still work; the pet hatches into it. */
+  species: z.enum(PET_SPECIES).optional(),
+});
 export type CreateConnectionRequest = z.infer<typeof CreateConnectionRequestSchema>;
 export const CreateConnectionResponseSchema = z.object({ invite_code: z.string().length(6) });
 export type CreateConnectionResponse = z.infer<typeof CreateConnectionResponseSchema>;
