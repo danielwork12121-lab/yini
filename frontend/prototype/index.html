@@ -48,7 +48,19 @@ body {
 body.yini { background:#FDF6EE; }
 .art { position:relative; width:100%; max-width:430px; margin:0 auto; overflow:hidden; }
 .art-in { position:absolute; left:0; top:0; width:941px; height:1672px; transform-origin:0 0; }
+.art-in { font-family:'Nunito',system-ui,sans-serif; }
+.art-in button, .art-in input { font-family:inherit; }
 .art-in button, .art-in a { -webkit-tap-highlight-color:transparent; }
+.art-in [data-act="pick-buddy"]:focus-visible, .art-in [data-act="pick-lover"]:focus-visible { outline-offset:-3px; }
+.ysheet { font-family:'Nunito',system-ui,sans-serif; background:#FDF6EE; color:#3A2418; }
+.ytitle { font-size:24px; font-weight:800; margin:0; }
+.yfield { background:#FBF1E7; border:2px solid #EEDFD0; border-radius:9999px; font-family:inherit; font-size:24px; font-weight:700; letter-spacing:.16em; text-align:center; color:#3A2418; min-height:56px; }
+.ybtn { appearance:none; border:0; cursor:pointer; min-height:56px; border-radius:9999px; background:#F0857A; color:#fff; font-family:inherit; font-size:18px; font-weight:800; }
+.ybtn:disabled { opacity:.5; cursor:not-allowed; }
+.pet-wrap { position:relative; display:block; width:100%; height:100%; }
+.pet-photo { width:100%; height:100%; object-fit:contain; display:block; }
+.pet-photo.nap { filter:grayscale(.45) brightness(.98); opacity:.88; }
+.zzz { position:absolute; right:4%; top:2%; font:600 20px/1 var(--display); color:var(--ink-faint); }
 .art-in input:focus-visible, .art-in button:focus-visible { outline:3px solid #EF8A73; outline-offset:3px; }
 .art-in label:focus-within { box-shadow:0 0 0 3px rgba(239,138,115,.45); }
 .screen { display:flex; flex-direction:column; gap:16px; }
@@ -136,7 +148,7 @@ label.caption { display:block; margin-bottom:8px; }
 .room { display:block; width:100%; height:210px; }
 .room *, .pet-svg * { vector-effect:non-scaling-stroke; }
 .o { stroke:var(--outline); stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
-.pet-slot { position:absolute; left:50%; bottom:20px; width:132px; height:132px; transform:translateX(-50%); background:none; border:none; padding:0; cursor:pointer; border-radius:50%; }
+.pet-slot { position:absolute; left:50%; bottom:14px; width:156px; height:156px; transform:translateX(-50%); background:none; border:none; padding:0; cursor:pointer; border-radius:50%; }
 .pet-svg { width:100%; height:100%; display:block; overflow:visible; }
 .pet-bob { animation:bob 2.4s ease-in-out infinite alternate; }
 .wobble { animation:wobble 520ms var(--ease); }
@@ -276,7 +288,7 @@ label.caption { display:block; margin-bottom:8px; }
   function fresh() {
     return { route:'welcome', auth:{ email:'', pw:'', user:'', pw2:'', lover:false }, me:null, data:null, half:0, hatched:false, youFed:false, partnerFed:false,
       petName:'Pebble', dayOffset:0, drawersEmpty:false, reply:null, doneFor:null, notes:{}, chat:{},
-      questDone:false, pair:{ name:'', invite:null, join:'' }, demoOpen:false,
+      questDone:false, buddy:null, pair:{ name:'', invite:null, join:'' }, demoOpen:false,
       rec:{ phase:'capture', recording:false, elapsed:0, text:'', typing:false, error:'', transcribing:false, playing:false, pos:0 } };
   }
   S = fresh();
@@ -330,28 +342,21 @@ label.caption { display:block; margin-bottom:8px; }
       next: BOND[lvl] ? BOND[lvl][0] : null, nextName: BOND[lvl] ? BOND[lvl][1] : '',
       you:S.youFed, both:S.youFed && S.partnerFed };
   }
+  var BUDDIES = { corgi:['Corgi','buddy-corgi'], poodle:['Poodle','buddy-poodle'], golden:['Golden puppy','buddy-golden-puppy'], tuxedo:['Tuxedo cat','buddy-tuxedo-cat'], fluffy:['Fluffy cat','buddy-fluffy-cat'], calico:['Calico cat','buddy-calico-cat'], bunny:['Bunny','buddy-bunny'], hamster:['Hamster','buddy-hamster'], hedgehog:['Hedgehog','buddy-hedgehog'] };
   function petSvg(p) {
-    if (!p.hatched) {
+    if (p.hatched) {
+      var b = BUDDIES[S.buddy || 'corgi'];
+      return '<span class="pet-wrap"><img class="pet-svg pet-photo pet-bob' + (p.you ? '' : ' nap') + '" src="assets/' + b[1] + '.png" alt="">' + (p.you ? '' : '<span class="zzz" aria-hidden="true">z</span>') + '</span>';
+    }
+    return eggSvg(p);
+  }
+  function eggSvg(p) {
+    {
       return '<svg class="pet-svg" viewBox="0 0 120 120" aria-hidden="true"><g class="pet-bob">' +
         '<path class="o" fill="var(--surface-warm)" d="M60 12C86 12 100 50 100 76c0 24-18 36-40 36S20 100 20 76C20 50 34 12 60 12z"/>' +
         '<circle cx="48" cy="82" r="5" fill="var(--sage)"/><circle cx="72" cy="66" r="4" fill="var(--blush)"/><circle cx="62" cy="95" r="3.500" fill="var(--butter)"/>' +
         (p.you ? '<path class="o" fill="none" d="M42 46l9 8 8-8 8 8 9-8"/>' : '') + '</g></svg>';
     }
-    var sc = [1, .82, .95, 1.05, 1.12][p.stage];
-    var eyes = p.both
-      ? '<path class="o" fill="none" d="M41 67q5-8 10 0M69 67q5-8 10 0"/>'
-      : p.you
-        ? '<ellipse cx="46" cy="66" rx="3.600" ry="4.800" fill="var(--outline)"/><ellipse cx="74" cy="66" rx="3.600" ry="4.800" fill="var(--outline)"/>'
-        : '<path class="o" fill="none" d="M41 65q5 7 10 0M69 65q5 7 10 0"/>';
-    var mouth = p.both ? '<path class="o" fill="none" d="M52 78q8 10 16 0"/>' : '<path class="o" fill="none" d="M55 80h10"/>';
-    return '<svg class="pet-svg" viewBox="0 0 120 120" aria-hidden="true"' + (p.you ? '' : ' style="filter:saturate(.75)"') + '>' +
-      '<g class="pet-bob"><g transform="translate(60 110) scale(' + sc + ') translate(-60 -110)">' +
-      (p.stage >= 2 ? '<circle class="o" cx="33" cy="36" r="10" fill="var(--butter)"/><circle class="o" cx="87" cy="36" r="10" fill="var(--butter)"/>' : '') +
-      '<ellipse class="o" cx="60" cy="70" rx="44" ry="40" fill="var(--butter)"/>' +
-      (p.both ? '<ellipse cx="36" cy="77" rx="6" ry="4" fill="var(--blush)"/><ellipse cx="84" cy="77" rx="6" ry="4" fill="var(--blush)"/>' : '') +
-      eyes + mouth + '</g>' +
-      (p.you ? '' : '<text x="96" y="30" font-family="Fraunces,Georgia,serif" font-size="18" font-weight="600" fill="var(--ink-faint)">z</text>') +
-      '</g></svg>';
   }
   var ROOM = '<svg class="room" viewBox="0 0 340 210" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' +
     '<rect width="340" height="210" fill="var(--wall)"/><rect y="158" width="340" height="52" fill="var(--floor)"/>' +
@@ -417,95 +422,163 @@ label.caption { display:block; margin-bottom:8px; }
   /* ───────── screens ───────── */
   /* ───────── auth: the Yini art-boards, ported as-is and scaled to the phone column ───────── */
   var AUTH = {
-    welcome: `<div data-layer="Background" style="position: relative; width: 941px; height: 1672px; overflow: hidden; background: #FDF6EE; font-family: 'Nunito', system-ui, sans-serif">
-  <img data-layer="Grass" src="assets/welcome-grass.png" alt="" style="position: absolute; left: 47px; top: 648px; width: 842px; height: 190px">
-  <img data-layer="Puppies" src="assets/welcome-puppies.png" alt="Corgi and schnauzer puppies cuddling" style="position: absolute; left: 71px; top: 203px; width: 801px; height: 570px">
-  <img data-layer="Floating hearts" src="assets/welcome-hearts.png" alt="" style="position: absolute; left: 76px; top: 188px; width: 741px; height: 378px">
-  <img data-layer="Logo" src="assets/welcome-logo.png" alt="yini" style="position: absolute; left: 253px; top: 776px; width: 445px; height: 197px">
-  <h1 data-layer="Headline" style="position: absolute; left: 0; top: 1012px; width: 941px; margin: 0; text-align: center; font-size: 52px; font-weight: 800; line-height: 1.2; letter-spacing: -0.5px; color: #3A2418">A little Yini goes a long way</h1>
-  <p data-layer="Subtitle" style="position: absolute; left: 0; top: 1092px; width: 941px; margin: 0; text-align: center; font-size: 32px; font-weight: 500; line-height: 1.3; color: #6B5A50">10 seconds a day to grow closer</p>
-  <img data-layer="Divider" src="assets/welcome-divider.png" alt="" style="position: absolute; left: 389px; top: 1185px; width: 163px; height: 61px">
-  <p data-layer="Tagline" style="position: absolute; left: 0; top: 1334px; width: 941px; margin: 0; text-align: center; font-size: 27px; font-weight: 500; line-height: 1.3; color: #7D6D63">For couples, friends, and family</p>
-  <button data-layer="Button" type="button" data-act="get-started" style="position: absolute; left: 126px; top: 1410px; width: 689px; height: 136px; border: 0; border-radius: 68px; background: #EC8D74; color: #FFFFFF; font-family: 'Nunito', system-ui, sans-serif; font-size: 44px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 28px; cursor: pointer">Get started<svg width="22" height="34" viewBox="0 0 22 34" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4 L17 17 L4 30"></path></svg></button>
-  </div>`,
-    signin: `<div data-layer="Background" style="position: relative; width: 941px; height: 1672px; overflow: hidden; font-family: 'Nunito', system-ui, sans-serif; color: #3A2418; background-color: #FDF6EE">
-  <button data-layer="Back button" type="button" data-act="auth-back" aria-label="Back" style="position: absolute; left: 35px; top: 53px; width: 60px; height: 60px; border: 0; background: transparent; color: #3A2418; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="28" height="42" viewBox="0 0 28 42" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 4 L6 21 L22 38"></path></svg></button>
-  <img data-layer="Top grass" src="assets/top-grass.png" alt="" style="position: absolute; left: 174px; top: 377px; width: 590px; height: 141px">
-  <img data-layer="Top puppies" src="assets/top-puppies.png" alt="Corgi and schnauzer puppies cuddling" style="position: absolute; left: 235px; top: 155px; width: 480px; height: 352px">
-  <img data-layer="Top hearts" src="assets/top-hearts.png" alt="" style="position: absolute; left: 193px; top: 130px; width: 542px; height: 237px">
-  <img data-layer="Logo" src="assets/logo-signin.png" alt="yini" style="position: absolute; left: 325px; top: 487px; width: 294px; height: 133px">
-  <h1 data-layer="Headline" style="position: absolute; left: 0; top: 626px; width: 941px; margin: 0; text-align: center; font-size: 35px; font-weight: 800; line-height: 1.2; color: #3A2418">A little Yini goes a long way.</h1>
-  <label data-layer="Email field" style="position: absolute; left: 158px; top: 708px; width: 625px; height: 96px; box-sizing: border-box; border: 2px solid #F0E2D3; border-radius: 48px; background: #F8EDE1; display: flex; align-items: center; gap: 34px; padding: 0 36px 0 38px">
-  <svg width="46" height="36" viewBox="0 0 46 36" fill="none" stroke="#4A3428" stroke-width="3.2" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="42" height="32" rx="4"></rect><path d="M3 4 L23 20 L43 4"></path></svg>
-  <input id="si-email" type="email" autocomplete="email" placeholder="Email" aria-label="Email" style="flex: 1; min-width: 0; border: 0; background: transparent; font-family: 'Nunito', system-ui, sans-serif; font-size: 31px; font-weight: 600; color: #3A2418; outline: none">
-  </label>
-  <label data-layer="Password field" style="position: absolute; left: 158px; top: 821px; width: 625px; height: 96px; box-sizing: border-box; border: 2px solid #F0E2D3; border-radius: 48px; background: #F8EDE1; display: flex; align-items: center; gap: 34px; padding: 0 30px 0 42px">
-  <svg width="38" height="46" viewBox="0 0 38 46" fill="none" stroke="#4A3428" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="19" width="32" height="24" rx="5"></rect><path d="M10 19 V12 a9 9 0 0 1 18 0 V19"></path><path d="M19 29 V33"></path></svg>
-  <input id="si-pw" type="password" autocomplete="current-password" placeholder="Password" aria-label="Password" style="flex: 1; min-width: 0; border: 0; background: transparent; font-family: 'Nunito', system-ui, sans-serif; font-size: 31px; font-weight: 600; color: #3A2418; outline: none">
-  <button type="button" data-act="toggle-pw" data-for="si-pw" aria-label="Show password" style="width: 52px; height: 52px; border: 0; background: transparent; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="42" height="30" viewBox="0 0 42 30" fill="none" stroke="#4A3428" stroke-width="3.2" aria-hidden="true"><path d="M2 15 C8 5 15 2 21 2 C27 2 34 5 40 15 C34 25 27 28 21 28 C15 28 8 25 2 15 Z"></path><circle cx="21" cy="15" r="6"></circle></svg></button>
-  </label>
-  <button data-layer="Sign in button" type="button" data-act="signin-go" style="position: absolute; left: 158px; top: 945px; width: 625px; height: 97px; border: 0; border-radius: 49px; background: #EF8A73; color: #FFFFFF; font-family: 'Nunito', system-ui, sans-serif; font-size: 37px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 30px; cursor: pointer">Sign in<svg width="16" height="26" viewBox="0 0 16 26" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3 L13 13 L3 23"></path></svg></button>
-  <div data-layer="Or divider" style="position: absolute; left: 199px; top: 1068px; width: 543px; height: 40px; display: flex; align-items: center; gap: 28px">
-  <div style="flex: 1; height: 2px; background: #D9CEC4"></div>
-  <span style="font-size: 29px; font-weight: 600; color: #7D6D63">or</span>
-  <div style="flex: 1; height: 2px; background: #D9CEC4"></div>
-  </div>
-  <button data-layer="Google button" type="button" data-act="auth-google" style="position: absolute; left: 185px; top: 1127px; width: 571px; height: 90px; box-sizing: border-box; border: 2px solid #EFE3D8; border-radius: 45px; background: #FFFDF9; font-family: 'Nunito', system-ui, sans-serif; font-size: 31px; font-weight: 600; color: #5A4A40; display: flex; align-items: center; justify-content: center; gap: 40px; cursor: pointer"><img src="assets/google-signin.png" alt="" style="width: 56px; height: 52px; object-fit: contain">Continue with Google</button>
-  
-  <p data-layer="Sign up link" style="position: absolute; left: 0px; top: 1241px; width: 941px; margin: 0; text-align: center; font-size: 26px; font-weight: 600; color: #7D6D63">Don’t have an account?&nbsp;&nbsp;<a href="#create" data-act="to-create" style="font-weight: 800; text-decoration: none; color: #D9533F">Create one</a></p>
-  <img data-layer="Bottom grass" src="assets/bottom-grass.png" alt="" style="position: absolute; left: 249px; top: 1391px; width: 443px; height: 129px">
-  <img data-layer="Bottom puppies" src="assets/bottom-puppies.png" alt="Puppies sitting together, seen from behind" style="position: absolute; left: 330px; top: 1344px; width: 380px; height: 210px">
-  <img data-layer="Bottom hearts" src="assets/bottom-hearts.png" alt="" style="position: absolute; left: 291px; top: 1311px; width: 360px; height: 118px">
-  </div>`,
-    create: `<div data-layer="Background" style="position: relative; width: 941px; height: 1672px; overflow: hidden; font-family: 'Nunito', system-ui, sans-serif; color: #3A2418; background-color: #FDF6EE">
-  <button data-layer="Back button" type="button" data-act="auth-back" aria-label="Back" style="position: absolute; left: 35px; top: 53px; width: 60px; height: 60px; border: 0; background: transparent; color: #3A2418; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="28" height="42" viewBox="0 0 28 42" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 4 L6 21 L22 38"></path></svg></button>
-  
-  
-  
-  
-  <p data-layer="Subtitle" style="position: absolute; left: 0; top: 608px; width: 941px; margin: 0; text-align: center; font-size: 35px; font-weight: 600; line-height: 1.3; color: #3A2418"><br></p>
-  <label data-layer="Username field" style="position: absolute; left: 98px; top: 691px; width: 744px; height: 95px; box-sizing: border-box; border: 2px solid #EEDFD0; border-radius: 48px; background: #FBF1E7; display: flex; align-items: center; gap: 40px; padding: 0 36px 0 46px">
-  <svg width="42" height="46" viewBox="0 0 42 46" fill="none" stroke="#3A2418" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><circle cx="21" cy="13" r="10"></circle><path d="M3 44 V40 a10 10 0 0 1 10 -10 H29 a10 10 0 0 1 10 10 V44 Z"></path></svg>
-  <input id="ca-user" type="text" autocomplete="nickname" placeholder="Username" aria-label="Username" style="flex: 1; min-width: 0; border: 0; background: transparent; font-family: 'Nunito', system-ui, sans-serif; font-size: 31px; font-weight: 600; color: #3A2418; outline: none">
-  </label>
-  <label data-layer="Password field" style="position: absolute; left: 98px; top: 807px; width: 744px; height: 95px; box-sizing: border-box; border: 2px solid #EEDFD0; border-radius: 48px; background: #FBF1E7; display: flex; align-items: center; gap: 42px; padding: 0 36px 0 48px">
-  <svg width="38" height="46" viewBox="0 0 38 46" fill="none" stroke="#3A2418" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="19" width="32" height="24" rx="5"></rect><path d="M10 19 V12 a9 9 0 0 1 18 0 V19"></path><path d="M19 29 V33"></path></svg>
-  <input id="ca-pw" type="password" autocomplete="new-password" placeholder="Password" aria-label="Password" style="flex: 1; min-width: 0; border: 0; background: transparent; font-family: 'Nunito', system-ui, sans-serif; font-size: 31px; font-weight: 600; color: #3A2418; outline: none">
-  <button type="button" data-act="toggle-pw" data-for="ca-pw" aria-label="Show password" style="width: 56px; height: 52px; border: 0; background: transparent; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="48" height="32" viewBox="0 0 48 32" fill="none" stroke="#3A2418" stroke-width="3.4" aria-hidden="true"><path d="M2 16 C9 5 17 2 24 2 C31 2 39 5 46 16 C39 27 31 30 24 30 C17 30 9 27 2 16 Z"></path><circle cx="24" cy="16" r="7"></circle></svg></button>
-  </label>
-  <button data-layer="Google button" type="button" data-act="auth-google" style="position: absolute; left: 96px; top: 921px; width: 746px; height: 90px; box-sizing: border-box; border: 2px solid #EEDFD0; border-radius: 45px; background: #FDF6EE; font-family: 'Nunito', system-ui, sans-serif; font-size: 32px; font-weight: 600; color: #3A2418; display: flex; align-items: center; justify-content: center; gap: 38px; cursor: pointer"><img src="assets/google-create.png" alt="" style="width: 50px; height: 52px; object-fit: contain">Continue with Google</button>
-  
-  <h2 data-layer="Section heading" style="position: absolute; left: 96px; top: 1060px; margin: 0; font-size: 44px; font-weight: 900; line-height: 1.2; color: #3A2418; height: 52px">Who are you here with?</h2>
-  <p data-layer="Helper text" style="position: absolute; left: 97px; top: 1125px; margin: 0; font-size: 27px; font-weight: 500; line-height: 1.3; color: #6B5A50">This can’t be changed later unless you link a new account</p>
-  <button data-layer="Partner module" type="button" id="role-lover" aria-pressed="false" data-act="pick-lover" style="position: absolute; left: 68px; top: 1191px; width: 265px; height: 252px; box-sizing: border-box; border: 2px solid #F2E6D9; border-radius: 26px; background: #FEF8EE; padding: 0; cursor: pointer; font-family: 'Nunito', system-ui, sans-serif">
-  <img src="assets/role-lover.png" alt="" style="position: absolute; left: 11px; top: 1px; width: 249px; height: 189px">
-  <span id="role-lover-label" style="position: absolute; left: 0; top: 192px; width: 100%; text-align: center; font-size: 31px; font-weight: 700; color: #3A2418">Lover</span>
-  </button>
-  <button data-layer="Friend module" type="button" disabled="disabled" aria-label="Friend, coming soon" style="position: absolute; left: 353px; top: 1191px; width: 248px; height: 252px; box-sizing: border-box; border: 2px dashed #E6D9CB; border-radius: 26px; background: #F8F2EA; padding: 0; cursor: not-allowed; font-family: 'Nunito', system-ui, sans-serif">
-  <img src="assets/role-friend.png" alt="" style="position: absolute; left: 16px; top: 18px; width: 209px; height: 176px; opacity: 0.4; filter: grayscale(0.7)">
-  <span data-layer="Friend coming soon" style="position: absolute; left: 39px; top: 84px; width: 170px; height: 40px; box-sizing: border-box; border-radius: 20px; background: #FFFFFF; border: 2px solid #E6D9CB; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 19px; font-weight: 800; color: #6B5A50"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#6B5A50" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="7"></circle><path d="M9 5 V9 L12 11"></path></svg>Coming soon</span>
-  <span style="position: absolute; left: 0; top: 192px; width: 100%; text-align: center; font-size: 31px; font-weight: 700; color: #8A7A70">Friend</span>
-  </button>
-  <button data-layer="Family module" type="button" disabled="disabled" aria-label="Family, coming soon" style="position: absolute; left: 622px; top: 1191px; width: 252px; height: 252px; box-sizing: border-box; border: 2px dashed #E6D9CB; border-radius: 26px; background: #F8F2EA; padding: 0; cursor: not-allowed; font-family: 'Nunito', system-ui, sans-serif">
-  <img src="assets/role-family.png" alt="" style="position: absolute; left: 10px; top: 8px; width: 226px; height: 186px; opacity: 0.4; filter: grayscale(0.7)">
-  <span data-layer="Family coming soon" style="position: absolute; left: 41px; top: 84px; width: 170px; height: 40px; box-sizing: border-box; border-radius: 20px; background: #FFFFFF; border: 2px solid #E6D9CB; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 19px; font-weight: 800; color: #6B5A50"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#6B5A50" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="7"></circle><path d="M9 5 V9 L12 11"></path></svg>Coming soon</span>
-  <span style="position: absolute; left: 0; top: 192px; width: 100%; text-align: center; font-size: 31px; font-weight: 700; color: #8A7A70">Family</span>
-  </button>
-  <button data-layer="Continue button" type="button" data-act="create-go" style="position: absolute; left: 67px; top: 1482px; width: 807px; height: 105px; border: 0; border-radius: 53px; background: #F0857A; color: #FFFFFF; font-family: 'Nunito', system-ui, sans-serif; font-size: 40px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 34px; cursor: pointer">Continue<svg width="16" height="28" viewBox="0 0 16 28" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3 L13 14 L3 25"></path></svg></button>
-  <img data-layer="Top puppies" src="assets/top-puppies.png" alt="Corgi and schnauzer puppies cuddling" style="position: absolute; left: 235px; top: 155px; width: 480px; height: 352px"><img data-layer="Top grass" src="assets/top-grass.png" alt="" style="position: absolute; left: 174px; top: 377px; width: 590px; height: 141px"><img data-layer="Top hearts" src="assets/top-hearts.png" alt="" style="position: absolute; left: 193px; top: 130px; width: 542px; height: 237px"><div style="font-size: 62px; line-height: 1; font-family: Nunito, system-ui, sans-serif; position: absolute; left: 156px; top: 527px; width: 630px; height: 183px; text-align: center; font-weight: 800; color: #5C3018"><b>Create Your Account&nbsp;</b></div></div>`
+    welcome: `<div data-layer="Background" style="position: relative; width: 941px; height: 1672px; overflow: hidden; background: #FDF6EE; ">
+<img data-layer="Grass" src="assets/welcome-grass.png" alt="" style="position: absolute; left: 47px; top: 648px; width: 842px; height: 190px">
+<img data-layer="Puppies" src="assets/welcome-puppies.png" alt="Corgi and schnauzer puppies cuddling" style="position: absolute; left: 71px; top: 203px; width: 801px; height: 570px">
+<img data-layer="Floating hearts" src="assets/welcome-floating-hearts.png" alt="" style="position: absolute; left: 76px; top: 188px; width: 741px; height: 378px">
+<img data-layer="Logo" src="assets/welcome-logo.png" alt="yini" style="position: absolute; left: 253px; top: 776px; width: 445px; height: 197px">
+<h1 data-layer="Headline" style="position: absolute; left: 0; top: 1012px; width: 941px; margin: 0; text-align: center; font-size: 52px; font-weight: 800; line-height: 1.2; letter-spacing: -0.5px; color: #3A2418">A little yini goes a long way</h1>
+<p data-layer="Subtitle" style="position: absolute; left: 0; top: 1092px; width: 941px; margin: 0; text-align: center; font-size: 32px; font-weight: 500; line-height: 1.3; color: #6B5A50">10 seconds a day to grow closer</p>
+<img data-layer="Divider" src="assets/welcome-divider.png" alt="" style="position: absolute; left: 389px; top: 1185px; width: 163px; height: 61px">
+<p data-layer="Tagline" style="position: absolute; left: 0; top: 1334px; width: 941px; margin: 0; text-align: center; font-size: 27px; font-weight: 500; line-height: 1.3; color: #7D6D63">For couples, friends, and family</p>
+<button data-layer="Button" type="button" data-act="get-started" style="position: absolute; left: 126px; top: 1410px; width: 689px; height: 136px; border: 0; border-radius: 68px; background: #EC8D74; color: #FFFFFF; font-size: 44px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 28px; cursor: pointer">Get started<svg width="22" height="34" viewBox="0 0 22 34" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4 L17 17 L4 30"></path></svg></button>
+</div>`,
+    signin: `<div data-layer="Background" style="position: relative; width: 941px; height: 1672px; overflow: hidden; color: #3A2418; background-color: #FDF6EE">
+<button data-layer="Back button" type="button" data-act="auth-back" aria-label="Back" style="position: absolute; left: 35px; top: 53px; width: 60px; height: 60px; border: 0; background: transparent; color: #3A2418; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="28" height="42" viewBox="0 0 28 42" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 4 L6 21 L22 38"></path></svg></button>
+<img data-layer="Top grass" src="assets/signin-top-grass.png" alt="" style="position: absolute; left: 174px; top: 377px; width: 590px; height: 141px">
+<img data-layer="Top puppies" src="assets/signin-top-puppies.png" alt="Corgi and schnauzer puppies cuddling" style="position: absolute; left: 235px; top: 155px; width: 480px; height: 352px">
+<img data-layer="Top hearts" src="assets/signin-top-hearts.png" alt="" style="position: absolute; left: 193px; top: 130px; width: 542px; height: 237px">
+<img data-layer="Logo" src="assets/signin-logo.png" alt="yini" style="position: absolute; left: 325px; top: 487px; width: 294px; height: 133px">
+<h1 data-layer="Headline" style="position: absolute; left: 0; top: 626px; width: 941px; margin: 0; text-align: center; font-size: 35px; font-weight: 800; line-height: 1.2; color: #3A2418">A little yini goes a long way.</h1>
+<label data-layer="Email field" style="position: absolute; left: 158px; top: 708px; width: 625px; height: 96px; box-sizing: border-box; border: 2px solid #F0E2D3; border-radius: 48px; background: #F8EDE1; display: flex; align-items: center; gap: 34px; padding: 0 36px 0 38px">
+<svg width="46" height="36" viewBox="0 0 46 36" fill="none" stroke="#4A3428" stroke-width="3.2" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="42" height="32" rx="4"></rect><path d="M3 4 L23 20 L43 4"></path></svg>
+<input id="si-email" type="email" autocomplete="email" placeholder="Email" aria-label="Email" style="flex: 1; min-width: 0; border: 0; background: transparent; font-size: 31px; font-weight: 600; color: #3A2418; outline: none">
+</label>
+<label data-layer="Password field" style="position: absolute; left: 158px; top: 821px; width: 625px; height: 96px; box-sizing: border-box; border: 2px solid #F0E2D3; border-radius: 48px; background: #F8EDE1; display: flex; align-items: center; gap: 34px; padding: 0 30px 0 42px">
+<svg width="38" height="46" viewBox="0 0 38 46" fill="none" stroke="#4A3428" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="19" width="32" height="24" rx="5"></rect><path d="M10 19 V12 a9 9 0 0 1 18 0 V19"></path><path d="M19 29 V33"></path></svg>
+<input id="si-pw" type="password" autocomplete="current-password" placeholder="Password" aria-label="Password" style="flex: 1; min-width: 0; border: 0; background: transparent; font-size: 31px; font-weight: 600; color: #3A2418; outline: none">
+<button type="button" data-act="toggle-pw" data-for="si-pw" aria-label="Show password" style="width: 52px; height: 52px; border: 0; background: transparent; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="42" height="30" viewBox="0 0 42 30" fill="none" stroke="#4A3428" stroke-width="3.2" aria-hidden="true"><path d="M2 15 C8 5 15 2 21 2 C27 2 34 5 40 15 C34 25 27 28 21 28 C15 28 8 25 2 15 Z"></path><circle cx="21" cy="15" r="6"></circle></svg></button>
+</label>
+<button data-layer="Sign in button" type="button" data-act="signin-go" style="position: absolute; left: 158px; top: 945px; width: 625px; height: 97px; border: 0; border-radius: 49px; background: #EF8A73; color: #FFFFFF; font-size: 37px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 30px; cursor: pointer">Sign in<svg width="16" height="26" viewBox="0 0 16 26" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3 L13 13 L3 23"></path></svg></button>
+<div data-layer="Or divider" style="position: absolute; left: 199px; top: 1068px; width: 543px; height: 40px; display: flex; align-items: center; gap: 28px">
+<div style="flex: 1; height: 2px; background: #D9CEC4"></div>
+<span style="font-size: 29px; font-weight: 600; color: #7D6D63">or</span>
+<div style="flex: 1; height: 2px; background: #D9CEC4"></div>
+</div>
+<button data-layer="Google button" type="button" data-act="auth-google" style="position: absolute; left: 185px; top: 1127px; width: 571px; height: 90px; box-sizing: border-box; border: 2px solid #EFE3D8; border-radius: 45px; background: #FFFDF9; font-size: 31px; font-weight: 600; color: #5A4A40; display: flex; align-items: center; justify-content: center; gap: 40px; cursor: pointer"><img src="assets/signin-google.png" alt="" style="width: 56px; height: 52px; object-fit: contain">Continue with Google</button>
+
+<p data-layer="Sign up link" style="position: absolute; left: 0px; top: 1237px; width: 941px; margin: 0; text-align: center; font-size: 26px; font-weight: 600; color: #7D6D63">Don’t have an account?&nbsp;&nbsp;<a href="#create" data-act="to-create" style="font-weight: 800; text-decoration: none; color: #D9533F">Create one</a></p>
+<img data-layer="Bottom grass" src="assets/signin-bottom-grass.png" alt="" style="position: absolute; left: 249px; top: 1391px; width: 443px; height: 129px">
+<img data-layer="Bottom puppies" src="assets/signin-bottom-puppies.png" alt="Puppies sitting together, seen from behind" style="position: absolute; left: 330px; top: 1344px; width: 380px; height: 210px">
+<img data-layer="Bottom hearts" src="assets/signin-bottom-hearts.png" alt="" style="position: absolute; left: 291px; top: 1311px; width: 360px; height: 118px">
+</div>`,
+    create: `<div data-layer="Background" style="position: relative; width: 941px; height: 1672px; overflow: hidden; color: #3A2418; background-color: #FDF6EE">
+<button data-layer="Back button" type="button" data-act="auth-back" aria-label="Back" style="position: absolute; left: 35px; top: 53px; width: 60px; height: 60px; border: 0; background: transparent; color: #3A2418; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="28" height="42" viewBox="0 0 28 42" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 4 L6 21 L22 38"></path></svg></button>
+<label data-layer="Username field" style="position: absolute; left: 98px; top: 691px; width: 744px; height: 95px; box-sizing: border-box; border: 2px solid #EEDFD0; border-radius: 48px; background: #FBF1E7; display: flex; align-items: center; gap: 40px; padding: 0 36px 0 46px">
+<svg width="42" height="46" viewBox="0 0 42 46" fill="none" stroke="#3A2418" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><circle cx="21" cy="13" r="10"></circle><path d="M3 44 V40 a10 10 0 0 1 10 -10 H29 a10 10 0 0 1 10 10 V44 Z"></path></svg>
+<input id="ca-user" type="text" autocomplete="nickname" placeholder="Username" aria-label="Username" style="flex: 1; min-width: 0; border: 0; background: transparent; font-size: 31px; font-weight: 600; color: #3A2418; outline: none">
+</label>
+<label data-layer="Password field" style="position: absolute; left: 98px; top: 807px; width: 744px; height: 95px; box-sizing: border-box; border: 2px solid #EEDFD0; border-radius: 48px; background: #FBF1E7; display: flex; align-items: center; gap: 42px; padding: 0 36px 0 48px">
+<svg width="38" height="46" viewBox="0 0 38 46" fill="none" stroke="#3A2418" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="19" width="32" height="24" rx="5"></rect><path d="M10 19 V12 a9 9 0 0 1 18 0 V19"></path><path d="M19 29 V33"></path></svg>
+<input id="ca-pw" type="password" autocomplete="new-password" placeholder="Password" aria-label="Password" style="flex: 1; min-width: 0; border: 0; background: transparent; font-size: 31px; font-weight: 600; color: #3A2418; outline: none">
+<button type="button" data-act="toggle-pw" data-for="ca-pw" aria-label="Show password" style="width: 56px; height: 52px; border: 0; background: transparent; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="48" height="32" viewBox="0 0 48 32" fill="none" stroke="#3A2418" stroke-width="3.4" aria-hidden="true"><path d="M2 16 C9 5 17 2 24 2 C31 2 39 5 46 16 C39 27 31 30 24 30 C17 30 9 27 2 16 Z"></path><circle cx="24" cy="16" r="7"></circle></svg></button>
+</label>
+<button data-layer="Google button" type="button" data-act="auth-google" style="position: absolute; left: 96px; top: 921px; width: 746px; height: 90px; box-sizing: border-box; border: 2px solid #EEDFD0; border-radius: 45px; background: #FDF6EE; font-size: 32px; font-weight: 600; color: #3A2418; display: flex; align-items: center; justify-content: center; gap: 38px; cursor: pointer"><img src="assets/create-google.png" alt="" style="width: 50px; height: 52px; object-fit: contain">Continue with Google</button>
+
+<h2 data-layer="Section heading" style="position: absolute; left: 96px; top: 1060px; margin: 0; font-size: 44px; font-weight: 900; line-height: 1.2; color: #3A2418; height: 52px">Who are you here with?</h2>
+<p data-layer="Helper text" style="position: absolute; left: 97px; top: 1125px; margin: 0; font-size: 27px; font-weight: 500; line-height: 1.3; color: #6B5A50">This can’t be changed later unless you link a new account</p>
+<button data-layer="Partner module" type="button" id="role-lover" aria-pressed="false" data-act="pick-lover" style="position: absolute; left: 68px; top: 1191px; width: 265px; height: 252px; box-sizing: border-box; border: 2px solid #F2E6D9; border-radius: 26px; background: #FEF8EE; padding: 0; cursor: pointer; ">
+<img src="assets/role-partner.png" alt="" style="position: absolute; left: 11px; top: 1px; width: 249px; height: 189px">
+<span id="role-lover-label" style="position: absolute; left: 0; top: 192px; width: 100%; text-align: center; font-size: 31px; font-weight: 700; color: #3A2418">Lovers</span>
+</button>
+<button data-layer="Friend module" type="button" disabled="disabled" aria-label="Friend, coming soon" style="position: absolute; left: 353px; top: 1191px; width: 248px; height: 252px; box-sizing: border-box; border: 2px dashed #E6D9CB; border-radius: 26px; background: #F8F2EA; padding: 0; cursor: not-allowed; ">
+<img src="assets/role-friend.png" alt="" style="position: absolute; left: 16px; top: 18px; width: 209px; height: 176px; opacity: 0.4; filter: grayscale(0.7)">
+<span data-layer="Friend coming soon" style="position: absolute; left: 39px; top: 84px; width: 170px; height: 40px; box-sizing: border-box; border-radius: 20px; background: #FFFFFF; border: 2px solid #E6D9CB; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 19px; font-weight: 800; color: #6B5A50"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#6B5A50" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="7"></circle><path d="M9 5 V9 L12 11"></path></svg>Coming soon</span>
+<span style="position: absolute; left: 0; top: 192px; width: 100%; text-align: center; font-size: 31px; font-weight: 700; color: #8A7A70">Friend</span>
+</button>
+<button data-layer="Family module" type="button" disabled="disabled" aria-label="Family, coming soon" style="position: absolute; left: 622px; top: 1191px; width: 252px; height: 252px; box-sizing: border-box; border: 2px dashed #E6D9CB; border-radius: 26px; background: #F8F2EA; padding: 0; cursor: not-allowed; ">
+<img src="assets/role-family.png" alt="" style="position: absolute; left: 10px; top: 8px; width: 226px; height: 186px; opacity: 0.4; filter: grayscale(0.7)">
+<span data-layer="Family coming soon" style="position: absolute; left: 41px; top: 84px; width: 170px; height: 40px; box-sizing: border-box; border-radius: 20px; background: #FFFFFF; border: 2px solid #E6D9CB; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 19px; font-weight: 800; color: #6B5A50"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#6B5A50" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="7"></circle><path d="M9 5 V9 L12 11"></path></svg>Coming soon</span>
+<span style="position: absolute; left: 0; top: 192px; width: 100%; text-align: center; font-size: 31px; font-weight: 700; color: #8A7A70">Family</span>
+</button>
+<button data-layer="Continue button" type="button" data-act="create-go" style="position: absolute; left: 67px; top: 1482px; width: 807px; height: 105px; border: 0; border-radius: 53px; background: #F0857A; color: #FFFFFF; font-size: 40px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 34px; cursor: pointer">Continue<svg width="16" height="28" viewBox="0 0 16 28" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3 L13 14 L3 25"></path></svg></button>
+<img data-layer="Top puppies" src="assets/signin-top-puppies.png" alt="Corgi and schnauzer puppies cuddling" style="position: absolute; left: 235px; top: 155px; width: 480px; height: 352px">
+<img data-layer="Top grass" src="assets/signin-top-grass.png" alt="" style="position: absolute; left: 174px; top: 377px; width: 590px; height: 141px">
+<img data-layer="Top hearts" src="assets/signin-top-hearts.png" alt="" style="position: absolute; left: 193px; top: 130px; width: 542px; height: 237px">
+<img data-layer="Logo" src="assets/signin-logo.png" alt="yini" style="position: absolute; left: 325px; top: 487px; width: 294px; height: 133px">
+<h1 data-layer="Headline" style="position: absolute; left: 0; top: 626px; width: 941px; margin: 0; text-align: center; font-size: 35px; font-weight: 800; line-height: 1.2; color: #3A2418">Create your account</h1>
+</div>`,
+    invite: `<div data-layer="Background" style="position: relative; width: 941px; height: 1672px; overflow: hidden; color: #3A2418; background-color: #FDF6EE">
+<button data-layer="Back button" type="button" data-act="auth-back" aria-label="Back" style="position: absolute; left: 35px; top: 53px; width: 60px; height: 60px; border: 0; background: transparent; color: #3A2418; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="28" height="42" viewBox="0 0 28 42" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 4 L6 21 L22 38"></path></svg></button>
+<img data-layer="Grass" src="assets/invite-grass.png" alt="" style="position: absolute; left: 71px; top: 427px; width: 801px; height: 195px">
+<img data-layer="Corgi" src="assets/invite-corgi.png" alt="Corgi waving hello" style="position: absolute; left: 223px; top: 114px; width: 412px; height: 492px">
+<img data-layer="Hearts" src="assets/invite-hearts.png" alt="" style="position: absolute; left: 154px; top: 200px; width: 630px; height: 239px">
+<h1 data-layer="Headline" style="position: absolute; left: 0; top: 646px; width: 941px; margin: 0; text-align: center; font-size: 70px; font-weight: 900; line-height: 1.2; letter-spacing: -0.5px; color: #3A2418">Bring your person over</h1>
+<p data-layer="Subtitle" style="position: absolute; left: 0; top: 752px; width: 941px; margin: 0; text-align: center; font-size: 34px; font-weight: 600; line-height: 1.3; color: #3A2418">Start your little shared world together.</p>
+<div data-layer="Invite card" style="position: absolute; left: 70px; top: 828px; width: 802px; height: 235px; box-sizing: border-box; border-radius: 50px; background: #FBEBD8; display: flex; flex-direction: column; align-items: center; gap: 18px; padding-top: 32px">
+<div data-layer="Invite label" style="display: flex; align-items: center; gap: 22px">
+<svg width="30" height="34" viewBox="0 0 30 34" fill="none" stroke="#F0857A" stroke-width="5" stroke-linecap="round" aria-hidden="true"><path d="M18 4 L23 13"></path><path d="M4 22 L16 25"></path></svg>
+<span style="font-size: 32px; font-weight: 700; color: #3A2418">Your invite code</span>
+<svg width="30" height="34" viewBox="0 0 30 34" fill="none" stroke="#F0857A" stroke-width="5" stroke-linecap="round" aria-hidden="true"><path d="M12 4 L7 13"></path><path d="M26 22 L14 25"></path></svg>
+</div>
+<div data-layer="Code box" style="width: 578px; height: 116px; box-sizing: border-box; border-radius: 58px; background: #FFFCF7; display: flex; align-items: center; justify-content: center; font-size: 64px; font-weight: 900; letter-spacing: 2px; color: #3A2418" id="invite-code" aria-live="polite"></div>
+</div>
+<button data-layer="Share invite button" type="button" data-act="invite-share" style="position: absolute; left: 72px; top: 1090px; width: 798px; height: 123px; border: 0; border-radius: 62px; background: #F0857A; color: #FFFFFF; font-size: 44px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 34px; cursor: pointer">Share invite<svg width="16" height="28" viewBox="0 0 16 28" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3 L13 14 L3 25"></path></svg></button>
+<button data-layer="Copy code button" type="button" data-act="invite-copy" style="position: absolute; left: 72px; top: 1238px; width: 798px; height: 118px; box-sizing: border-box; border: 3px solid #D2A47E; border-radius: 59px; background: transparent; color: #3A2418; font-size: 42px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 30px; cursor: pointer"><svg width="46" height="46" viewBox="0 0 46 46" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round" aria-hidden="true"><rect x="12" y="12" width="30" height="30" rx="6"></rect><path d="M32 6 H10 a6 6 0 0 0 -6 6 V32"></path></svg>Copy code</button>
+<p data-layer="Footer note" style="position: absolute; left: 0; top: 1410px; width: 941px; margin: 0; text-align: center; font-size: 28px; font-weight: 600; line-height: 1.3; color: #7D6D63">Once they join, your little world begins.</p>
+<button data-layer="Have a code" type="button" data-act="join-open" style="position: absolute; left: 270px; top: 1480px; width: 400px; height: 90px; border: 0; background: transparent; color: #7D6D63; font-size: 30px; font-weight: 700; text-decoration: underline; text-underline-offset: 8px; cursor: pointer">I have a code instead</button>
+</div>`,
+    buddy: `<div data-layer="Background" style="position: relative; width: 941px; height: 1672px; overflow: hidden; color: #3A2418; background-color: #FDF6EE">
+<button data-layer="Back button" type="button" data-act="auth-back" aria-label="Back" style="position: absolute; left: 35px; top: 53px; width: 60px; height: 60px; border: 0; background: transparent; color: #3A2418; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="28" height="42" viewBox="0 0 28 42" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 4 L6 21 L22 38"></path></svg></button>
+<img data-layer="Top corgi" src="assets/buddy-top-corgi.png" alt="Happy corgi" style="position: absolute; left: 197px; top: 33px; width: 548px; height: 289px">
+<h1 data-layer="Headline" style="position: absolute; left: 0; top: 345px; width: 941px; margin: 0; text-align: center; font-size: 70px; font-weight: 900; line-height: 1.2; letter-spacing: -0.5px; color: #3A2418">Pick your little buddy</h1>
+<img data-layer="Leaf" src="assets/buddy-leaf.png" alt="" style="position: absolute; left: 812px; top: 342px; width: 55px; height: 80px">
+<p data-layer="Subtitle" style="position: absolute; left: 59px; top: 437px; width: 824px; margin: 0; text-align: center; font-size: 34px; font-weight: 600; line-height: 1.4; color: #3A2418; height: 137px">You get to pick the pet first — <br>but if your partner is around, discuss with them!</p>
+<button data-layer="Corgi tile" type="button" data-buddy="corgi" aria-pressed="false" data-act="pick-buddy" aria-label="Corgi" style="position: absolute; left: 49px; top: 583px; width: 268px; height: 248px; box-sizing: border-box; border: 3px solid #F2E6D9; border-radius: 30px; background: #FEF8EE; padding: 0; cursor: pointer">
+<img src="assets/buddy-corgi.png" alt="" style="position: absolute; left: 10px; top: 19px; width: 247px; height: 194px">
+</button>
+<button data-layer="Poodle tile" type="button" data-buddy="poodle" aria-pressed="false" data-act="pick-buddy" aria-label="Poodle" style="position: absolute; left: 335px; top: 583px; width: 268px; height: 248px; box-sizing: border-box; border: 3px solid #F2E6D9; border-radius: 30px; background: #FEF8EE; padding: 0; cursor: pointer">
+<img src="assets/buddy-poodle.png" alt="" style="position: absolute; left: 14px; top: 22px; width: 239px; height: 194px">
+</button>
+<button data-layer="Golden puppy tile" type="button" data-buddy="golden" aria-pressed="false" data-act="pick-buddy" aria-label="Golden puppy" style="position: absolute; left: 621px; top: 583px; width: 268px; height: 248px; box-sizing: border-box; border: 3px solid #F2E6D9; border-radius: 30px; background: #FEF8EE; padding: 0; cursor: pointer">
+<img src="assets/buddy-golden-puppy.png" alt="" style="position: absolute; left: 9px; top: 23px; width: 249px; height: 197px">
+</button>
+<button data-layer="Tuxedo cat tile" type="button" data-buddy="tuxedo" aria-pressed="false" data-act="pick-buddy" aria-label="Tuxedo cat" style="position: absolute; left: 49px; top: 849px; width: 268px; height: 248px; box-sizing: border-box; border: 3px solid #F2E6D9; border-radius: 30px; background: #FEF8EE; padding: 0; cursor: pointer">
+<img src="assets/buddy-tuxedo-cat.png" alt="" style="position: absolute; left: 8px; top: 15px; width: 251px; height: 202px">
+</button>
+<button data-layer="Fluffy cat tile" type="button" data-buddy="fluffy" aria-pressed="false" data-act="pick-buddy" aria-label="Fluffy cat" style="position: absolute; left: 335px; top: 849px; width: 268px; height: 248px; box-sizing: border-box; border: 3px solid #F2E6D9; border-radius: 30px; background: #FEF8EE; padding: 0; cursor: pointer">
+<img src="assets/buddy-fluffy-cat.png" alt="" style="position: absolute; left: 14px; top: 14px; width: 239px; height: 201px">
+</button>
+<button data-layer="Calico cat tile" type="button" data-buddy="calico" aria-pressed="false" data-act="pick-buddy" aria-label="Calico cat" style="position: absolute; left: 621px; top: 849px; width: 268px; height: 248px; box-sizing: border-box; border: 3px solid #F2E6D9; border-radius: 30px; background: #FEF8EE; padding: 0; cursor: pointer">
+<img src="assets/buddy-calico-cat.png" alt="" style="position: absolute; left: 9px; top: 17px; width: 249px; height: 200px">
+</button>
+<button data-layer="Bunny tile" type="button" data-buddy="bunny" aria-pressed="false" data-act="pick-buddy" aria-label="Bunny" style="position: absolute; left: 49px; top: 1115px; width: 268px; height: 248px; box-sizing: border-box; border: 3px solid #F2E6D9; border-radius: 30px; background: #FEF8EE; padding: 0; cursor: pointer">
+<img src="assets/buddy-bunny.png" alt="" style="position: absolute; left: 9px; top: 23px; width: 249px; height: 191px">
+</button>
+<button data-layer="Hamster tile" type="button" data-buddy="hamster" aria-pressed="false" data-act="pick-buddy" aria-label="Hamster" style="position: absolute; left: 335px; top: 1115px; width: 268px; height: 248px; box-sizing: border-box; border: 3px solid #F2E6D9; border-radius: 30px; background: #FEF8EE; padding: 0; cursor: pointer">
+<img src="assets/buddy-hamster.png" alt="" style="position: absolute; left: 15px; top: 43px; width: 238px; height: 168px">
+</button>
+<button data-layer="Hedgehog tile" type="button" data-buddy="hedgehog" aria-pressed="false" data-act="pick-buddy" aria-label="Hedgehog" style="position: absolute; left: 621px; top: 1115px; width: 268px; height: 248px; box-sizing: border-box; border: 3px solid #F2E6D9; border-radius: 30px; background: #FEF8EE; padding: 0; cursor: pointer">
+<img src="assets/buddy-hedgehog.png" alt="" style="position: absolute; left: 9px; top: 32px; width: 249px; height: 179px">
+</button>
+<p data-layer="Footer note" style="position: absolute; left: 0; top: 1393px; width: 941px; margin: 0; text-align: center; font-size: 28px; font-weight: 600; line-height: 1.3; color: #7D6D63">You can always choose a different buddy later</p>
+
+<button data-layer="Bring buddy home button" type="button" data-act="buddy-go" style="position: absolute; left: 95px; top: 1463px; width: 751px; height: 110px; border: 0; border-radius: 55px; background: #F0857A; color: #FFFFFF; font-size: 40px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 30px; cursor: pointer">Let’s bring our buddy home<svg width="16" height="28" viewBox="0 0 16 28" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3 L13 14 L3 25"></path></svg></button>
+
+</div>`
   };
-  
+
   function fitArt() {
     var art = $('#art'), inner = $('#artin'); if (!art || !inner) return;
     var sc = art.clientWidth / 941; inner.style.transform = 'scale(' + sc + ')'; art.style.height = (1672 * sc) + 'px';
   }
   function renderAuth(app, key) {
     app.className = 'phone auth';
-    app.innerHTML = '<div class="art" id="art"><div class="art-in" id="artin" role="group" aria-label="' + ({ welcome:'Welcome', signin:'Sign in', create:'Create account' })[key] + '">' + AUTH[key] + '</div></div>';
+    app.innerHTML = '<div class="art" id="art"><div class="art-in" id="artin" role="group" aria-label="' + ({ welcome:'Welcome', signin:'Sign in', create:'Create account', invite:'Invite your person', buddy:'Pick your buddy' })[key] + '">' + AUTH[key] + '</div></div>';
     fitArt();
     var A = S.auth, set = function (id, v) { var e = $('#' + id); if (e && v) e.value = v; };
     set('si-email', A.email); set('si-pw', A.pw); set('ca-user', A.user); set('ca-pw', A.pw2);
     if (key === 'create') paintRole();
+    if (key === 'invite') { if (!S.pair.invite) S.pair.invite = newCode(); var c = $('#invite-code'); if (c) c.textContent = S.pair.invite; }
+    if (key === 'buddy') paintBuddy();
+  }
+  function newCode() { var c = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789', o = ''; for (var i = 0; i < 6; i++) o += c[Math.floor(Math.random() * c.length)]; return o; }
+  function paintBuddy() {
+    var tiles = document.querySelectorAll('[data-act="pick-buddy"]');
+    for (var i = 0; i < tiles.length; i++) {
+      var on = tiles[i].dataset.buddy === S.buddy;
+      tiles[i].setAttribute('aria-pressed', String(on)); tiles[i].style.borderColor = on ? '#EE8478' : '#F2E6D9'; tiles[i].style.background = on ? '#FFF2EC' : '#FEF8EE';
+    }
   }
   function paintRole() {
     var b = $('#role-lover'), l = $('#role-lover-label'), on = S.auth.lover; if (!b) return;
@@ -515,28 +588,8 @@ label.caption { display:block; margin-bottom:8px; }
   function renderWelcome(app) { renderAuth(app, 'welcome'); }
   function renderSignin(app) { renderAuth(app, 'signin'); }
   function renderCreate(app) { renderAuth(app, 'create'); }
-
-  function renderPair(app) {
-    var P = S.pair;
-    app.innerHTML = '<div class="screen">' +
-      '<div><p class="display h1" id="h" tabindex="-1" style="margin-bottom:6px">Who\'s your person?</p>' +
-      '<p class="body muted">Yini only works with two. Everything you write stays yours. They never see it.</p></div>' +
-      '<div class="card"><label class="caption eyebrow" for="pn">What should they call you?</label>' +
-      '<input class="field" id="pn" maxlength="40" placeholder="Your name" value="' + esc(P.name) + '" autocomplete="off"></div>' +
-      (P.invite
-        ? '<div class="card card-warm"><p class="eyebrow">Send them this code</p>' +
-          '<p class="display" style="font-size:40px;letter-spacing:.12em;margin:6px 0 12px">' + P.invite + '</p>' +
-          '<button class="btn btn-quiet" data-act="copy">Copy code</button>' +
-          '<p class="small" style="margin:12px 0">Once they enter it, you will both land on the daily check-in. You can start writing before they join. Nothing is lost.</p>' +
-          '<button class="btn" data-act="pair-start">Start without waiting</button></div>'
-        : '<div class="card"><p class="body" style="margin-bottom:14px">Start a new connection and get a code to send them.</p>' +
-          '<button class="btn" id="getcode" data-act="pair-code"' + (P.name.trim() ? '' : ' disabled') + '>Get a code</button></div>') +
-      '<div class="card"><p class="body" style="margin-bottom:14px">Or enter the code they sent you.</p>' +
-      '<label class="caption" for="pj" style="position:absolute;left:-9999px">Invite code</label>' +
-      '<input class="field" id="pj" maxlength="6" placeholder="ABC123" autocapitalize="characters" autocomplete="off" value="' + esc(P.join) + '" style="font-size:22px;letter-spacing:.16em;text-align:center">' +
-      '<button class="btn btn-quiet" id="joinbtn" data-act="pair-join" style="margin-top:12px"' + (P.join.length === 6 && P.name.trim() ? '' : ' disabled') + '>Join them</button></div>' +
-      '<p class="err" id="pairerr"></p></div>';
-  }
+  function renderInvite(app) { renderAuth(app, 'invite'); }
+  function renderBuddy(app) { renderAuth(app, 'buddy'); }
 
   function renderToday(app) {
     var d = S.data, p = petState();
@@ -657,7 +710,7 @@ label.caption { display:block; margin-bottom:8px; }
   }
 
   /* ───────── chrome ───────── */
-  var ROUTES = { welcome:renderWelcome, signin:renderSignin, create:renderCreate, pair:renderPair, today:renderToday, log:renderLog, problems:renderProblems, compliments:renderCompliments };
+  var ROUTES = { welcome:renderWelcome, signin:renderSignin, create:renderCreate, invite:renderInvite, buddy:renderBuddy, today:renderToday, log:renderLog, problems:renderProblems, compliments:renderCompliments };
   function tabs() {
     var el = $('#tabs'), show = ['today', 'problems', 'compliments'].indexOf(S.route) > -1;
     el.hidden = !show; if (!show) return;
@@ -685,11 +738,11 @@ label.caption { display:block; margin-bottom:8px; }
     var r = (location.hash || '').replace('#', '');
     if (r === 'login') r = 'welcome';
     if (!ROUTES[r]) r = 'welcome';
-    if (!S.me && ['welcome', 'signin', 'create', 'pair'].indexOf(r) < 0) r = 'welcome';
+    if (!S.me && ['welcome', 'signin', 'create', 'invite', 'buddy'].indexOf(r) < 0) r = 'welcome';
     if (r !== S.route) moved = true;
     S.route = r;
     var app = $('#app'); app.className = 'phone'; app.removeAttribute('style');
-    document.body.classList.toggle('yini', ['welcome', 'signin', 'create'].indexOf(r) > -1);
+    document.body.classList.toggle('yini', ['welcome', 'signin', 'create', 'invite', 'buddy'].indexOf(r) > -1);
     ROUTES[r](app); tabs(); demoChrome();
     try { if (location.hash.replace('#', '') !== r) history.replaceState(null, '', '#' + r); } catch (e) {}
     if (moved) { window.scrollTo(0, 0); var h = $('#h'); if (h) h.focus({ preventScroll:true }); }
@@ -765,43 +818,54 @@ label.caption { display:block; margin-bottom:8px; }
 
   /* ───────── actions ───────── */
   function start(who) {
-    S.me = who; S.data = JSON.parse(JSON.stringify(SEED[who]));
+    S.me = who; S.data = JSON.parse(JSON.stringify(SEED[who])); if (!S.buddy) S.buddy = 'corgi';
     if (S.pair.name.trim() && who === 'avery') S.data.name = S.pair.name.trim();
     go('today');
   }
   var ACT = {
     'get-started': function () { go('create'); },
-    'auth-back': function () { go('welcome'); },
+    'auth-back': function () { go({ signin:'welcome', create:'welcome', invite:'create', buddy:'invite' }[S.route] || 'welcome'); },
     'to-create': function (t, e) { e.preventDefault(); go('create'); },
     'toggle-pw': function (t) {
       var i = $('#' + t.dataset.for); if (!i) return; var show = i.type === 'password';
       i.type = show ? 'text' : 'password'; t.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
     },
-    'auth-google': function () { if (S.route === 'signin') start('avery'); else go('pair'); },
+    'auth-google': function () { if (S.route === 'signin') start('avery'); else go('invite'); },
     'signin-go': function () { start(/^\s*sam/i.test(S.auth.email) ? 'sam' : 'avery'); },
     'pick-lover': function () { S.auth.lover = !S.auth.lover; paintRole(); },
     'create-go': function () {
       if (!S.auth.lover) return toast('Pick who you\u2019re here with first.');
       if (S.auth.user.trim()) S.pair.name = S.auth.user.trim();
-      go('pair');
+      go('invite');
     },
     demo: function (t) { S.demoOpen = false; start(t.dataset.who); },
     go: function (t) { go(t.dataset.to); },
     hello: function () { closeSheet(); if (S.route === 'today' || S.route === 'log') render(); },
     'sheet-close': closeSheet,
     scrim: function (t, e) { if (e.target === t) closeSheet(); },
-    'pair-code': function () {
-      var c = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789', s = ''; for (var i = 0; i < 6; i++) s += c[Math.floor(Math.random() * c.length)];
-      S.pair.invite = s; render();
+    'invite-share': function () {
+      var msg = 'Come join me on Yini. Use my code ' + S.pair.invite + '.';
+      try { navigator.clipboard.writeText(msg).then(function () { toast('Invite copied. Paste it to your person.'); }, function () { toast('Your code is ' + S.pair.invite + '.'); }); } catch (e) { toast('Your code is ' + S.pair.invite + '.'); }
+      setTimeout(function () { if (S.route === 'invite') go('buddy'); }, 900);
     },
-    'pair-start': function () { start('avery'); },
-    'pair-join': function () { start('sam'); },
-    copy: function () {
-      var code = S.pair.invite;
-      try { navigator.clipboard.writeText(code).then(function () { toast('Code copied.'); }, function () { toast('Select the code to copy it.'); }); } catch (e) { toast('Select the code to copy it.'); }
+    'invite-copy': function () {
+      try { navigator.clipboard.writeText(S.pair.invite).then(function () { toast('Code copied.'); }, function () { toast('Your code is ' + S.pair.invite + '.'); }); } catch (e) { toast('Your code is ' + S.pair.invite + '.'); }
+    },
+    'join-open': function () {
+      $('#layer').innerHTML = '<div class="scrim" data-act="scrim"><div class="sheet ysheet" role="dialog" aria-modal="true" aria-label="Join with a code"><div class="grabber"></div>' +
+        '<p class="ytitle">Enter your person\u2019s code</p><label for="joincode" style="position:absolute;left:-9999px">Invite code</label>' +
+        '<input class="field yfield" id="joincode" maxlength="6" placeholder="ABC123" autocapitalize="characters" autocomplete="off">' +
+        '<button class="ybtn" id="joinbtn" data-act="join-go" disabled>Join them</button><button class="link" data-act="sheet-close">Close</button></div></div>';
+      var i = $('#joincode'); if (i) i.focus();
+    },
+    'join-go': function () { closeSheet(); S.buddy = S.buddy || 'corgi'; start('sam'); toast('You are in. Their buddy is waiting.'); },
+    'pick-buddy': function (t) { S.buddy = S.buddy === t.dataset.buddy ? null : t.dataset.buddy; paintBuddy(); },
+    'buddy-go': function () {
+      if (!S.buddy) return toast('Pick a buddy first.');
+      start('avery');
     },
     pet: function () {
-      var p = petState(), slot = $('#petslot'), svg = slot && $('svg', slot);
+      var p = petState(), slot = $('#petslot'), svg = slot && $('.pet-svg', slot);
       if (svg && !reduced()) { svg.classList.remove('wobble'); void svg.getBoundingClientRect(); svg.classList.add('wobble'); }
       if (!p.hatched || reduced() || !slot) return;
       var wrap = slot.parentNode;
@@ -866,8 +930,7 @@ label.caption { display:block; margin-bottom:8px; }
     if (t.id === 'si-email') S.auth.email = t.value; if (t.id === 'si-pw') S.auth.pw = t.value;
     if (t.id === 'ca-user') S.auth.user = t.value; if (t.id === 'ca-pw') S.auth.pw2 = t.value;
     if (t.id === 'entry') { S.rec.text = t.value; var b = $('#sendbtn'); if (b && S.rec.phase === 'capture') b.disabled = !t.value.trim(); }
-    if (t.id === 'pn') { S.pair.name = t.value; var g = $('#getcode'), j = $('#joinbtn'); if (g) g.disabled = !t.value.trim(); if (j) j.disabled = !(S.pair.join.length === 6 && t.value.trim()); }
-    if (t.id === 'pj') { t.value = t.value.toUpperCase(); S.pair.join = t.value; var j2 = $('#joinbtn'); if (j2) j2.disabled = !(t.value.length === 6 && S.pair.name.trim()); }
+    if (t.id === 'joincode') { t.value = t.value.toUpperCase(); var jb = $('#joinbtn'); if (jb) jb.disabled = t.value.length !== 6; }
     if (t.id === 'questin') { var q = $('#questbtn'); if (q) q.disabled = !t.value.trim(); }
   });
   document.addEventListener('keydown', function (e) {

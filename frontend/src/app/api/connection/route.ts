@@ -43,7 +43,7 @@ export const POST = actionRoute(actionTypes.createConnection, async ({ input, us
       .insert({ invite_code: code(), kind: 'partner' }).select('id, invite_code').single();
     if (error) continue;
     await db.from('connection_members').insert({ connection_id: conn.id, user_id: user.id });
-    await db.from('pets').insert({ connection_id: conn.id, name: 'Egg' });
+    await db.from('pets').insert({ connection_id: conn.id, name: 'Egg', species: input.species ?? null });
     await db.from('profiles').update({ default_connection_id: conn.id }).eq('id', user.id);
     return { invite_code: conn.invite_code };
   }

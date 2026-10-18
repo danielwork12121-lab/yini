@@ -104,3 +104,12 @@ textarea.entry:focus { outline:2px solid var(--primary-tint); outline-offset:1px
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ── Legal / long-form text pages (privacy) ── */
+.legal { max-width: 640px; margin: 0 auto; padding: 32px 20px 64px; line-height: 1.6; }
+.legal-back { display: inline-block; margin-bottom: 20px; color: var(--ink-muted); text-decoration: none; }
+.legal-title { font-size: 36px; margin: 0 0 4px; }
+.legal h2 { font-size: 22px; margin: 32px 0 8px; }
+.legal p, .legal li { color: var(--ink); }
+.legal ul { padding-left: 20px; display: grid; gap: 10px; }
+.legal a { color: var(--primary-press); }

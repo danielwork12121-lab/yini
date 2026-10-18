@@ -6,7 +6,7 @@ import { zTimestamp, zUuid } from './_fields';
 export const PetSchema = z.object({
   connection_id: zUuid,
   name: z.string().min(1).max(24),
-  species: z.enum(PET_SPECIES).nullable().describe('Null until chosen. The egg defers the decision.'),
+  species: z.enum(PET_SPECIES).nullable().describe('The buddy picked at sign-up. Null only if none was picked. Not shown until the egg hatches.'),
   hatched_at: zTimestamp.nullable().describe('Set on the first day BOTH people logged.'),
   xp: z.number().int().nonnegative().default(0).describe('Follow-through on nudges and quests. Separate from feedings, which are attendance.'),
   created_at: zTimestamp,
