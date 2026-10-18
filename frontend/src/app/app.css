@@ -448,3 +448,9 @@ body { background: #FDF6EE; }
 .rf-wait { display: flex; align-items: center; gap: 10px; margin: 0; min-height: 44px; font-size: max(13px, calc(27 * var(--u))); font-weight: 700; color: var(--muted); }
 .rf-err { margin: 0; font-size: max(12px, calc(24 * var(--u))); font-weight: 600; color: #9E4A33; }
 .rf-voice svg, .rf-again svg { width: 18px; height: 18px; flex: none; }
+
+/* Notice quests */
+.sug-tags { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.sug-cat-notice { background: #E7EDDA; color: #56663F; }
+.rf-tell { appearance: none; cursor: pointer; border: 2px solid #F3C3B8; background: #FDEEE8; color: #C9483A; border-radius: 9999px; min-height: 44px; font: inherit; font-size: max(14px, calc(30 * var(--u))); font-weight: 800; }
+.rf-tell:disabled { opacity: .5; cursor: default; }

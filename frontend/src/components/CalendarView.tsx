@@ -191,7 +191,8 @@ export function CalendarView() {
               {open.grow.map((g, i) => (
                 <div key={i} className="step-row">
                   <span className="step-tick"><CheckIcon /></span>
-                  <span className="step-body"><b>{g.text}</b>{g.outcome && <small>{OUTCOME_LINE[g.outcome]}</small>}</span>
+                  <span className="step-body"><b>{g.kind === 'notice' ? 'You noticed something kind' : g.text}</b>
+                    {g.kind === 'notice' ? (g.note && <small>{g.note}</small>) : (g.outcome && <small>{OUTCOME_LINE[g.outcome]}</small>)}</span>
                 </div>
               ))}
             </div>

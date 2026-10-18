@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { GlowBig, HeartSmall, HeartToggle, PauseIcon, PlayIcon, PlusIcon } from '@/components/app/icons';
 import type { GlowResponse, LoveNotesResponse, LoveNoteView } from '@/contract';
 import { fetchJson, HttpError, peekJson, putJson } from '@/lib/cachedJson';
-import { LoveComposer } from '@/components/love/LoveComposer';
+import { LoveComposer, LOVE_DRAFT_KEY } from '@/components/love/LoveComposer';
 import { clock } from '@/components/love/useVoiceNote';
 
 const shortDate = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
@@ -26,8 +26,17 @@ export function GlowView() {
   const [tab, setTab] = useState<'notes' | 'things'>('notes');
   const [filter, setFilter] = useState<Filter>('all');
   const [composing, setComposing] = useState(false);
+  const [draft, setDraft] = useState('');
   const [toast, setToast] = useState(false);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+
+  // A "tell them" from Grow arrives as a draft: open the composer with it ready.
+  useEffect(() => {
+    try {
+      const d = sessionStorage.getItem(LOVE_DRAFT_KEY);
+      if (d) { sessionStorage.removeItem(LOVE_DRAFT_KEY); queueMicrotask(() => { setDraft(d); setComposing(true); }); }
+    } catch { /* a convenience only */ }
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -150,7 +159,7 @@ export function GlowView() {
       <p className="foot">{notes ? `Notes are only ever what ${partner} chose to send you.` : `Only the kind parts cross over. Everything else ${partner} writes stays ${partner}’s.`}</p>
 
       {toast && <div className="toast" role="status">Your note is on its way ♡</div>}
-      {composing && <LoveComposer partner={partner} onClose={() => setComposing(false)} onSent={(r) => sent(r.note)} />}
+      {composing && <LoveComposer partner={partner} initialText={draft} onClose={() => { setComposing(false); setDraft(''); }} onSent={(r) => sent(r.note)} />}
     </main>
   );
 }

@@ -1,4 +1,5 @@
 'use client';
+import { questOf } from '@/lib/quest';
 import { useCallback, useEffect, useState } from 'react';
 import type { DailyFeedbackView, FeedbackLatestResponse } from '@/contract';
 import { createClient } from '@/lib/supabase/client';
@@ -46,7 +47,7 @@ export function DailyFeedback({ demo }: { demo: boolean }) {
         <>
           <p style={{ color: 'var(--ink)', fontWeight: 700 }}>{feedback.headline}</p>
           <ul style={{ margin: '8px 0 0', paddingLeft: 18 }}>
-            {feedback.bullets.map((b, i) => <li key={i} style={{ marginBottom: 6 }}>{b}</li>)}
+            {feedback.bullets.map((b, i) => <li key={i} style={{ marginBottom: 6 }}>{questOf(b).text}</li>)}
           </ul>
         </>
       ) : (

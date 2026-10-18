@@ -1,5 +1,8 @@
 'use client';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { questOf } from '@/lib/quest';
+import { LOVE_DRAFT_KEY } from '@/components/love/LoveComposer';
 import { BookmarkIcon, CheckIcon, MicSmall, SproutBig, SproutSmall } from '@/components/app/icons';
 import { LiveBars } from '@/components/app/LiveBars';
 import { clock, useVoiceNote } from '@/components/love/useVoiceNote';
@@ -29,6 +32,7 @@ const writeSeen = (seen: Set<string>) => {
  * it and it moves to a quiet list at the bottom; whatever is new stands out at the top.
  */
 export function GrowView() {
+  const router = useRouter();
   const [data, setData] = useState<GrowResponse | null>(null);
   const [error, setError] = useState('');
   const [attempt, setAttempt] = useState(0);
@@ -209,12 +213,12 @@ export function GrowView() {
               <li key={d.text} className="sug sug-done">
                 <div className="sug-text">
                   {d.outcome && <span className="sug-outcome">{OUTCOME_LABEL[d.outcome]}</span>}
-                  <h3>{d.text}</h3>
+                  <h3>{questOf(d.text).text}</h3>
                   {d.reflection && <p className="sug-note">“{d.reflection}”</p>}
                   <button type="button" className="linkbtn linkbtn-sm" style={{ alignSelf: 'flex-start' }} onClick={() => setSheet({ text: d.text, mode: 'done' })}>{d.outcome ? 'Edit reflection' : 'Reflect'}</button>
                 </div>
                 <div className="sug-act">
-                  <button type="button" className="sug-badge" aria-label={`Done: ${d.text}. Tap to mark as not done.`} onClick={() => void update(d.text, { status: 'open' })}>
+                  <button type="button" className="sug-badge" aria-label={`Done: ${questOf(d.text).text}. Tap to mark as not done.`} onClick={() => void update(d.text, { status: 'open' })}>
                     <CheckIcon />Done
                   </button>
                 </div>
@@ -232,7 +236,7 @@ export function GrowView() {
               <li key={d.text} className="sug sug-done">
                 <div className="sug-text">
                   {d.outcome && <span className="sug-outcome sug-outcome-quiet">{OUTCOME_LABEL[d.outcome]}</span>}
-                  <h3>{d.text}</h3>
+                  <h3>{questOf(d.text).text}</h3>
                   {d.reflection && <p className="sug-note">“{d.reflection}”</p>}
                   <button type="button" className="linkbtn linkbtn-sm" style={{ alignSelf: 'flex-start' }} onClick={() => setSheet({ text: d.text, mode: 'skipped' })}>{d.outcome ? 'Edit reflection' : 'Reflect'}</button>
                 </div>
@@ -266,7 +270,15 @@ export function GrowView() {
           key={sheet.text + sheet.mode}
           text={sheet.text} mode={sheet.mode}
           initialOutcome={sheetItem?.outcome ?? null} initialNote={sheetItem?.reflection ?? ''}
-          onSave={(outcome, note) => { void update(sheet.text, { outcome, reflection: note }); setSheet(null); }}
+          partner={partner}
+          onSave={(outcome, note, tell) => {
+            void update(sheet.text, { outcome, reflection: note });
+            setSheet(null);
+            if (tell && note.trim()) {
+              try { sessionStorage.setItem(LOVE_DRAFT_KEY, note.trim()); } catch { /* the note is still saved */ }
+              router.push('/glow');
+            }
+          }}
           onClose={() => setSheet(null)}
         />
       )}
@@ -286,28 +298,36 @@ function Task({ text, isNew, saved, leaving, onResolve, onSave, label }: {
   text: string; isNew: boolean; saved: boolean; leaving: boolean; label: string;
   onResolve: (t: string, status: 'done' | 'skipped') => void; onSave: (t: string, on: boolean) => void;
 }) {
+  const quest = questOf(text);
+  const notice = quest.kind === 'notice';
   return (
     <li className={`sug${isNew ? ' sug-new' : ''}${saved ? ' sug-saved' : ''}${leaving ? ' sug-leave' : ''}`}>
       <div className="sug-text">
         <div className="sug-top">
-          <span className={`sug-cat${isNew ? ' sug-cat-new' : ''}`}>{isNew ? 'New' : label}</span>
+          <span className="sug-tags">
+            <span className={`sug-cat${isNew ? ' sug-cat-new' : ''}`}>{isNew ? 'New' : label}</span>
+            {notice && <span className="sug-cat sug-cat-notice">Notice</span>}
+          </span>
           <button type="button" className="sug-mark" aria-pressed={saved} aria-label={saved ? 'Remove from saved' : 'Save for later, at the top'} onClick={() => onSave(text, !saved)}><BookmarkIcon on={saved} /></button>
         </div>
-        <h3>{text}</h3>
+        <h3>{quest.text}</h3>
       </div>
       <div className="sug-act sug-act-col">
-        <button type="button" className="pill pill-green sug-btn" aria-label={`Mark as done: ${text}`} onClick={() => onResolve(text, 'done')}>I did it</button>
-        <button type="button" className="sug-skip" aria-label={`Not this time: ${text}`} onClick={() => onResolve(text, 'skipped')}>Not this time</button>
+        <button type="button" className="pill pill-green sug-btn" aria-label={`${notice ? 'Mark as noticed' : 'Mark as done'}: ${quest.text}`} onClick={() => onResolve(text, 'done')}>{notice ? 'I noticed' : 'I did it'}</button>
+        <button type="button" className="sug-skip" aria-label={`Not this time: ${quest.text}`} onClick={() => onResolve(text, 'skipped')}>Not this time</button>
       </div>
     </li>
   );
 }
 
 /** "How did that little step go?" Pick how it went, add a line only you and Yini see, or skip. */
-function ReflectSheet({ text, mode, initialOutcome, initialNote, onSave, onClose }: {
-  text: string; mode: 'done' | 'skipped'; initialOutcome: GrowOutcome | null; initialNote: string;
-  onSave: (outcome: GrowOutcome, note: string) => void; onClose: () => void;
+function ReflectSheet({ text: raw, mode, partner, initialOutcome, initialNote, onSave, onClose }: {
+  text: string; mode: 'done' | 'skipped'; partner: string; initialOutcome: GrowOutcome | null; initialNote: string;
+  onSave: (outcome: GrowOutcome, note: string, tell?: boolean) => void; onClose: () => void;
 }) {
+  const { kind, text } = questOf(raw);
+  // A notice quest has no "how did it go": the point is what they noticed.
+  const noticing = kind === 'notice' && mode === 'done';
   const [outcome, setOutcome] = useState<GrowOutcome | null>(initialOutcome);
   const [note, setNote] = useState(initialNote);
   const [typing, setTyping] = useState(initialNote.length > 0);
@@ -326,17 +346,17 @@ function ReflectSheet({ text, mode, initialOutcome, initialNote, onSave, onClose
       <div className="sheet-scrim" onClick={onClose} />
       <div className="sheet" role="dialog" aria-modal="true" aria-labelledby="reflect-title">
         <div className="sheet-grab" />
-        <h2 id="reflect-title">{skipped ? 'That’s okay ♡' : 'How did that little step go? ♡'}</h2>
+        <h2 id="reflect-title">{skipped ? 'That’s okay ♡' : noticing ? 'What did you notice? ♡' : 'How did that little step go? ♡'}</h2>
         <p className="sheet-sub">{skipped ? `What got in the way of: ${text}` : text}</p>
-        <div className="opts" role="radiogroup" aria-label={skipped ? 'What got in the way' : 'How it went'}>
+        {!noticing && <div className="opts" role="radiogroup" aria-label={skipped ? 'What got in the way' : 'How it went'}>
           {options.map((o) => (
             <button key={o} type="button" role="radio" aria-checked={outcome === o} className="opt" onClick={() => setOutcome(o)}>
               {skipped ? SKIP_LABEL[o] : OUTCOME_LABEL[o]}
             </button>
           ))}
-        </div>
+        </div>}
         <div className="rf-why">
-          <span className="rf-q">Why did you pick that?</span>
+          <span className="rf-q">{noticing ? `What did ${partner} do, even something small?` : 'Why did you pick that?'}</span>
           {voice.phase === 'recording' ? (
             <div className="rf-rec" role="status" aria-label="Recording">
               <LiveBars stream={voice.stream} />
@@ -355,7 +375,7 @@ function ReflectSheet({ text, mode, initialOutcome, initialNote, onSave, onClose
               )}
               {typing && (
                 <>
-                  <textarea aria-label="Why did you pick that?" value={note} onChange={(e) => setNote(e.target.value)} maxLength={600} placeholder="A few words is plenty. Only you and Yini see this" />
+                  <textarea aria-label={noticing ? `What did ${partner} do?` : 'Why did you pick that?'} value={note} onChange={(e) => setNote(e.target.value)} maxLength={600} placeholder="A few words is plenty. Only you and Yini see this" />
                   <button type="button" className="rf-again" onClick={() => void voice.start()}><MicSmall />{note ? 'Say it again' : 'Voice input'}</button>
                 </>
               )}
@@ -363,7 +383,17 @@ function ReflectSheet({ text, mode, initialOutcome, initialNote, onSave, onClose
           )}
           {voice.error && <p className="rf-err" role="alert">{voice.error}</p>}
         </div>
-        <button type="button" className="cta-big" disabled={!outcome || voice.phase === 'recording' || voice.phase === 'transcribing'} onClick={() => outcome && onSave(outcome, note)}>Save reflection</button>
+        {(() => {
+          const busy = voice.phase === 'recording' || voice.phase === 'transcribing';
+          const chosen: GrowOutcome | null = noticing ? 'went_well' : outcome;
+          const ok = !!chosen && !busy && (!noticing || note.trim().length > 0);
+          return (
+            <>
+              <button type="button" className="cta-big" disabled={!ok} onClick={() => chosen && onSave(chosen, note)}>Save reflection</button>
+              {noticing && <button type="button" className="rf-tell" disabled={!ok} onClick={() => chosen && onSave(chosen, note, true)}>Save and tell {partner} ♡</button>}
+            </>
+          );
+        })()}
         <button type="button" className="cta-quiet" onClick={onClose}>Skip for now</button>
       </div>
     </>

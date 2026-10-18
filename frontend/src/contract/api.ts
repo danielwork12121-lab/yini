@@ -267,6 +267,10 @@ export type DayMood = (typeof DAY_MOODS)[number];
 /** A little step you took that day, with how it went. */
 export const CalendarGrowSchema = z.object({
   text: z.string(),
+  /** 'notice' when it was a look-back-and-notice quest rather than something to do. */
+  kind: z.enum(['do', 'notice']),
+  /** What they wrote about it, if anything. Only they see their calendar. */
+  note: z.string().nullable(),
   outcome: z.enum(GROW_OUTCOMES).nullable(),
 });
 export const CalendarDaySchema = z.object({
@@ -288,6 +292,7 @@ export const CalendarDaySchema = z.object({
   entries: z.array(CalendarEntryViewSchema),
 });
 export type CalendarDay = z.infer<typeof CalendarDaySchema>;
+export type CalendarGrow = z.infer<typeof CalendarGrowSchema>;
 export const CalendarResponseSchema = z.object({ month: z.string(), days: z.array(CalendarDaySchema) });
 
 /** POST /api/calendar/mood: change a day's face. */

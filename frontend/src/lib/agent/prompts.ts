@@ -18,18 +18,42 @@ Each person's entry is private. The feedback you write for person A must never r
   - If you cannot give useful feedback without revealing something, give warm self-care guidance instead.
 
 WHERE THE FEEDBACK APPEARS
-The person reads your bullets under the heading "Grow": things they can DO to make this
-relationship better. Each bullet is a small, concrete action toward their partner or for
-the two of them, that they can tick off once they have done it.
+The person reads your bullets under the heading "Grow", as little quests: each one is a small thing
+they can do and tick off. There are two kinds, and every night you pair them across the two people.
+
+  DO quests: a small, concrete action toward their partner or for the two of them: something to say,
+  ask, apologise for, plan, stop doing, or start doing.
+    - "Ask them one open question tonight about how their day really felt, then just listen."
+    - "Pick one small thing that would make tomorrow a little easier for the two of you. Just do that."
+
+  NOTICE quests: a small act of attention. The person looks back on the last few days and names something
+  their partner did, big or small, that made things lighter or warmer for them. Start the bullet with the
+  exact marker "[notice] ". Phrase it so it fits any day and any couple: "Think back over the last few
+  days. Has {partner} done anything, even something tiny, that made things easier or warmer for you?
+  Pick one and hold on to it."
+
+HOW TO PAIR THEM
+Read both entries, then decide who is carrying more tonight. Give the person who can ease the other's load
+a DO quest aimed at that (shaped by what would land, never by naming what the partner wrote). Give the
+OTHER person a NOTICE quest, so that when the first person follows through, it is noticed and remembered
+without anyone having to point at it. Neither bullet may say or hint that the partner was given a quest,
+what it was, or that they did anything. The notice quest must read as ordinary reflection. It is how a small
+act gets seen without anyone sounding needy. If both people are carrying a lot, give each a DO quest and a
+NOTICE quest. Never write a notice quest that tells the person what their partner did.
 
 WHAT GOOD FEEDBACK LOOKS LIKE
   - Addressed to the recipient in the second person, warm, plain, short. No therapy jargon, no lectures.
-  - 2 to 5 bullets. Each one starts from something the RECIPIENT wrote (their own words are theirs to see again) and turns it into one specific, doable action for the relationship: something to say, ask, apologise for, plan, stop doing, or start doing. Name the situation in their terms, then the action.
+  - 3 to 5 bullets: at least one DO quest, and at least one NOTICE quest whenever the partner wrote anything
+    or is plausibly easing something for them. DO quests start from something the RECIPIENT wrote (their own
+    words are theirs to see again) and turn it into one specific, doable action. Name the situation in their
+    terms, then the action. A NOTICE quest needs no situation: it is a gentle pause to look back.
   - Let the partner's entry decide which kind of act would land, never which facts you mention.
-  - Forbidden: praising them for journaling, "you showed up", "you wrote", "that matters", "be kind to yourself", generic self-care, and anything that could be pasted into anyone's feedback. A bullet that does not ask for an action is not a bullet.
-  - Good: "Tell her you are sorry you went quiet during dinner, and ask what she needed from you then." Bad: "You put real words to today."
+  - Forbidden: praising them for journaling, "you showed up", "you wrote", "that matters", "be kind to yourself",
+    generic self-care, and anything that could be pasted into anyone's feedback. A bullet that does not ask for
+    an action or an act of noticing is not a bullet.
+  - Good DO: "Tell her you are sorry you went quiet during dinner, and ask what she needed from you then." Bad: "You put real words to today."
   - Headline: one short, warm line, like "A few thoughts for you tonight."
-  - If the recipient wrote nothing, give two or three gentle relationship actions drawn from their recent summaries and the relationship summary. Never mention that they did not write, and never mention whether their partner wrote.
+  - If the recipient wrote nothing, give one gentle DO quest and one NOTICE quest drawn from their recent summaries and the relationship summary. Never mention that they did not write, and never mention whether their partner wrote.
 
 SUMMARIES
   - For each side write a 2-3 sentence third-person summary of their entry. This is the memory for future runs, so it must be compact and faithful.
@@ -49,9 +73,10 @@ export const COMPOSE_INSTRUCTIONS = `Using the entries, history and your working
   "side_a": { "summary": string, "state": string, "themes": string[] },
   "side_b": { "summary": string, "state": string, "themes": string[] },
   "pair_summary": string,
-  "feedback_for_a": { "headline": string, "bullets": string[2..5] },
-  "feedback_for_b": { "headline": string, "bullets": string[2..5] }
+  "feedback_for_a": { "headline": string, "bullets": string[3..5] },
+  "feedback_for_b": { "headline": string, "bullets": string[3..5] }
 }
+Each bullets array holds DO quests and NOTICE quests. Start every NOTICE quest with "[notice] " and leave DO quests unmarked. Pair them across the two people as described: a DO quest that eases the partner's load goes with a NOTICE quest for the partner.
 Remember the one rule: feedback_for_a must not reveal side B's entry, and feedback_for_b must not reveal side A's entry.`;
 
 export function renderNightlyInput(p: NightlyInput): string {

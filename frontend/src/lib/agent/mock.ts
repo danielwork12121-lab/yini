@@ -23,7 +23,8 @@ export function mockNightly(p: NightlyInput): NightlyOutput {
       me.entries_text
         ? 'Tell them one thing from today that you appreciated about them, in a sentence, out loud.'
         : 'Send them a short message tomorrow morning just to say you are thinking of them.',
-      'Pick one small, concrete kindness for tomorrow and do it without announcing it.',
+      'Pick one small thing that would make tomorrow a little easier for the two of you. Just do that.',
+      `[notice] Think back over the last few days. Has ${partner.display_name} done anything, even something tiny, that made things easier or warmer for you? Pick one and hold on to it.`,
     ];
     const leak = (partner.entries_text ?? '').split(/\s+/).slice(0, 12).join(' ');
     if (leak.split(' ').length >= 6) bullets.push(`Your partner wrote: ${leak}`);
