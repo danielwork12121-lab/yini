@@ -12,13 +12,13 @@ const LEAVE_AT_MS = 3200;
 
 const longDate = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
 
-type Arrival = { from: string; to: string; go: boolean };
+type Arrival = { from: string; to: string };
 
 /**
  * Watches the app's clock. When a new day begins (a demo fast-forward, or midnight on
- * the server's clock) it asks the page to look again, shows a "new day" card with the
- * calendar flipping to the new date, and takes you to your calendar. On the record page
- * it never moves you, so nobody loses a half-finished log.
+ * the server's clock) it asks the page to look again and shows a short "new day" card
+ * with the calendar flipping to the new date. It is only a message: it never moves you
+ * to another page, and it never gets in the way of a half-finished log.
  */
 export function DayWatcher() {
   const clock = useAppClock();
@@ -41,30 +41,23 @@ export function DayWatcher() {
     router.refresh(); // new day: the server looks again, which also starts the overnight read behind Grow
     const today = deviceToday();
     setFlipped(false);
-    setArrival({ from: addDays(today, before), to: addDays(today, clock.offset), go: here !== '/today' && here !== '/calendar' });
+    setArrival({ from: addDays(today, before), to: addDays(today, clock.offset) });
   }, [clock.loaded, clock.offset, router]);
 
   useEffect(() => {
     if (!arrival) return;
     const flip = setTimeout(() => setFlipped(true), FLIP_AT_MS);
-    const leave = setTimeout(() => {
-      if (arrival.go) router.push('/calendar');
-      setArrival(null);
-    }, LEAVE_AT_MS);
+    const leave = setTimeout(() => setArrival(null), LEAVE_AT_MS);
     return () => { clearTimeout(flip); clearTimeout(leave); };
-  }, [arrival, router]);
+  }, [arrival]);
 
   if (!arrival) return null;
   return (
-    <div className="daywatch" role="status" aria-live="polite">
+    <div className="daywatch" role="status" aria-live="polite" onClick={() => setArrival(null)}>
       <div className="daywatch-card">
         <DateTile date={flipped ? arrival.to : arrival.from} large />
         <p className="daywatch-title">A new day</p>
-        <p className="daywatch-date">{longDate(arrival.to)}</p>
-        <div className="daywatch-actions">
-          <button type="button" className="ypet-btn daywatch-go" onClick={() => { setArrival(null); router.push('/calendar'); }}>See your calendar</button>
-          <button type="button" className="ypet-again" onClick={() => setArrival(null)}>{arrival.go ? 'Stay here' : 'Keep going'}</button>
-        </div>
+        <p className="daywatch-date">Today is {longDate(arrival.to)}</p>
       </div>
     </div>
   );

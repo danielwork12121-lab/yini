@@ -313,13 +313,17 @@ export type PartnerNeedView = z.infer<typeof PartnerNeedViewSchema>;
 /**
  * GET /api/grow. Things you could do to grow the relationship, worked out overnight
  * from both people's logs. `working` means a day is still being read, so the client
- * polls; `empty` means nothing has been logged yet.
+ * polls; `empty` means nothing has been logged yet; `waiting` means today is logged
+ * and the read happens once the day ends.
  */
 export const GrowResponseSchema = z.object({
   partner_display_name: z.string(),
-  status: z.enum(['empty', 'working', 'ready', 'failed']),
+  /** waiting: you have logged today and the day is not over yet, so there is nothing to read until tonight. */
+  status: z.enum(['empty', 'waiting', 'working', 'ready', 'failed']),
   feedback: z.array(DailyFeedbackViewSchema),
   from_partner: z.array(PartnerNeedViewSchema),
+  /** Why the read could not run, in plain words, when status is `failed`. Null otherwise. */
+  problem: z.string().nullable(),
 });
 export type GrowResponse = z.infer<typeof GrowResponseSchema>;
 

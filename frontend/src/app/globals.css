@@ -232,6 +232,7 @@ button.cal-cell:focus-visible, .cal-step:focus-visible, .cal-close:focus-visible
 .gg-note { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 13px 16px;
   margin-bottom: 16px; font-size: 15px; font-weight: 600; line-height: 1.4; color: var(--ink-muted); }
 .gg-note-warn { justify-content: space-between; color: #9E4A33; }
+.gg-why { display: block; margin-top: 4px; font-size: 12px; opacity: .8; word-break: break-word; }
 .gg-section { margin-top: 26px; }
 .gg-h { font-family: var(--font-display), Georgia, serif; font-size: 19px; margin: 0 0 10px; letter-spacing: -.2px; }
 .gg-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
@@ -276,11 +277,9 @@ button.cal-cell:focus-visible, .cal-step:focus-visible, .cal-close:focus-visible
 .daywatch { position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; padding: 24px;
   background: rgba(42, 37, 32, .42); animation: daywatchin .25s var(--ease); }
 @keyframes daywatchin { from { opacity: 0; } to { opacity: 1; } }
-.daywatch-card { width: 100%; max-width: 340px; background: var(--canvas); border-radius: 30px; padding: 30px 24px 18px; text-align: center; display: flex; flex-direction: column; align-items: center;
+.daywatch-card { width: 100%; max-width: 340px; background: var(--canvas); border-radius: 30px; padding: 30px 24px 26px; text-align: center; display: flex; flex-direction: column; align-items: center;
   font-family: var(--font-art), 'Nunito', system-ui, sans-serif; color: #3A2418; box-shadow: 0 24px 60px rgba(42,37,32,.3); animation: daywatchup .4s var(--ease-bounce); }
 @keyframes daywatchup { from { transform: translateY(24px) scale(.96); opacity: 0; } to { transform: none; opacity: 1; } }
 .daywatch-title { margin: 0; font-size: 28px; font-weight: 900; letter-spacing: -.2px; }
-.daywatch-date { margin: 4px 0 20px; font-size: 17px; font-weight: 700; color: #7D6D63; }
-.daywatch-actions { width: 100%; display: grid; gap: 2px; }
-.daywatch-go { min-height: 54px; font-size: 18px; }
+.daywatch-date { margin: 4px 0 0; font-size: 17px; font-weight: 700; color: #7D6D63; }
 @media (prefers-reduced-motion: reduce) { .dateicon-d, .daywatch, .daywatch-card { animation: none; } }
