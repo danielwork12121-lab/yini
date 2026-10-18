@@ -28,12 +28,13 @@ const FACE: Record<EmotionalState, number> = { rough: 1, strained: 2, steady: 3,
 const DAY_EMOJI: Record<EmotionalState, string> = { rough: '😮‍💨', strained: '😕', steady: '🙂', good: '😊', great: '🎉' };
 
 /** Keyless stand-in for the AI's cut-down: the first few real sentences, trimmed. Never invents. */
-function mockJots(raw: string): string[] {
-  return raw.split(/(?<=[.!?])\s+|\n+/)
+function mockJots(raw: string, max = 6): string[] {
+  const all = raw.split(/(?<=[.!?])\s+|\n+/)
     .map((s) => s.replace(/^\s*(and|so|then|but|well|um|uh)\b[,\s]*/i, '').replace(/\s+/g, ' ').trim())
-    .filter((s) => s.length >= 12)
-    .slice(0, 6)
-    .map((s) => (s.length > 90 ? s.slice(0, 87).trimEnd() + '…' : s));
+    .filter((s) => s.length >= 12);
+  // More sentences than room: take them evenly across the day rather than only the first few.
+  const picked = all.length <= max ? all : Array.from({ length: max }, (_, i) => all[Math.floor((i * all.length) / max)]);
+  return picked.map((s) => (s.length > 90 ? s.slice(0, 87).trimEnd() + '…' : s));
 }
 
 function firstSentenceAbout(t: string, re: RegExp): string | null {
@@ -74,13 +75,14 @@ export function mockClassify(raw: string): ClassifyOutput {
   };
 }
 
-/** Keyless stand-in for the calendar summary. */
-export function mockDaySummary(raw: string): DaySummary {
+/** Keyless stand-in for the whole-day calendar summary. `raw` is everything said that day. */
+export function mockDaySummary(raw: string, maxJots = 6): DaySummary {
   const state = pickState(raw);
   return {
     headline: state === 'rough' ? 'A heavy one.' : state === 'great' ? 'A good one.' : 'An ordinary day.',
     emoji: DAY_EMOJI[state],
-    jots: mockJots(raw),
+    mood: FACE[state],
+    jots: mockJots(raw, maxJots),
   };
 }
 

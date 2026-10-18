@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Fraunces, Figtree, Nunito } from 'next/font/google';
 import './globals.css';
+import { DayWatcher } from '@/components/DayWatcher';
 
 // Fraunces is variable: SOFT rounds the terminals and WONK adds a deliberate
 // wobble. Declaring `axes` means weight must stay variable, not a fixed list.
@@ -22,7 +23,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${display.variable} ${body.variable} ${art.variable}`}>
-      <body>{children}</body>
+      <body>
+        {children}
+        <DayWatcher />
+      </body>
     </html>
   );
 }

@@ -102,17 +102,28 @@ export function classifyUser(input: {
 
 /* ───────────────────────────── day summary ───────────────────────────── */
 
-export const DAY_SUMMARY_SYSTEM = `You write the private calendar notes for one person's journal entry.
+export const DAY_SUMMARY_SYSTEM = `You write the private calendar notes for one person's WHOLE DAY.
 
-They will read these later, themselves, to remember their day at a glance. Nobody
-else ever sees them. Return a single JSON object and nothing else:
-  { "headline": string, "emoji": string, "jots": string[] }
+They may have spoken once or several times that day (morning, afternoon, evening).
+You are given everything they said, oldest first, with when each was said. Read it as
+one day, not as separate entries. They will read your notes later, themselves, to
+remember the day at a glance. Nobody else ever sees them. Return a single JSON object
+and nothing else:
+  { "headline": string, "emoji": string, "mood": number, "jots": string[] }
 
-jots — the IDEAS worth remembering, each restated in your own compact words.
+mood — how the day felt OVERALL, 1 (very hard) to 5 (great), weighing everything said
+  together, including how it ended. A rough morning that turned into a good afternoon
+  lands in the middle or above; do not just copy the first or the last entry.
+
+jots — the key talking points of the day, each restated in your own compact words.
+  • You are given a MAXIMUM number of jots. It is a ceiling, not a target. Use fewer
+    when there is little to say.
+  • When they said a LOT, condense: merge related ideas, keep only the points that
+    matter most, and fit in the maximum. When they said a little, keep their ideas
+    as they are and condense less.
   • Rewrite, never quote. Do not copy their sentences, even shortened. Drop filler,
     hedges, "like", "um", and anything said twice.
-  • One idea per jot, about 30 to 70 characters, at most 8. Merge repeats. A short
-    entry gets 1 to 3 jots; never pad.
+  • One idea per jot, about 30 to 70 characters. Merge repeats across entries.
   • Keep the specifics that make the memory come back: who, where, how long, what
     caused it. "Food delivery 12 hours late, day felt ruined" beats "Had a bad
     experience with food".
@@ -127,11 +138,18 @@ jots — the IDEAS worth remembering, each restated in your own compact words.
 
 headline — the whole day in one short phrase, 60 characters or fewer, in plain words.
 
-emoji — exactly ONE emoji that stands for the day (😴 worn out, 🎉 a win, 🌧️ gloomy,
+emoji — exactly ONE emoji that stands for the whole day (😴 worn out, 🎉 a win, 🌧️ gloomy,
   😊 good and ordinary). Output only the emoji character.`;
 
-export function daySummaryUser(input: { raw_text: string; author_display_name: string }): string {
-  return [`Author: ${input.author_display_name}`, ``, `ENTRY:`, `"""`, input.raw_text, `"""`].join('\n');
+export function daySummaryUser(input: {
+  author_display_name: string; max_jots: number; entries: { when: string; text: string }[];
+}): string {
+  return [
+    `Author: ${input.author_display_name}`,
+    `Maximum jots: ${input.max_jots}`,
+    ``,
+    ...input.entries.flatMap((e, i) => [`ENTRY ${i + 1} (${e.when}):`, `"""`, e.text, `"""`, ``]),
+  ].join('\n').trimEnd();
 }
 
 /* ───────────────────────────── compose ───────────────────────────── */

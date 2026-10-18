@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ClassifyOutputSchema } from '@/contract';
 import { mockClassify } from '@/lib/llm/mock';
 import {
-  decodeDayNote, encodeDayNote, faceEmoji, isSingleEmoji, mergeDayNotes, noteAsSummary, normalizeJots, MAX_JOTS,
+  decodeDayNote, encodeDayNote, faceEmoji, isSingleEmoji, jotBudget, MAX_DAY_JOTS, noteAsSummary, normalizeJots, timeLabel, wordCount, MAX_JOTS,
 } from './calendar';
 
 describe('day notes', () => {
@@ -29,16 +29,7 @@ describe('day notes', () => {
     expect(jots[1].length).toBeLessThanOrEqual(120);
   });
 
-  it('a second check-in the same day adds to the day', () => {
-    const merged = mergeDayNotes(
-      { emoji: '😕', headline: 'Slow morning', jots: ['Overslept'] },
-      { emoji: '🙂', headline: 'Better evening', jots: ['Overslept', 'Walk with Sam'] },
-    );
-    expect(merged).toEqual({ emoji: '🙂', headline: 'Better evening', jots: ['Overslept', 'Walk with Sam'] });
-  });
-
-  it('keeps the earlier headline when the new one is empty, and caps the summary', () => {
-    expect(mergeDayNotes({ emoji: '🙂', headline: 'Kept', jots: [] }, { emoji: '🙂', headline: '', jots: [] }).headline).toBe('Kept');
+  it('caps the summary line', () => {
     expect(noteAsSummary({ emoji: '🙂', headline: 'h', jots: ['a'.repeat(900)] }).length).toBeLessThanOrEqual(600);
   });
 
@@ -80,5 +71,62 @@ describe('day summary', () => {
   it('mock summary is valid and never invents', () => {
     expect(() => DaySummarySchema.parse(mockDaySummary('Work was brutal today and the deadline moved again.'))).not.toThrow();
     expect(mockDaySummary('ok').jots).toEqual([]);
+  });
+});
+
+describe('how many key points a day gets', () => {
+  it('a few words keep their ideas, a ramble is condensed, and it never overflows', () => {
+    expect(jotBudget(3)).toBe(0);
+    expect(jotBudget(12)).toBe(1);
+    expect(jotBudget(40)).toBe(2);
+    expect(jotBudget(80)).toBe(3);
+    expect(jotBudget(150)).toBe(4);
+    expect(jotBudget(250)).toBe(5);
+    expect(jotBudget(400)).toBe(MAX_DAY_JOTS);
+    expect(jotBudget(5000)).toBe(MAX_DAY_JOTS);
+    const budgets = [0, 5, 10, 20, 45, 90, 160, 300, 1000].map(jotBudget);
+    expect([...budgets].sort((a, b) => a - b)).toEqual(budgets); // more said never means fewer points
+  });
+  it('the budget is a ceiling on the notes that are kept', () => {
+    const many = Array.from({ length: 10 }, (_, i) => `point number ${i}`);
+    expect(normalizeJots(many, 3)).toEqual(['point number 0', 'point number 1', 'point number 2']);
+    expect(normalizeJots(many, 0)).toEqual([]);
+  });
+  it('counts words across a whole day', () => {
+    expect(wordCount('  a  few   words\nhere ')).toBe(4);
+    expect(wordCount('')).toBe(0);
+  });
+  it('labels when in the day something was said, in the person\'s own timezone', () => {
+    expect(timeLabel('2026-10-17T16:12:00Z', 'America/Los_Angeles')).toBe('morning, 9:12 AM');
+    expect(timeLabel('2026-10-17T22:30:00Z', 'America/Los_Angeles')).toBe('afternoon, 3:30 PM');
+    expect(timeLabel('2026-10-18T03:00:00Z', 'America/Los_Angeles')).toBe('evening, 8:00 PM');
+  });
+});
+
+describe('whole-day summary', () => {
+  const morning = 'This morning was awful. My food never came and I was furious about it. I skipped breakfast and was late.';
+  const afternoon = 'Then this afternoon things got so much better. Sam surprised me with lunch and we laughed a lot. I feel really lucky.';
+  it('the keyless summary reads the whole day and respects the ceiling', () => {
+    const out = mockDaySummary(`${morning}\n\n${afternoon}`, 3);
+    expect(() => DaySummarySchema.parse(out)).not.toThrow();
+    expect(out.jots.length).toBeLessThanOrEqual(3);
+    expect(out.jots.length).toBeGreaterThan(1);
+    expect(out.mood).toBeGreaterThanOrEqual(1);
+    expect(out.mood).toBeLessThanOrEqual(5);
+  });
+  it('when much more is said than fits, the notes are spread across the day, not just its start', () => {
+    const out = mockDaySummary(`${morning}\n\n${afternoon}`, 2);
+    expect(out.jots).toHaveLength(2);
+    expect(out.jots[1]).not.toBe(out.jots[0]);
+    expect(`${morning} ${afternoon}`).toContain(out.jots[1].replace(/…$/, '').slice(0, 20));
+  });
+  it('a mood is a whole number from 1 to 5, whatever the model sends', () => {
+    expect(DaySummarySchema.parse({ headline: 'x', jots: [], mood: 3.6 }).mood).toBe(4);
+    expect(DaySummarySchema.parse({ headline: 'x', jots: [], mood: 9 }).mood).toBe(5);
+    expect(DaySummarySchema.parse({ headline: 'x', jots: [], mood: '2' }).mood).toBe(2);
+    expect(DaySummarySchema.parse({ headline: 'x', jots: [], mood: 'great' }).mood).toBeUndefined();
+    expect(DaySummarySchema.parse({ headline: 'x', jots: [] }).mood).toBeUndefined();
+    expect(DaySummarySchema.parse({ headline: 'x', jots: [], mood: null }).mood).toBeUndefined();
+    expect(DaySummarySchema.parse({ headline: 'x', jots: [], mood: '' }).mood).toBeUndefined();
   });
 });
