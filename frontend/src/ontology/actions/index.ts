@@ -7,3 +7,4 @@ export * from './demo-login';
 export * from './entries';
 export * from './feedback';
 export * from './nightly';
+export * from './calendar';

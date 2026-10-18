@@ -23,7 +23,7 @@ Your calendar. There is no partner-visible view.
 | `local_date` | string | yes |  |  |  |
 | `mood_face` | integer | yes |  | 1..5 |  |
 | `source` | `self` \| `derived` | yes | `"derived"` |  |  |
-| `note` | string \| null | yes |  |  | The coach's short private note on that day. |
+| `note` | string \| null | yes |  |  | The day's emoji, headline and jot notes, as a small JSON document (see lib/calendar.ts). Older rows are plain text. |
 | `created_at` | string | yes |  |  |  |
 
 ## Links
@@ -33,3 +33,4 @@ Your calendar. There is no partner-visible view.
 ## Actions
 
 - Written by: [Check in](../actions/checkIn.md)
+- Read by: [Get my calendar month](../actions/getCalendar.md)

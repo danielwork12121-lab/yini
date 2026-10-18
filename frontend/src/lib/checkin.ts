@@ -22,6 +22,7 @@ import {
 import { createAdminSupabase } from '@/lib/supabase/admin';
 import { leakCheckAndRewrite } from '@/lib/leakcheck';
 import { env } from '@/lib/env';
+import { decodeDayNote, encodeDayNote, faceEmoji, isSingleEmoji, mergeDayNotes, noteAsSummary, normalizeJots } from '@/lib/calendar';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 const SAFETY_RESOURCES = [
@@ -85,10 +86,28 @@ export async function runCheckin(
     safety_flag: cls.safety.flag, classifier_model: env.model('classify'), classified_at: new Date().toISOString(),
   }).eq('id', entry.id);
 
+  // The calendar: one emoji and a short list of jot notes per day, private to the author.
+  // A second check-in the same day adds to the day instead of replacing it.
+  const dayFace = await dayMoodFace(db, userId, connectionId, req.local_date, entry.id, cls.mood_face);
+  const { data: existingDay } = await db.from('mood_days').select('note, mood_face')
+    .eq('author_id', userId).eq('connection_id', connectionId).eq('local_date', req.local_date).maybeSingle();
+  const dayNote = mergeDayNotes(
+    existingDay ? decodeDayNote(existingDay.note, existingDay.mood_face) : null,
+    {
+      emoji: isSingleEmoji(cls.day_emoji) ? cls.day_emoji.trim() : faceEmoji(dayFace),
+      headline: cls.day_note, jots: normalizeJots(cls.jots),
+    },
+  );
   await db.from('mood_days').upsert({
     author_id: userId, connection_id: connectionId, local_date: req.local_date,
-    mood_face: cls.mood_face, source: 'derived', note: cls.day_note,
+    mood_face: dayFace, source: 'derived', note: encodeDayNote(dayNote),
   }, { onConflict: 'author_id,connection_id,local_date' });
+
+  // This entry's own memory, so the nightly joint analysis can read it straight away.
+  // Separate from the classification write: a missing column must never cost the calendar.
+  await db.from('entries').update({
+    ai_summary: noteAsSummary({ emoji: dayNote.emoji, headline: cls.day_note, jots: normalizeJots(cls.jots) }),
+  }).eq('id', entry.id);
 
   // ── 3. feeding. Participation only — a brutal day feeds it exactly as well. ──
   await db.from('pet_feedings')
@@ -259,6 +278,15 @@ export async function runCheckin(
 }
 
 /* ───────────────────────────── helpers ───────────────────────────── */
+
+/** The day's face is the average of everything said that day, so one bad hour does not erase a good evening. */
+async function dayMoodFace(db: SupabaseClient, userId: string, connectionId: string, date: string, thisEntry: string, latest: number): Promise<number> {
+  const { data } = await db.from('entries').select('mood_face')
+    .eq('author_id', userId).eq('connection_id', connectionId)
+    .eq('local_date', date).neq('id', thisEntry).not('mood_face', 'is', null);
+  const faces = [...(data ?? []).map((r) => r.mood_face as number), latest];
+  return Math.min(5, Math.max(1, Math.round(faces.reduce((a, b) => a + b, 0) / faces.length)));
+}
 
 async function recentStates(db: SupabaseClient, userId: string, before: string, n: number): Promise<string[]> {
   const { data } = await db.from('entries').select('state, local_date')

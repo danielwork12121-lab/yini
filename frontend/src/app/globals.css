@@ -163,3 +163,41 @@ textarea.entry:focus { outline:2px solid var(--primary-tint); outline-offset:1px
 .ypet-btn:focus-visible, .ypet-again:focus-visible, .ypet-back:focus-visible { outline: 3px solid #EF8A73; outline-offset: 3px; }
 .ypet-again { appearance: none; border: 0; background: none; margin-top: 10px; padding: 10px; color: #7D6D63; font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer; }
 .ypet-again:disabled { opacity: .5; cursor: default; }
+
+/* ── Calendar: one emoji per day, tap for the jot notes ── */
+.cal-back { display: inline-block; color: var(--ink-muted); text-decoration: none; font-size: 14px; padding: 6px 0; }
+.cal-title { font-size: 30px; margin: 6px 0 6px; line-height: 1.15; }
+.cal-sub { margin: 0 0 18px; }
+.cal-nav { display: flex; align-items: center; justify-content: space-between; margin: 6px 0 10px; }
+.cal-month { font-size: 22px; margin: 0; }
+.cal-step { appearance: none; width: 44px; height: 44px; border-radius: 9999px; border: 1px solid var(--line-strong); background: var(--surface);
+  color: var(--ink); font-size: 24px; line-height: 1; cursor: pointer; }
+.cal-step:active { background: var(--canvas-sunk); }
+.cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.cal-dow { text-align: center; font-size: 12px; letter-spacing: .08em; color: var(--ink-faint); padding: 4px 0; }
+.cal-cell { position: relative; aspect-ratio: 1 / 1.12; border-radius: 14px; background: var(--surface); border: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: center; padding: 0; font: inherit; color: var(--ink); }
+.cal-blank { background: transparent; border-color: transparent; }
+.cal-num { position: absolute; top: 4px; left: 6px; font-size: 11px; color: var(--ink-faint); }
+.cal-emoji { font-size: clamp(20px, 6.2vw, 28px); line-height: 1; margin-top: 12px; }
+button.cal-cell { cursor: pointer; background: var(--surface-warm); border-color: var(--line-strong); transition: transform 120ms var(--ease); }
+button.cal-cell:active { transform: scale(.94); }
+button.cal-cell:focus-visible, .cal-step:focus-visible, .cal-close:focus-visible { outline: 3px solid var(--primary-tint); outline-offset: 2px; }
+.cal-today { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-tint) inset; }
+.cal-today .cal-num { color: var(--primary-press); font-weight: 700; }
+.cal-scrim { position: fixed; inset: 0; background: rgba(42, 37, 32, .45); display: flex; align-items: flex-end; justify-content: center; z-index: 50; }
+.cal-sheet { position: relative; width: 100%; max-width: 430px; max-height: 86dvh; overflow-y: auto; background: var(--canvas); border-radius: 28px 28px 0 0;
+  padding: 26px 22px calc(26px + env(safe-area-inset-bottom, 0px)); box-shadow: 0 -12px 40px rgba(42, 37, 32, .18); }
+.cal-close { position: absolute; top: 12px; right: 14px; width: 40px; height: 40px; border-radius: 9999px; border: 0; background: var(--canvas-sunk);
+  color: var(--ink-muted); font-size: 24px; line-height: 1; cursor: pointer; }
+.cal-sheet-date { margin: 0 0 8px; text-transform: uppercase; letter-spacing: .06em; }
+.cal-sheet-top { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; padding-right: 36px; }
+.cal-big { font-size: 52px; line-height: 1; }
+.cal-sheet-title { font-size: 22px; margin: 0; line-height: 1.25; text-wrap: balance; }
+.cal-jots { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 8px; }
+.cal-jots li { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 11px 14px 11px 34px; font-size: 15.5px; line-height: 1.45; }
+.cal-jots li::before { content: ''; position: absolute; left: 14px; top: 17px; width: 8px; height: 8px; border-radius: 9999px; background: var(--primary-tint); }
+.cal-said { border-top: 1px solid var(--line); padding-top: 12px; }
+.cal-said summary { cursor: pointer; font-weight: 600; font-size: 15px; color: var(--ink-muted); padding: 4px 0; }
+.cal-entry { margin-top: 12px; background: var(--surface-warm); border-radius: 14px; padding: 14px; }
+.cal-entry p.caption { margin: 0 0 6px; }

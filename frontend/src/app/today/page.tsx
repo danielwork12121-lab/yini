@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
+import Link from 'next/link';
 import type { TodayResponse } from '@/contract';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { env } from '@/lib/env';
@@ -27,6 +28,9 @@ export default async function TodayPage() {
 
   return (
     <main className="phone" style={{ paddingTop: 36 }}>
+      <p style={{ textAlign: 'right', margin: '-12px 0 8px' }}>
+        <Link href="/calendar" className="small" style={{ textDecoration: 'none' }}>📅 Calendar</Link>
+      </p>
       <CheckIn today={today} />
       <DailyFeedback demo={env.demoMode()} />
     </main>
