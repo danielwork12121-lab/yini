@@ -1,7 +1,7 @@
 import type { CheckinResponse } from '@/contract';
 
 /** What Yini says back after a check-in. Shown on Home once the AI is done. */
-export function ReplyCards({ reply, partner }: { reply: CheckinResponse; partner: string }) {
+export function ReplyCards({ reply }: { reply: CheckinResponse }) {
   return (
     <>
       {reply.safety && (
@@ -33,7 +33,6 @@ export function ReplyCards({ reply, partner }: { reply: CheckinResponse; partner
         </>
       )}
       {reply.pet_hatched_now && <p className="reply-foot" style={{ fontSize: 'var(--t-body)' }}>You both showed up. Your egg hatched.</p>}
-      <p className="reply-foot">{partner} will never see what you wrote.</p>
     </>
   );
 }

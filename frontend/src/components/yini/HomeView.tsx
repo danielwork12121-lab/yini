@@ -2,8 +2,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ReplyCards } from '@/components/ReplyCards';
-import { dismissCheckin, retryCheckin, usePendingCheckin } from '@/lib/pendingCheckin';
-import { AppDateIcon } from '@/components/DateIcon';
+import { retryCheckin, usePendingCheckin } from '@/lib/pendingCheckin';
 import { fetchJson, peekJson, warmJson } from '@/lib/cachedJson';
 import { Streak } from '@/components/app/Streak';
 import type { TodayResponse } from '@/contract';
@@ -13,7 +12,7 @@ import { MicBig } from '@/components/app/icons';
 const greeting = () => { const h = new Date().getHours(); return h < 12 ? 'Morning' : h < 18 ? 'Afternoon' : 'Evening'; };
 
 /** Home: the Check in button, your room and your cat. Feeding and the reply from Yini live here too. */
-export function HomeView({ name, partner }: { name: string; partner: string }) {
+export function HomeView({ name }: { name: string; partner: string }) {
   const [request, setRequest] = useState(0);
   const [action, setAction] = useState<'feeding' | 'happy'>('feeding');
   const [today, setToday] = useState<TodayResponse | null>(null);
@@ -81,13 +80,7 @@ export function HomeView({ name, partner }: { name: string; partner: string }) {
       {today && <Streak today={today} />}
 
       {pending.status === 'done' && (
-        <>
-          <div className="reply"><ReplyCards reply={pending.reply} partner={partner} /></div>
-          <div className="reply-bar">
-            <Link href="/calendar"><AppDateIcon /> See it on your calendar</Link>
-            <button type="button" className="linkbtn" onClick={dismissCheckin}>Dismiss</button>
-          </div>
-        </>
+        <div className="reply"><ReplyCards reply={pending.reply} /></div>
       )}
     </main>
   );
