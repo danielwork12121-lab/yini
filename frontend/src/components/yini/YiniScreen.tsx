@@ -4,7 +4,7 @@ import { SCREENS, type ScreenKey } from './screens';
 
 const LABELS: Record<ScreenKey, string> = {
   welcome: 'Welcome', signin: 'Sign in', create: 'Create account',
-  invite: 'Invite your person', buddy: 'Pick your buddy',
+  invite: 'Invite your person', buddy: 'Pick your buddy', privacy: 'How your feelings stay yours',
 };
 
 /** The art boards are drawn at 941×1672 and scaled to the phone column. */
