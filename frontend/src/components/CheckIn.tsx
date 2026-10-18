@@ -5,7 +5,8 @@ import type { TodayResponse } from '@/contract';
 import { startCheckin } from '@/lib/pendingCheckin';
 import { fetchAppToday } from '@/lib/appClock';
 import { Room } from '@/components/app/Room';
-import { KeyboardIcon, MicSmall, WaveIcon } from '@/components/app/icons';
+import { KeyboardIcon, MicSmall } from '@/components/app/icons';
+import { LiveBars } from '@/components/app/LiveBars';
 
 // No pitch-deck timer: people talk as long as they need. The only limits are
 // practical. Ten minutes of 24 kbps audio is about 1.8 MB, well inside the 4.5 MB
@@ -19,7 +20,7 @@ const AUDIO_BITS_PER_SECOND = 24_000; // plenty for speech, keeps long takes sma
 
 type Phase = 'capture' | 'transcribing' | 'preview';
 
-export function CheckIn({ today }: { today: TodayResponse }) {
+export function CheckIn({ today }: { today: TodayResponse | null }) {
   const [phase, setPhase] = useState<Phase>('capture');
   const [recording, setRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -30,7 +31,8 @@ export function CheckIn({ today }: { today: TodayResponse }) {
   const [typing, setTyping] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const [pet] = useState(today.pet);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const pet = today?.pet ?? null;
 
   const recorder = useRef<MediaRecorder | null>(null);
   const chunks = useRef<Blob[]>([]);
@@ -45,6 +47,7 @@ export function CheckIn({ today }: { today: TodayResponse }) {
     recorder.current?.state === 'recording' && recorder.current.stop();
     recorder.current?.stream.getTracks().forEach((t) => t.stop());
     setRecording(false);
+    setStream(null);
   }, []);
 
   useEffect(() => () => stop(), [stop]);
@@ -96,6 +99,7 @@ export function CheckIn({ today }: { today: TodayResponse }) {
         void transcribe(b, ms);
       };
       recorder.current = mr;
+      setStream(stream);
       startedAt.current = Date.now();
       mr.start(1000); // a chunk a second, so a long take is never held in one buffer
       setRecording(true);
@@ -138,7 +142,7 @@ export function CheckIn({ today }: { today: TodayResponse }) {
   const nearCap = recording && elapsed >= WARN_MS;
 
   const showText = (typing || phase === 'preview') && phase !== 'transcribing';
-  const tag = recording ? 'Listening…' : phase === 'transcribing' ? 'Writing it down…' : phase === 'preview' ? 'Here is what I heard' : typing ? 'Type it here' : `${greeting()}, ${today.display_name}`;
+  const tag = recording ? 'Listening…' : phase === 'transcribing' ? 'Writing it down…' : phase === 'preview' ? 'Here is what I heard' : typing ? 'Type it here' : today?.display_name ? `${greeting()}, ${today.display_name}` : greeting();
 
   return (
     <main>
@@ -146,7 +150,7 @@ export function CheckIn({ today }: { today: TodayResponse }) {
       <section className={`listen listen-wide${recording ? ' listen-live' : ''}`} aria-label="Check in">
         <div className="listen-top">
           <span className="listen-tag"><span className="listen-dot" aria-hidden="true" />{tag}</span>
-          {recording && <span className="listen-wave"><WaveIcon /></span>}
+          {recording && <LiveBars stream={stream} />}
         </div>
 
         {phase === 'capture' && !typing && (
@@ -220,10 +224,12 @@ export function CheckIn({ today }: { today: TodayResponse }) {
       {error && <p className="err" role="alert">{error}</p>}
 
       <Room />
-      <p className="reply-foot" style={{ margin: 'calc(24 * var(--u)) calc(60 * var(--u)) 0' }}>
-        {pet.hatched ? pet.name : 'An egg, for now'} · {pet.bond_name} · {pet.total_half_days} {pet.total_half_days === 1 ? 'half-day' : 'half-days'}
-        {' · '}{pet.both_fed_today ? 'Fully fed today.' : pet.you_fed_today ? 'Half fed today.' : 'Napping.'}
-      </p>
+      {pet && (
+        <p className="reply-foot" style={{ margin: 'calc(24 * var(--u)) calc(60 * var(--u)) 0' }}>
+          {pet.hatched ? pet.name : 'An egg, for now'} · {pet.bond_name} · {pet.total_half_days} {pet.total_half_days === 1 ? 'half-day' : 'half-days'}
+          {' · '}{pet.both_fed_today ? 'Fully fed today.' : pet.you_fed_today ? 'Half fed today.' : 'Napping.'}
+        </p>
+      )}
     </main>
   );
 }

@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { TimePicker } from './TimePicker';
 
 const KEY = 'yini.notify.prefs';
 type Prefs = { checkin: boolean; love: boolean; glow: boolean; grow: boolean; time: string };
@@ -35,9 +36,7 @@ export function NotificationPrefs() {
             <button type="button" role="switch" className="switch" aria-checked={prefs[r.key]} aria-label={r.title} onClick={() => set({ [r.key]: !prefs[r.key] })} />
           </div>
           {r.key === 'checkin' && prefs.checkin && (
-            <label className="remind">Remind me at
-              <input type="time" value={prefs.time} onChange={(e) => set({ time: e.target.value || DEFAULTS.time })} aria-label="Reminder time" />
-            </label>
+            <TimePicker value={prefs.time} onChange={(time) => set({ time })} />
           )}
         </div>
       ))}
