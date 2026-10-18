@@ -33,8 +33,9 @@ describe('Grow: overnight feedback', () => {
     expect(parsed.bullets[0]).toHaveLength(400);
     expect(parsed.bullets).not.toContain('');
   });
-  it('still insists on at least two bullets and a headline', () => {
-    expect(FeedbackForSchema.safeParse({ headline: 'Hi', bullets: ['only one'] }).success).toBe(false);
+  it('still insists on at least one bullet and a headline', () => {
+    expect(FeedbackForSchema.safeParse({ headline: 'Hi', bullets: ['only one'] }).success).toBe(true);
+    expect(FeedbackForSchema.safeParse({ headline: 'Hi', bullets: [] }).success).toBe(false);
     expect(FeedbackForSchema.safeParse({ headline: '', bullets: ['a', 'b'] }).success).toBe(false);
     expect(FeedbackForSchema.safeParse(null).success).toBe(false);
   });
