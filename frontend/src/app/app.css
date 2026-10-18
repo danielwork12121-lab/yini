@@ -322,8 +322,8 @@ body { background: #FDF6EE; }
 .day-tags { display: flex; align-items: center; gap: calc(12 * var(--u)); flex-wrap: wrap; }
 .mood-chip { padding: calc(6 * var(--u)) calc(18 * var(--u)); border-radius: 20px; font-size: max(11.5px, calc(24 * var(--u))); font-weight: 800; }
 .mood-chip[data-m="happy"] { background: #FCEBD3; color: #B5711F; }
-.mood-chip[data-m="down"] { background: #E8ECF2; color: #566173; }
-.mood-chip[data-m="stressed"] { background: #E7EDDA; color: #56663F; }
+.mood-chip[data-m="sad"] { background: #E8ECF2; color: #566173; }
+.mood-chip[data-m="neutral"] { background: #E7EDDA; color: #56663F; }
 .day-src { font-size: max(11px, calc(22 * var(--u))); font-weight: 700; color: var(--faint); }
 .day-change { flex: none; appearance: none; cursor: pointer; height: max(32px, calc(60 * var(--u))); padding: 0 calc(22 * var(--u)); border: 2px solid var(--field); border-radius: 9999px; background: #fff; font-size: max(12px, calc(24 * var(--u))); font-weight: 800; color: var(--muted); }
 .mood-picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: calc(14 * var(--u)); }

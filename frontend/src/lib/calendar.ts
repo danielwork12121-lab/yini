@@ -12,21 +12,29 @@ export const MAX_JOT_LENGTH = 120;
 
 export type DayNote = { emoji: string; headline: string; jots: string[]; /** Set to 'you' when the person changed the face themselves. */ by?: 'you' };
 
-/** The three faces a day can have on the calendar, and the one emoji each is stored as. */
-export type DayMood = 'happy' | 'down' | 'stressed';
-export const DAY_MOOD_EMOJI: Record<DayMood, string> = { happy: '🙂', down: '😔', stressed: '😣' };
+/**
+ * The three faces a day can have on the calendar, and how a day is sorted into one:
+ *   happy    (yellow)  positive: good, calm, proud, warm, content
+ *   neutral  (green)   in between: ordinary, flat, mixed, nothing much happened
+ *   sad      (grey)    negative: sad, lonely, hurt, stressed, anxious, frustrated, angry, overwhelmed
+ * Stress and anger count as negative: they are not "in the middle".
+ */
+export type DayMood = 'happy' | 'neutral' | 'sad';
+/** The one emoji each mood is stored as (the day summary writes exactly one of these). */
+export const DAY_MOOD_EMOJI: Record<DayMood, string> = { happy: '🙂', neutral: '😐', sad: '😔' };
 /** The mood face (1 to 5) a chosen mood is recorded with, for anything else that reads it. */
-export const DAY_MOOD_FACE: Record<DayMood, number> = { happy: 4, down: 2, stressed: 3 };
-const STRESSED = ['😣', '😖', '😫', '😩', '😰', '😨', '😤', '😡', '🤯', '😵', '😴', '😬', '😮‍💨', '😓', '😟', '🥵', '⚡'];
-const DOWN = ['😔', '😞', '😢', '😭', '🥺', '😕', '😶', '😿', '💔', '🙁', '☹', '🌧', '☔'];
+export const DAY_MOOD_FACE: Record<DayMood, number> = { happy: 4, neutral: 3, sad: 2 };
+const SAD = ['😔', '😞', '😢', '😭', '🥺', '😕', '😿', '💔', '🙁', '☹', '🌧', '☔', '😣', '😖', '😫', '😩', '😰', '😨', '😤', '😡', '🤯', '😵', '😬', '😮‍💨', '😓', '😟', '🥵', '⚡', '😠', '😒'];
+const NEUTRAL = ['😐', '😶', '😑', '🫤', '🙃', '😴'];
+const HAPPY = /[🙂😊😄😁😀🥰😍🎉✨☀🌞😌🤗]/u;
 
 /** Which of the three faces a day gets. A recognised emoji decides; otherwise the 1 to 5 face does. */
 export function moodOfDay(emoji: string | null | undefined, face: number): DayMood {
   const e = emoji ?? '';
-  if (STRESSED.some((x) => e.includes(x))) return 'stressed';
-  if (DOWN.some((x) => e.includes(x))) return 'down';
-  if (e && /[🙂😊😄😁😀🥰😍🎉✨☀🌞😌🤗]/u.test(e)) return 'happy';
-  return face <= 2 ? 'down' : 'happy';
+  if (SAD.some((x) => e.includes(x))) return 'sad';
+  if (NEUTRAL.some((x) => e.includes(x))) return 'neutral';
+  if (e && HAPPY.test(e)) return 'happy';
+  return face <= 2 ? 'sad' : face >= 4 ? 'happy' : 'neutral';
 }
 
 export const faceEmoji = (face: number) => FACE_EMOJI[Math.min(5, Math.max(1, Math.round(face)))] ?? FACE_EMOJI[3];

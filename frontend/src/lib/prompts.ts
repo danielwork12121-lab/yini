@@ -29,7 +29,7 @@ state — one of: rough | strained | steady | good | great
 
 severity — 0..3. How much weight they are carrying. 0 is a fine ordinary day.
 
-mood_face — 1..5, worst to best. Usually tracks state.
+mood_face — 1..5, worst to best. Usually tracks state. 1-2 = sad or negative (this includes stressed, anxious, angry), 3 = neutral, 4-5 = positive.
 
 themes — up to 3, ONLY from: ${THEME_LIST}
   Never invent a theme. If nothing fits, use "other".
@@ -139,9 +139,11 @@ jots — the key talking points of the day, each restated in your own compact wo
 headline — the whole day in one short phrase, 60 characters or fewer, in plain words.
 
 emoji — exactly ONE of these three, chosen by how the day felt OVERALL. Output only that character.
-  🙂 happy: good, calm, proud, warm, content, or an ordinary okay day
-  😔 down: sad, lonely, low, disappointed, missing someone, drained of joy
-  😣 stressed: overwhelmed, anxious, frustrated, on edge, stretched thin`;
+  🙂 happy (positive): good, calm, proud, warm, loved, relieved, excited, content
+  😐 neutral: an ordinary day, flat, mixed, or nothing much felt either way; the good and the bad about cancel out
+  😔 sad (negative): sad, lonely, hurt, disappointed, missing someone, AND stressed, overwhelmed, anxious, frustrated, angry, on edge, stretched thin
+  Stress, worry and anger are negative, never neutral. If any hard feeling clearly dominates the day, choose 😔.
+  If the day is mostly good with one small annoyance, choose 🙂. When unsure between 🙂 and 😐, choose 😐; between 😐 and 😔, choose by which feeling the person spent the most words on.`;
 
 export function daySummaryUser(input: {
   author_display_name: string; max_jots: number; entries: { when: string; text: string }[];
