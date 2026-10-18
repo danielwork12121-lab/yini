@@ -22,7 +22,7 @@ import {
 import { createAdminSupabase } from '@/lib/supabase/admin';
 import { leakCheckAndRewrite } from '@/lib/leakcheck';
 import { env } from '@/lib/env';
-import { encodeDayNote, faceEmoji, isSingleEmoji, jotBudget, noteAsSummary, normalizeJots, timeLabel, wordCount, type DayNote } from '@/lib/calendar';
+import { DAY_MOOD_EMOJI, encodeDayNote, moodOfDay, jotBudget, noteAsSummary, normalizeJots, timeLabel, wordCount, type DayNote } from '@/lib/calendar';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 const SAFETY_RESOURCES = [
@@ -118,7 +118,8 @@ export async function runCheckin(
   // afternoon settle into one honest mood instead of the last entry winning.
   const dayFace = daySummary.mood ?? await dayMoodFace(db, userId, connectionId, req.local_date, entry.id, cls.mood_face);
   const dayNote: DayNote = {
-    emoji: isSingleEmoji(daySummary.emoji) ? daySummary.emoji.trim() : faceEmoji(dayFace),
+    // One of three faces whatever the model sent, so the calendar always has a picture for it.
+    emoji: DAY_MOOD_EMOJI[moodOfDay(daySummary.emoji, dayFace)],
     headline: daySummary.headline || cls.day_note,
     jots: normalizeJots(daySummary.jots.length ? daySummary.jots : maxJots ? cls.jots : [], maxJots),
   };

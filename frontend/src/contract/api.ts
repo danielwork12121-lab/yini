@@ -16,6 +16,10 @@ import { PetStateSchema } from './models';
 const zUuid = z.string().uuid();
 const zLocalDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
+/** How a little step went (if you did it) or why it did not happen (if you did not). */
+export const GROW_OUTCOMES = ['went_well', 'okay', 'hard', 'no_time', 'not_right'] as const;
+export type GrowOutcome = (typeof GROW_OUTCOMES)[number];
+
 /** Uniform error envelope. Every route returns this shape on failure. */
 export const ApiErrorSchema = z.object({
   error: z.string(),
@@ -258,11 +262,24 @@ export const CalendarEntryViewSchema = z.object({
   input_mode: z.enum(INPUT_MODES),
   created_at: z.string(),
 });
+export const DAY_MOODS = ['happy', 'down', 'stressed'] as const;
+export type DayMood = (typeof DAY_MOODS)[number];
+/** A little step you took that day, with how it went. */
+export const CalendarGrowSchema = z.object({
+  text: z.string(),
+  outcome: z.enum(GROW_OUTCOMES).nullable(),
+});
 export const CalendarDaySchema = z.object({
   local_date: zLocalDate,
   mood_face: z.number().int().min(1).max(5),
   /** One emoji standing for the day. */
   emoji: z.string(),
+  /** The day's face on the calendar: happy, down or stressed. */
+  mood: z.enum(DAY_MOODS),
+  /** Who chose it: Yini, or you when you changed it. */
+  mood_by: z.enum(['yini', 'you']),
+  /** Little steps from Grow you did that day. */
+  grow: z.array(CalendarGrowSchema),
   /** One plain line summing up the day. May be empty on older days. */
   headline: z.string(),
   /** The day cut into short notes: only the crucial things said. */
@@ -272,6 +289,11 @@ export const CalendarDaySchema = z.object({
 });
 export type CalendarDay = z.infer<typeof CalendarDaySchema>;
 export const CalendarResponseSchema = z.object({ month: z.string(), days: z.array(CalendarDaySchema) });
+
+/** POST /api/calendar/mood: change a day's face. */
+export const DayMoodRequestSchema = z.object({ local_date: zLocalDate, mood: z.enum(DAY_MOODS) });
+export type DayMoodRequest = z.infer<typeof DayMoodRequestSchema>;
+export const DayMoodResponseSchema = z.object({ local_date: zLocalDate, mood: z.enum(DAY_MOODS), mood_by: z.literal('you') });
 export type CalendarResponse = z.infer<typeof CalendarResponseSchema>;
 
 /* ── nightly feedback ───────────────────────────────────────────────── */
@@ -327,6 +349,29 @@ export type GrowDoneRequest = z.infer<typeof GrowDoneRequestSchema>;
 export const GrowDoneResponseSchema = z.object({ done: z.array(GrowDoneViewSchema) });
 export type GrowDoneResponse = z.infer<typeof GrowDoneResponseSchema>;
 
+/** What one person has done with one suggestion. Only touched suggestions appear. */
+export const GrowItemViewSchema = z.object({
+  text: z.string(),
+  saved: z.boolean(),
+  status: z.enum(['done', 'skipped']).nullable(),
+  outcome: z.enum(GROW_OUTCOMES).nullable(),
+  reflection: z.string().nullable(),
+  done_at: z.string().nullable(),
+});
+export type GrowItemView = z.infer<typeof GrowItemViewSchema>;
+
+/** POST /api/grow/item. Send only what changes. `status: 'open'` takes a done or skipped back. */
+export const GrowItemRequestSchema = z.object({
+  text: z.string().min(1).max(900),
+  saved: z.boolean().optional(),
+  status: z.enum(['done', 'skipped', 'open']).optional(),
+  outcome: z.enum(GROW_OUTCOMES).nullable().optional(),
+  reflection: z.string().max(600).nullable().optional(),
+});
+export type GrowItemRequest = z.infer<typeof GrowItemRequestSchema>;
+export const GrowItemResponseSchema = z.object({ items: z.array(GrowItemViewSchema) });
+export type GrowItemResponse = z.infer<typeof GrowItemResponseSchema>;
+
 /**
  * GET /api/grow. Things you could do to grow the relationship, worked out overnight
  * from both people's logs. `working` means a day is still being read, so the client
@@ -341,6 +386,8 @@ export const GrowResponseSchema = z.object({
   from_partner: z.array(PartnerNeedViewSchema),
   /** Suggestions already ticked off, newest first. */
   done: z.array(GrowDoneViewSchema),
+  /** Everything you have bookmarked, done, skipped or reflected on, newest first. */
+  items: z.array(GrowItemViewSchema),
   /** Why the read could not run, in plain words, when status is `failed`. Null otherwise. */
   problem: z.string().nullable(),
 });
@@ -366,6 +413,39 @@ export const GlowResponseSchema = z.object({
   compliments: z.array(ComplimentViewSchema),
 });
 export type GlowResponse = z.infer<typeof GlowResponseSchema>;
+
+/* ── Love Notes ─────────────────────────────────────────────────────── */
+
+/** A voice note, ready to play. The link is short-lived. */
+export const LoveVoiceSchema = z.object({ url: z.string(), duration_ms: z.number().int().nonnegative() });
+export const LoveNoteViewSchema = z.object({
+  id: zUuid,
+  title: z.string().nullable(),
+  body: z.string(),
+  created_at: z.string(),
+  voice: LoveVoiceSchema.nullable(),
+  /** Only meaningful on notes you received. */
+  is_favorite: z.boolean(),
+  /** True until you have opened Glow once since it arrived. */
+  is_new: z.boolean(),
+});
+export type LoveNoteView = z.infer<typeof LoveNoteViewSchema>;
+
+/** GET /api/love: what your person sent you, and what you sent them. */
+export const LoveNotesResponseSchema = z.object({
+  partner_display_name: z.string(),
+  received: z.array(LoveNoteViewSchema),
+  sent: z.array(LoveNoteViewSchema),
+});
+export type LoveNotesResponse = z.infer<typeof LoveNotesResponseSchema>;
+
+/** POST /api/love result. */
+export const LoveSendResponseSchema = z.object({ note: LoveNoteViewSchema });
+export type LoveSendResponse = z.infer<typeof LoveSendResponseSchema>;
+
+/** POST /api/love/favorite. Only the person who received it can favorite it. */
+export const LoveFavoriteRequestSchema = z.object({ id: zUuid, favorite: z.boolean() });
+export const LoveFavoriteResponseSchema = z.object({ id: zUuid, is_favorite: z.boolean() });
 
 /* ── the testing clock ──────────────────────────────────────────────── */
 

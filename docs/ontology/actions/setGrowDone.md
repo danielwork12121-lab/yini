@@ -10,8 +10,8 @@ Marks one of your own Grow suggestions as done, or takes that back. Done ones mo
 | Route | `POST /api/grow/done` |
 | Who can call | A signed-in user (Supabase session cookie). |
 | Input from | JSON body |
-| Writes | [Grow: done](../objects/growDone.md) |
-| Reads | [Daily feedback](../objects/dailyFeedback.md), [Grow: done](../objects/growDone.md), [Profile](../objects/profile.md) |
+| Writes | [Grow: what you did](../objects/growDone.md) |
+| Reads | [Daily feedback](../objects/dailyFeedback.md), [Grow: what you did](../objects/growDone.md), [Profile](../objects/profile.md) |
 
 ## Input
 

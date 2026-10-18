@@ -5,6 +5,32 @@ import {
   decodeDayNote, encodeDayNote, faceEmoji, isSingleEmoji, jotBudget, MAX_DAY_JOTS, noteAsSummary, normalizeJots, timeLabel, wordCount, MAX_JOTS,
 } from './calendar';
 
+import { DAY_MOOD_EMOJI, moodOfDay } from './calendar';
+
+describe('the three calendar moods', () => {
+  it('maps the faces Yini uses to happy, down or stressed', () => {
+    expect(moodOfDay('🙂', 4)).toBe('happy');
+    expect(moodOfDay('😔', 2)).toBe('down');
+    expect(moodOfDay('😣', 3)).toBe('stressed');
+    expect(moodOfDay('😮‍💨', 1)).toBe('stressed');
+  });
+
+  it('falls back to the 1 to 5 face for emoji from before the three faces', () => {
+    expect(moodOfDay('🎉', 5)).toBe('happy');
+    expect(moodOfDay('🧃', 1)).toBe('down');
+    expect(moodOfDay(undefined, 4)).toBe('happy');
+  });
+
+  it('every stored emoji maps back to its own mood', () => {
+    for (const [mood, emoji] of Object.entries(DAY_MOOD_EMOJI)) expect(moodOfDay(emoji, 3)).toBe(mood);
+  });
+
+  it('remembers when you changed the day yourself', () => {
+    const note = { emoji: '😔', headline: 'h', jots: [], by: 'you' as const };
+    expect(decodeDayNote(encodeDayNote(note), 2)).toEqual(note);
+  });
+});
+
 describe('day notes', () => {
   it('round-trips emoji, headline and jots', () => {
     const note = { emoji: '🎉', headline: 'Big win', jots: ['Shipped the demo', 'Dinner with Sam'] };

@@ -18,7 +18,7 @@ export function HomeView({ name, partner }: { name: string; partner: string }) {
   const pending = usePendingCheckin();
 
   // Fill Grow and Glow in the background, so they open already showing something.
-  useEffect(() => { warmJson('/api/today'); warmJson('/api/grow'); warmJson('/api/glow'); }, []);
+  useEffect(() => { warmJson('/api/today'); warmJson('/api/grow'); warmJson('/api/glow'); warmJson('/api/love'); }, []);
 
   function feed() {
     if (feeding) return;

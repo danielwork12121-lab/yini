@@ -10,7 +10,24 @@ export const MAX_JOTS = 12;
 export const MAX_DAY_JOTS = 6;
 export const MAX_JOT_LENGTH = 120;
 
-export type DayNote = { emoji: string; headline: string; jots: string[] };
+export type DayNote = { emoji: string; headline: string; jots: string[]; /** Set to 'you' when the person changed the face themselves. */ by?: 'you' };
+
+/** The three faces a day can have on the calendar, and the one emoji each is stored as. */
+export type DayMood = 'happy' | 'down' | 'stressed';
+export const DAY_MOOD_EMOJI: Record<DayMood, string> = { happy: '🙂', down: '😔', stressed: '😣' };
+/** The mood face (1 to 5) a chosen mood is recorded with, for anything else that reads it. */
+export const DAY_MOOD_FACE: Record<DayMood, number> = { happy: 4, down: 2, stressed: 3 };
+const STRESSED = ['😣', '😖', '😫', '😩', '😰', '😨', '😤', '😡', '🤯', '😵', '😴', '😬', '😮‍💨', '😓', '😟', '🥵', '⚡'];
+const DOWN = ['😔', '😞', '😢', '😭', '🥺', '😕', '😶', '😿', '💔', '🙁', '☹', '🌧', '☔'];
+
+/** Which of the three faces a day gets. A recognised emoji decides; otherwise the 1 to 5 face does. */
+export function moodOfDay(emoji: string | null | undefined, face: number): DayMood {
+  const e = emoji ?? '';
+  if (STRESSED.some((x) => e.includes(x))) return 'stressed';
+  if (DOWN.some((x) => e.includes(x))) return 'down';
+  if (e && /[🙂😊😄😁😀🥰😍🎉✨☀🌞😌🤗]/u.test(e)) return 'happy';
+  return face <= 2 ? 'down' : 'happy';
+}
 
 export const faceEmoji = (face: number) => FACE_EMOJI[Math.min(5, Math.max(1, Math.round(face)))] ?? FACE_EMOJI[3];
 
@@ -58,19 +75,20 @@ export function normalizeJots(jots: readonly string[], max = MAX_JOTS): string[]
 }
 
 export function encodeDayNote(n: DayNote): string {
-  return JSON.stringify({ v: 1, e: n.emoji, h: n.headline, j: n.jots });
+  return JSON.stringify(n.by === 'you' ? { v: 1, e: n.emoji, h: n.headline, j: n.jots, u: 1 } : { v: 1, e: n.emoji, h: n.headline, j: n.jots });
 }
 
 export function decodeDayNote(raw: string | null | undefined, face: number): DayNote {
   const fallback: DayNote = { emoji: faceEmoji(face), headline: '', jots: [] };
   if (!raw) return fallback;
   try {
-    const o = JSON.parse(raw) as { v?: number; e?: unknown; h?: unknown; j?: unknown };
+    const o = JSON.parse(raw) as { v?: number; e?: unknown; h?: unknown; j?: unknown; u?: unknown };
     if (o && o.v === 1) {
       return {
         emoji: isSingleEmoji(typeof o.e === 'string' ? o.e : null) ? (o.e as string).trim() : fallback.emoji,
         headline: typeof o.h === 'string' ? o.h.slice(0, 200) : '',
         jots: Array.isArray(o.j) ? normalizeJots(o.j.filter((x): x is string => typeof x === 'string')) : [],
+        ...(o.u === 1 ? { by: 'you' as const } : {}),
       };
     }
   } catch { /* plain text from before jot notes existed */ }
