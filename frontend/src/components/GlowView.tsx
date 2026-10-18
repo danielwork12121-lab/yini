@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import type { GlowResponse } from '@/contract';
+import { fetchJson, HttpError, peekJson } from '@/lib/cachedJson';
 
 const shortDate = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 
@@ -17,10 +18,14 @@ export function GlowView() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/glow', { cache: 'no-store' })
-      .then((res) => { if (!res.ok) throw new Error(); return res.json() as Promise<GlowResponse>; })
+    const cached = peekJson<GlowResponse>('/api/glow');
+    if (cached) queueMicrotask(() => { if (!cancelled) setData((d) => d ?? cached); }); // last answer first, then the fresh one
+    fetchJson<GlowResponse>('/api/glow')
       .then((body) => { if (!cancelled) { setError(''); setData(body); } })
-      .catch(() => { if (!cancelled) setError('Could not load Glow. Check your connection and try again.'); });
+      .catch((e: Error) => {
+        if (e instanceof HttpError && e.status === 401) { window.location.assign('/'); return; }
+        if (!cancelled) setError(e.message ? `Could not load Glow. ${e.message}` : 'Could not load Glow. Check your connection and try again.');
+      });
     return () => { cancelled = true; };
   }, [attempt]);
 

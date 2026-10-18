@@ -21,8 +21,8 @@ export function mockNightly(p: NightlyInput): NightlyOutput {
   const feedbackFor = (me: NightlyInput['side_a'], partner: NightlyInput['side_a']) => {
     const bullets = [
       me.entries_text
-        ? 'You put real words to today. Reread the first line you wrote and notice what you were asking for.'
-        : 'A quiet day is allowed. Tomorrow, one honest line is plenty.',
+        ? 'Tell them one thing from today that you appreciated about them, in a sentence, out loud.'
+        : 'Send them a short message tomorrow morning just to say you are thinking of them.',
       'Pick one small, concrete kindness for tomorrow and do it without announcing it.',
     ];
     const leak = (partner.entries_text ?? '').split(/\s+/).slice(0, 12).join(' ');

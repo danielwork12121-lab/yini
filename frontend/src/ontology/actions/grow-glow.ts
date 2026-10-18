@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { GlowResponseSchema, GrowResponseSchema } from '../../contract/api';
+import { GlowResponseSchema, GrowDoneRequestSchema, GrowDoneResponseSchema, GrowResponseSchema } from '../../contract/api';
 import { defineAction } from '../define';
 
 export const getGrow = defineAction({
@@ -12,12 +12,30 @@ export const getGrow = defineAction({
   inputFrom: 'none',
   output: GrowResponseSchema,
   writes: ['analysisRun', 'dailyFeedback', 'journalEntry'],
-  reads: ['dailyFeedback', 'nudge', 'analysisRun', 'journalEntry', 'profile', 'connectionMember'],
+  reads: ['dailyFeedback', 'nudge', 'analysisRun', 'journalEntry', 'growDone', 'profile', 'connectionMember'],
   modelAccess: 'Only when it starts the overnight read, and then exactly what runNightlySweep sees. The response itself carries just the recipient\'s own feedback rows and the already leak-checked nudges.',
   invariants: [
     'Feedback and nudges are read through the user\'s own client, so RLS (recipient_id = auth.uid()) is what filters them.',
     'Starting the read is idempotent per (connection, day): a finished or already-running day is never started twice, and a failed one waits a few minutes before it retries.',
     'The read runs after the response is sent, so opening Grow never waits on a model.',
+    'A day that already has a finished read is read again when something new was saved after it, so Grow keeps up with the day.',
+  ],
+});
+
+export const setGrowDone = defineAction({
+  apiName: 'setGrowDone',
+  title: 'Tick off a Grow suggestion',
+  description: 'Marks one of your own Grow suggestions as done, or takes that back. Done ones move to a quiet list at the bottom of Grow.',
+  actor: 'user',
+  route: { method: 'POST', path: '/api/grow/done' },
+  input: GrowDoneRequestSchema,
+  inputFrom: 'json',
+  output: GrowDoneResponseSchema,
+  writes: ['growDone'],
+  reads: ['dailyFeedback', 'growDone', 'profile'],
+  invariants: [
+    'Only text that is one of the caller\'s own current daily_feedback bullets can be ticked off. Anything else is refused.',
+    'Taking it back deletes only the caller\'s own row. Ticking twice is one row.',
   ],
 });
 

@@ -52,11 +52,11 @@ export function productionNightlyDeps(): NightlyDeps {
         : { output: mockNightly(input), model: 'mock-fallback', toolCalls };
     },
 
-    async adversarial(feedback) {
+    async adversarial(feedback, _partnerName, source) {
       // The mock attacker flags every capitalised word, which would fail every
       // sentence. With no real model there is nothing adversarial to run.
       if (provider === 'mock' || !env.leakCheckEnabled()) return { feedback, verdict: 'skipped' };
-      const checked = await leakCheckAndRewrite(feedback.bullets.join('\n'), []);
+      const checked = await leakCheckAndRewrite(feedback.bullets.join('\n'), [], source);
       if (checked.dropped) return { feedback: { headline: SAFE_HEADLINE, bullets: [...SAFE_BULLETS] }, verdict: checked.result.verdict };
       if (checked.rewrites === 0) return { feedback, verdict: checked.result.verdict };
       const rewritten = FeedbackForSchema.safeParse({

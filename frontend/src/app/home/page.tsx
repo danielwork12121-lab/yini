@@ -1,9 +1,10 @@
 import { redirect } from 'next/navigation';
+import { after } from 'next/server';
 import type { Metadata } from 'next';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { getConnectionStatus } from '@/lib/connection-status';
 import { env } from '@/lib/env';
-import { startOvernightForUser } from '@/lib/overnight';
+import { readNowForUser } from '@/lib/overnight';
 import { HomeView } from '@/components/yini/HomeView';
 import { SetupNeeded } from '@/components/SetupNeeded';
 
@@ -19,7 +20,7 @@ export default async function HomePage() {
   if (!user) redirect('/');
   const status = await getConnectionStatus(user.id);
   if (!status.paired) redirect('/pair');
-  // If yesterday has not been read yet, start that now so Grow is ready by the time it is opened.
-  await startOvernightForUser(user.id);
+  // If the latest day has not been read yet, start that after the page is sent, so Home never waits on it.
+  after(() => readNowForUser(user.id));
   return <HomeView name={status.display_name ?? ''} partner={status.partner_display_name ?? 'Your person'} />;
 }

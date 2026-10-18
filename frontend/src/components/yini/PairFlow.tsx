@@ -1,4 +1,5 @@
 'use client';
+import { clearJsonCache } from '@/lib/cachedJson';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -112,7 +113,7 @@ export function PairFlow() {
       case 'auth-back':
         if (step === 'privacy') setStep('buddy');
         else if (step === 'buddy') setStep('invite');
-        else void createClient().auth.signOut().then(() => { router.push('/'); router.refresh(); });
+        else void createClient().auth.signOut().then(() => { clearJsonCache(); router.push('/'); router.refresh(); });
         break;
       case 'invite-share': void share(); break;
       case 'invite-copy': if (code) void copy(code, 'Code copied.'); break;

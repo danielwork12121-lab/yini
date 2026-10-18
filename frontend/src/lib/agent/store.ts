@@ -41,6 +41,7 @@ export interface RunRow {
   id: string;
   status: AnalysisStatus;
   started_at: string;
+  finished_at?: string | null;
   model: string | null;
   tool_calls: number;
   error: string | null;

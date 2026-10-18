@@ -244,6 +244,25 @@ button.cal-cell:focus-visible, .cal-step:focus-visible, .cal-close:focus-visible
 .gg-grow .gg-latest { background: linear-gradient(180deg, #F2F7E8 0%, var(--canvas) 100%); border: 1px solid #D9E6C4; border-radius: 26px; padding: 20px 16px 16px; }
 .gg-kicker { margin: 0 0 6px; text-transform: uppercase; letter-spacing: .06em; color: #667A51; }
 .gg-headline { font-size: 23px; line-height: 1.25; margin: 0 0 14px; text-wrap: balance; }
+/* tap-to-complete */
+.gg-tap { width: 100%; text-align: left; font: inherit; color: inherit; cursor: pointer; align-items: center; -webkit-tap-highlight-color: transparent;
+  transition: transform .2s var(--ease), opacity .3s var(--ease), box-shadow .2s var(--ease), background .2s var(--ease); }
+.gg-tap:active { transform: scale(.985); }
+.gg-body { display: grid; gap: 6px; min-width: 0; }
+.gg-strong { box-shadow: 0 6px 18px rgba(102,122,81,.16); border-color: #D9E6C4; }
+.gg-newitem { border-color: #F0857A; box-shadow: 0 6px 20px rgba(240,133,122,.22); }
+.gg-newpill { background: #F0857A; color: #fff; font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; border-radius: 9999px; padding: 3px 8px; margin-right: 8px; }
+.gg-meta { display: block; }
+.gg-check { flex: none; width: 26px; height: 26px; border-radius: 50%; border: 2px solid #B9C9A3; display: grid; place-items: center; font-size: 15px; font-weight: 800; color: transparent; background: #fff;
+  transition: background .2s var(--ease), border-color .2s var(--ease), color .2s var(--ease); }
+.gg-checked { background: #7FA05F; border-color: #7FA05F; color: #fff; }
+.gg-task { transition: opacity .32s var(--ease), transform .32s var(--ease); }
+.gg-leaving { opacity: 0; transform: translateX(28px); }
+.gg-caughtup { margin: 0; color: var(--ink-muted); }
+.gg-donesec .gg-isdone { background: transparent; border-style: dashed; opacity: .72; box-shadow: none; }
+.gg-donesec .gg-isdone .gg-text { color: var(--ink-muted); }
+.gg-count { font-family: var(--font-body, inherit); font-size: 13px; color: var(--ink-faint); margin-left: 6px; }
+@media (prefers-reduced-motion: reduce) { .gg-task, .gg-tap, .gg-check { transition: none; } .gg-leaving { transform: none; } }
 .gg-earlier { border-top: 1px solid var(--line); padding: 10px 0; }
 .gg-earlier summary { cursor: pointer; display: grid; gap: 2px; list-style: none; padding: 4px 0; }
 .gg-earlier summary::-webkit-details-marker { display: none; }
@@ -283,3 +302,4 @@ button.cal-cell:focus-visible, .cal-step:focus-visible, .cal-close:focus-visible
 .daywatch-title { margin: 0; font-size: 28px; font-weight: 900; letter-spacing: -.2px; }
 .daywatch-date { margin: 4px 0 0; font-size: 17px; font-weight: 700; color: #7D6D63; }
 @media (prefers-reduced-motion: reduce) { .dateicon-d, .daywatch, .daywatch-card { animation: none; } }
+.pageload { min-height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: var(--ink-muted); }

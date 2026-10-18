@@ -43,4 +43,4 @@ Lands the morning after: cross-partner mediation written from both diaries, with
 ## Actions
 
 - Written by: [Analyse now (admin)](../actions/analyzeNow.md), [Get my Grow](../actions/getGrow.md), [Run tonight's analysis now (demo)](../actions/runMyAnalysis.md), [Nightly sweep (cron)](../actions/runNightlySweep.md)
-- Read by: [Get my Grow](../actions/getGrow.md), [Get latest feedback](../actions/getLatestFeedback.md), [List feedback](../actions/listFeedback.md)
+- Read by: [Get my Grow](../actions/getGrow.md), [Get latest feedback](../actions/getLatestFeedback.md), [List feedback](../actions/listFeedback.md), [Tick off a Grow suggestion](../actions/setGrowDone.md)

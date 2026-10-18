@@ -56,7 +56,7 @@ export function memoryNightlyStore(seed: { connections: ConnectionInfo[]; entrie
       Object.assign(r, { status: 'running', started_at: new Date().toISOString(), model, error: null });
       return r.id;
     },
-    async finishRun(id, patch) { Object.assign(runs.find((r) => r.id === id)!, patch); },
+    async finishRun(id, patch) { Object.assign(runs.find((r) => r.id === id)!, patch, { finished_at: new Date().toISOString() }); },
 
     async writeSummary(ids, summary) { for (const e of entries) if (ids.includes(e.id)) e.ai_summary = summary; },
     async upsertFeedback(row) {

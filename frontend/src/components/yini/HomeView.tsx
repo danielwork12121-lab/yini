@@ -1,10 +1,11 @@
 'use client';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AnimatedPet } from '@/components/pets/AnimatedPet';
 import { ReplyCards } from '@/components/ReplyCards';
 import { dismissCheckin, retryCheckin, usePendingCheckin } from '@/lib/pendingCheckin';
 import { AppDateIcon } from '@/components/DateIcon';
+import { warmJson } from '@/lib/cachedJson';
 
 const greeting = () => { const h = new Date().getHours(); return h < 12 ? 'Morning' : h < 18 ? 'Afternoon' : 'Evening'; };
 
@@ -14,6 +15,9 @@ export function HomeView({ name, partner }: { name: string; partner: string }) {
   const [feeding, setFeeding] = useState(false);
   const [fed, setFed] = useState(false);
   const pending = usePendingCheckin();
+
+  // Fill Grow and Glow in the background, so they open already showing something.
+  useEffect(() => { warmJson('/api/grow'); warmJson('/api/glow'); }, []);
 
   function feed() {
     if (feeding) return;

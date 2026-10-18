@@ -326,8 +326,8 @@ export const LEAK_SHINGLE_SPAN = 6;
 export const SAFE_HEADLINE = 'A few thoughts for you tonight.';
 /** Ships when every bullet leaked. Self-care only: a worse product, a correct outcome. */
 export const SAFE_BULLETS = [
-  'Take a quiet moment for yourself tonight. You showed up and wrote, and that matters.',
-  'Pick one small thing that would make tomorrow a little easier, and do just that.',
+  'Ask them one open question tonight about how their day really felt, then just listen.',
+  'Pick one small thing that would make tomorrow a little easier for the two of you, and do just that.',
 ] as const;
 
 const words = (t: string) =>
@@ -338,6 +338,29 @@ export function wordShingles(text: string, n: number = LEAK_SHINGLE_SPAN): Set<s
   const out = new Set<string>();
   for (let i = 0; i + n <= w.length; i++) out.add(w.slice(i, i + n).join(' '));
   return out;
+}
+
+const STOP = new Set(('the and for are but not you your yours with that this have has had was were will would could should about from into over than then them they their there what when where which while who whom how why all any can did does done get got its just like more most much our out own she her him his now off one only other some such too very want wants wanted also been being both each few here may might must need needs said say says see seen than these those through under until upon use used way yes ' +
+  'feel feels felt feeling today tonight tomorrow yesterday day days time thing things something someone really still always never maybe sure small little kind kindness warm').split(' '));
+
+const significantWords = (t: string): Set<string> =>
+  new Set((t.toLowerCase().replace(/[‘’]/g, "'").match(/[a-z0-9']+/g) ?? []).filter((w) => w.length >= 4 && !STOP.has(w)));
+
+/**
+ * Which of the adversary's recovered "specifics" are really the partner's? A specific
+ * counts only if it uses a distinctive word that is in the PARTNER's entry and not in
+ * the recipient's own. What someone wrote themselves is theirs to see again, so echoing
+ * it back is no leak. With no partner text there is nothing to leak at all.
+ */
+export function specificsFromPartner(
+  specifics: readonly string[],
+  partnerText: string | null,
+  ownText: string | null,
+): string[] {
+  if (!partnerText) return [];
+  const theirs = significantWords(partnerText);
+  const mine = significantWords(ownText ?? '');
+  return specifics.filter((sp) => [...significantWords(sp)].some((w) => theirs.has(w) && !mine.has(w)));
 }
 
 /** True when `candidate` shares any n-word run with `source`. */
