@@ -4,8 +4,9 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { YiniScreen, type ActHandler } from './YiniScreen';
 import { useToast } from './useToast';
+import { PetStep } from './PetStep';
 
-type Step = 'invite' | 'buddy' | 'privacy';
+type Step = 'invite' | 'buddy' | 'privacy' | 'pet';
 
 async function postJson(url: string, body: unknown) {
   const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
@@ -97,13 +98,15 @@ export function PairFlow() {
       case 'join-open': setJoinOpen(true); break;
       case 'pick-buddy': setBuddy((cur) => (cur === target.dataset.buddy ? null : target.dataset.buddy ?? null)); break;
       case 'buddy-go': if (!busy) void bringBuddyHome(); break;
-      case 'privacy-go': router.push('/today'); router.refresh(); break;
+      case 'privacy-go': setStep('pet'); break;
     }
   };
 
   return (
     <div className="yini-page">
-      <YiniScreen screen={step} onAct={onAct} buddy={buddy} code={code} />
+      {step === 'pet'
+        ? <PetStep onBack={() => setStep('privacy')} onDone={() => { router.push('/today'); router.refresh(); }} />
+        : <YiniScreen screen={step} onAct={onAct} buddy={buddy} code={code} />}
 
       {joinOpen && (
         <div className="yscrim" onClick={(e) => { if (e.target === e.currentTarget) setJoinOpen(false); }}>
