@@ -8,7 +8,8 @@
  */
 import { z } from 'zod';
 import {
-  CONCERN_STATUSES, CONNECTION_KINDS, INPUT_MODES, NUDGE_KINDS, NUDGE_STATUSES, THEMES,
+  ANALYSIS_STATUSES, CONCERN_STATUSES, CONNECTION_KINDS, EMOTIONAL_STATES, INPUT_MODES,
+  NUDGE_KINDS, NUDGE_STATUSES, PET_SPECIES, THEMES,
 } from './enums';
 import { PetStateSchema } from './models';
 
@@ -21,6 +22,7 @@ export const ApiErrorSchema = z.object({
   code: z.enum([
     'unauthenticated', 'no_connection', 'already_checked_in', 'invalid_input',
     'transcription_failed', 'model_failed', 'rate_limited', 'server_error',
+    'forbidden', 'not_found', 'conflict',
   ]),
   /** True when the client should keep the user's text and offer a retry. */
   recoverable: z.boolean().default(true),
@@ -77,15 +79,13 @@ export type TranscribeResponse = z.infer<typeof TranscribeResponseSchema>;
 /* ── POST /api/checkin ──────────────────────────────────────────────── */
 
 export const CheckinRequestSchema = z.object({
-  /** The user's own words. Required either way — voice arrives already transcribed. */
-  text: z.string().min(1).max(8000),
+  text: z.string().min(1).max(8000).describe("The user's own words. Required either way; voice arrives already transcribed."),
   input_mode: z.enum(INPUT_MODES),
-  connection_id: zUuid.nullable().default(null),   // null = the default connection
+  connection_id: zUuid.nullable().default(null).describe('Null means your default connection.'),
   audio_path: z.string().nullable().default(null),
   audio_duration_ms: z.number().int().nonnegative().nullable().default(null),
   transcript_failed: z.boolean().default(false),
-  /** Computed client-side from the device clock; server validates against the profile tz. */
-  local_date: zLocalDate,
+  local_date: zLocalDate.describe('Computed client-side from the device clock, YYYY-MM-DD.'),
 });
 export type CheckinRequest = z.infer<typeof CheckinRequestSchema>;
 
@@ -199,8 +199,110 @@ export const QuestSubmitRequestSchema = z.object({
 export type QuestSubmitRequest = z.infer<typeof QuestSubmitRequestSchema>;
 
 /* ── pairing + demo ─────────────────────────────────────────────────── */
-export const JoinRequestSchema = z.object({ invite_code: z.string().length(6) });
+const zDisplayName = z.string().trim().max(40).optional()
+  .describe('Optional. Sets your display name in the same step.');
+
+/** GET /api/connection — drives whether the app shows /pair or /today. */
+export const ConnectionStatusResponseSchema = z.object({
+  paired: z.boolean(),
+  display_name: z.string().nullable(),
+  invite_code: z.string().nullable(),
+  partner_display_name: z.string().nullable(),
+});
+export type ConnectionStatusResponse = z.infer<typeof ConnectionStatusResponseSchema>;
+
+/** POST /api/connection */
+export const CreateConnectionRequestSchema = z.object({
+  display_name: zDisplayName,
+  /** The buddy picked at sign-up. Optional so older clients still work; the pet hatches into it. */
+  species: z.enum(PET_SPECIES).optional(),
+});
+export type CreateConnectionRequest = z.infer<typeof CreateConnectionRequestSchema>;
+export const CreateConnectionResponseSchema = z.object({ invite_code: z.string().length(6) });
+export type CreateConnectionResponse = z.infer<typeof CreateConnectionResponseSchema>;
+
+/** POST /api/connection/join. Codes are read aloud, so case and whitespace are forgiven. */
+export const JoinRequestSchema = z.object({
+  invite_code: z.string().trim().toUpperCase().length(6, 'That code should be 6 characters'),
+  display_name: zDisplayName,
+});
 export type JoinRequest = z.infer<typeof JoinRequestSchema>;
+export const JoinResponseSchema = z.object({ ok: z.literal(true), already: z.boolean().default(false) });
+export type JoinResponse = z.infer<typeof JoinResponseSchema>;
 
 export const DemoLoginRequestSchema = z.object({ role: z.enum(['avery', 'sam']) });
 export type DemoLoginRequest = z.infer<typeof DemoLoginRequestSchema>;
+export const DemoLoginResponseSchema = z.object({ ok: z.literal(true), display_name: z.string() });
+export type DemoLoginResponse = z.infer<typeof DemoLoginResponseSchema>;
+
+/* ── GET /api/entries ───────────────────────────────────────────────── */
+
+const zLimit = (max: number, dflt: number) => z.coerce.number().int().min(1).max(max).default(dflt);
+
+/** Your own entries, newest first. Includes the nightly `ai_summary` once it exists. */
+export const EntriesQuerySchema = z.object({ limit: zLimit(60, 14) });
+export type EntriesQuery = z.infer<typeof EntriesQuerySchema>;
+export const EntryViewSchema = z.object({
+  id: zUuid,
+  local_date: zLocalDate,
+  text: z.string(),
+  input_mode: z.enum(INPUT_MODES),
+  state: z.enum(EMOTIONAL_STATES).nullable(),
+  mood_face: z.number().int().min(1).max(5).nullable(),
+  ai_summary: z.string().nullable(),
+  created_at: z.string(),
+});
+export type EntryView = z.infer<typeof EntryViewSchema>;
+export const EntriesResponseSchema = z.object({ entries: z.array(EntryViewSchema) });
+export type EntriesResponse = z.infer<typeof EntriesResponseSchema>;
+
+/* ── nightly feedback ───────────────────────────────────────────────── */
+
+/** What the recipient sees. No run id, no leak metrics, nothing about the other side. */
+export const DailyFeedbackViewSchema = z.object({
+  id: zUuid,
+  local_date: zLocalDate,
+  headline: z.string(),
+  bullets: z.array(z.string()),
+  created_at: z.string(),
+});
+export type DailyFeedbackView = z.infer<typeof DailyFeedbackViewSchema>;
+
+/** GET /api/feedback/latest */
+export const FeedbackLatestResponseSchema = z.object({ feedback: DailyFeedbackViewSchema.nullable() });
+export type FeedbackLatestResponse = z.infer<typeof FeedbackLatestResponseSchema>;
+
+/** GET /api/feedback */
+export const FeedbackListQuerySchema = z.object({ limit: zLimit(30, 7) });
+export type FeedbackListQuery = z.infer<typeof FeedbackListQuerySchema>;
+export const FeedbackListResponseSchema = z.object({ feedback: z.array(DailyFeedbackViewSchema) });
+export type FeedbackListResponse = z.infer<typeof FeedbackListResponseSchema>;
+
+/* ── running the nightly agent ──────────────────────────────────────── */
+
+/** Operator view of a run. Deliberately omits `pair_summary`, which describes both people. */
+export const AnalysisRunViewSchema = z.object({
+  connection_id: zUuid,
+  local_date: zLocalDate,
+  status: z.enum(ANALYSIS_STATUSES),
+  model: z.string().nullable(),
+  tool_calls: z.number().int().nonnegative(),
+  error: z.string().nullable(),
+});
+export type AnalysisRunView = z.infer<typeof AnalysisRunViewSchema>;
+export const AnalyzeResponseSchema = z.object({ runs: z.array(AnalysisRunViewSchema) });
+export type AnalyzeResponse = z.infer<typeof AnalyzeResponseSchema>;
+
+/** POST /api/admin/analyze. Omit connection_id to sweep every eligible connection. */
+export const AnalyzeRequestSchema = z.object({
+  connection_id: zUuid.optional(),
+  /** Defaults to each connection's target day (see NIGHTLY_TARGET). */
+  local_date: zLocalDate.optional(),
+  /** Re-run a day that already finished. */
+  force: z.boolean().default(false),
+});
+export type AnalyzeRequest = z.infer<typeof AnalyzeRequestSchema>;
+
+/** POST /api/feedback/run. Demo mode only: "pretend it's midnight" for your own connection. */
+export const RunMyAnalysisRequestSchema = z.object({ local_date: zLocalDate.optional() });
+export type RunMyAnalysisRequest = z.infer<typeof RunMyAnalysisRequestSchema>;

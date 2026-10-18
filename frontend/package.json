@@ -1,5 +1,5 @@
 {
-  "name": "corner",
+  "name": "yini",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -7,9 +7,14 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "contract:test": "tsc src/contract/policy.selftest.ts --outDir .tmp-selftest --module commonjs --target es2022 --moduleResolution node --skipLibCheck --esModuleInterop && node .tmp-selftest/policy.selftest.js",
+    "contract:test": "tsx src/contract/policy.selftest.ts",
     "db:migrate": "node scripts/migrate.mjs",
-    "db:migrate:dry": "node scripts/migrate.mjs --dry"
+    "db:migrate:dry": "node scripts/migrate.mjs --dry",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "ontology:docs": "tsx scripts/ontology-docs.ts",
+    "ontology:check": "tsx scripts/ontology-docs.ts --check",
+    "db:proof": "node scripts/rls-proof.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.135.0",
@@ -29,8 +34,10 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.2",
+    "pg": "^8.13.1",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5",
-    "pg": "^8.13.1"
+    "vitest": "^3.2.7"
   }
 }

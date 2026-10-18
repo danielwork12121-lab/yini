@@ -2,31 +2,28 @@
 import type { PetState } from '@/contract';
 
 /**
- * The pet. Layered transparent PNGs, animated with CSS transforms — no SVG
- * tracing, no generated art, no sprite sheets.
+ * The pet. One finished illustration per buddy at /pets/<species>.png, animated with
+ * CSS transforms only. Until the egg hatches (or if no art exists for the species) a
+ * neutral placeholder shape is shown so the loop stays demoable.
  *
- * Assets live at /pets/<species>/<layer>.png, every layer on the same 512x512
- * registration. Until they land, `hasArt` is false and we render a neutral
- * placeholder shape so the loop is demoable without blocking on art.
- *
- * Expression is a LAYER SWAP, never a redraw: one body, swapped eyes and mouth.
+ * Expression is a filter, never a redraw: napping dims and desaturates the same art.
  */
-export function Pet({ pet, hatching = false, hasArt = false }: {
+export function Pet({ pet, hatching = false, hasArt = true }: {
   pet: PetState; hatching?: boolean; hasArt?: boolean;
 }) {
-  const eyes = pet.both_fed_today ? 'eyes-happy' : pet.you_fed_today ? 'eyes-normal' : 'eyes-sleepy';
-  const mouth = pet.both_fed_today ? 'mouth-smile' : 'mouth-neutral';
-  const src = (layer: string) => `/pets/${pet.species ?? 'egg'}/${layer}.png`;
+  const napping = !pet.you_fed_today;
 
   return (
     <div>
       <div className={`pet-stage ${hatching ? 'pet-hatching' : ''}`}>
         {pet.hatched && hasArt && pet.species ? (
           <div className="pet-bob" style={{ position: 'absolute', inset: 0 }}>
-            <img className="pet-layer pet-breathe" src={src('body')} alt="" />
-            <img className="pet-layer" src={src(eyes)} alt="" />
-            <img className="pet-layer" src={src(mouth)} alt="" />
-            {pet.both_fed_today && <img className="pet-layer" src={src('blush')} alt="" />}
+            <img
+              className="pet-layer pet-breathe"
+              src={`/pets/${pet.species}.png`}
+              alt=""
+              style={napping ? { filter: 'grayscale(.45) brightness(.98)', opacity: 0.88 } : undefined}
+            />
           </div>
         ) : (
           <Placeholder hatched={pet.hatched} fed={pet.you_fed_today} both={pet.both_fed_today} />

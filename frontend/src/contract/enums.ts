@@ -133,6 +133,12 @@ export type CareActSource = (typeof CARE_ACT_SOURCES)[number];
 export const LEAK_VERDICTS = ['pass', 'fail', 'skipped', 'error'] as const;
 export type LeakVerdict = (typeof LEAK_VERDICTS)[number];
 
+/* ───────────────────────────── nightly agent ───────────────────────────── */
+
+/** Lifecycle of one nightly run. `skipped` is not a failure: nobody wrote, or no partner yet. */
+export const ANALYSIS_STATUSES = ['running', 'done', 'skipped', 'failed'] as const;
+export type AnalysisStatus = (typeof ANALYSIS_STATUSES)[number];
+
 /* ───────────────────────────── the pet ───────────────────────────── */
 
 /**
@@ -166,17 +172,11 @@ export const PET_STAGES = [
 export const HATCH_REQUIRES_SHARED_DAY = true;
 
 /**
- * Pet art layers. The co-founder ships one transparent PNG per layer per species,
- * all on a common 512x512 registration. Animation is CSS transforms on these,
- * never redrawn art and never traced to SVG.
+ * The buddies you can pick at sign-up (the pick-a-buddy screen). One finished
+ * illustration per species, at /pets/<species>.png. The pet stays an egg until the
+ * first day both people log, then hatches into the buddy that was picked.
  */
-export const PET_LAYERS = [
-  'body', 'eyes-normal', 'eyes-happy', 'eyes-sleepy',
-  'mouth-neutral', 'mouth-smile', 'blush',
-] as const;
-export type PetLayer = (typeof PET_LAYERS)[number];
-
 export const PET_SPECIES = [
-  'blob-bird', 'cat', 'bunny', 'frog', 'axolotl', 'capybara', 'penguin', 'fox',
+  'corgi', 'poodle', 'golden', 'tuxedo', 'fluffy', 'calico', 'bunny', 'hamster', 'hedgehog',
 ] as const;
 export type PetSpecies = (typeof PET_SPECIES)[number];
