@@ -1,7 +1,8 @@
 'use client';
-import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { CheckinResponse, TodayResponse } from '@/contract';
+import { useRouter } from 'next/navigation';
+import type { TodayResponse } from '@/contract';
+import { startCheckin } from '@/lib/pendingCheckin';
 import { Pet } from './Pet';
 
 // No pitch-deck timer: people talk as long as they need. The only limits are
@@ -14,7 +15,7 @@ const MIN_MS = 1_000;               // tap-to-start raises accidental-recording 
 const MAX_CHARS = 8_000;            // journal_entries.raw_text check
 const AUDIO_BITS_PER_SECOND = 24_000; // plenty for speech, keeps long takes small
 
-type Phase = 'capture' | 'transcribing' | 'preview' | 'sending' | 'reply';
+type Phase = 'capture' | 'transcribing' | 'preview';
 
 export function CheckIn({ today }: { today: TodayResponse }) {
   const [phase, setPhase] = useState<Phase>('capture');
@@ -26,8 +27,8 @@ export function CheckIn({ today }: { today: TodayResponse }) {
   const [text, setText] = useState('');
   const [typing, setTyping] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [reply, setReply] = useState<CheckinResponse | null>(null);
-  const [pet, setPet] = useState(today.pet);
+  const router = useRouter();
+  const [pet] = useState(today.pet);
 
   const recorder = useRef<MediaRecorder | null>(null);
   const chunks = useRef<Blob[]>([]);
@@ -120,34 +121,14 @@ export function CheckIn({ today }: { today: TodayResponse }) {
     if (!body) { setError('There is nothing to send yet. Say or type something first.'); return; }
     if (body.length > MAX_CHARS) { setError(`That is a long one. Trim it under ${MAX_CHARS.toLocaleString()} characters.`); return; }
 
-    setPhase('sending');
+    // Hand the words to the background and go Home: nobody should sit and wait on the AI.
     setError(null);
-    try {
-      const res = await fetch('/api/checkin', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          text: body,
-          input_mode: blob ? 'voice' : 'text',
-          audio_duration_ms: durationMs,
-          transcript_failed: transcriptFailed,
-          connection_id: null,
-          audio_path: null,
-          local_date: localDate(),
-        }),
-      });
-      const json = await res.json();
-      if (!res.ok) { setError(json.error ?? 'Something went wrong.'); setPhase(blob ? 'preview' : 'capture'); return; }
-      setReply(json as CheckinResponse);
-      setPet((json as CheckinResponse).pet);
-      setPhase('reply');
-    } catch {
-      setError('Network hiccup. Your words are still here. Try send again.');
-      setPhase(blob ? 'preview' : 'capture');
-    }
+    startCheckin({
+      text: body, input_mode: blob ? 'voice' : 'text', audio_duration_ms: durationMs,
+      transcript_failed: transcriptFailed, local_date: localDate(),
+    });
+    router.push('/home');
   }
-
-  if (phase === 'reply' && reply) return <Reply reply={reply} pet={pet} partner={today.partner_display_name} />;
 
   const overLimit = text.trim().length > MAX_CHARS;
   const nearCap = recording && elapsed >= WARN_MS;
@@ -214,8 +195,6 @@ export function CheckIn({ today }: { today: TodayResponse }) {
           </div>
         )}
 
-        {phase === 'sending' && <p className="body" style={{ margin: 0 }}>Thinking about your day…</p>}
-
         {typing && phase === 'capture' && text.trim().length > 0 && (
           <button className="btn" style={{ marginTop: 12 }} onClick={send} disabled={overLimit}>Send</button>
         )}
@@ -234,67 +213,6 @@ export function CheckIn({ today }: { today: TodayResponse }) {
       <div className="card card-warm" style={{ marginTop: 22 }}>
         <Pet pet={pet} />
       </div>
-    </div>
-  );
-}
-
-function Reply({ reply, pet, partner }: { reply: CheckinResponse; pet: CheckinResponse['pet']; partner: string }) {
-  return (
-    <div>
-      {reply.safety && (
-        <div className="card" style={{ borderColor: '#D6C9B0', background: 'var(--surface-warm)' }}>
-          <p className="body" style={{ marginTop: 0 }}>{reply.reply.for_you}</p>
-          {reply.safety.resources.map((r) => (
-            <p key={r.label} className="small" style={{ margin: '8px 0' }}>
-              <strong style={{ color: 'var(--ink)' }}>{r.label}</strong><br />{r.detail}
-            </p>
-          ))}
-        </div>
-      )}
-
-      {!reply.safety && (
-        <>
-          <div className="card">
-            <p className="body" style={{ marginTop: 0 }}>{reply.reply.acknowledgement}</p>
-            <p className="body" style={{ marginBottom: 0, color: 'var(--ink-muted)' }}>{reply.reply.for_you}</p>
-          </div>
-
-          {/* Only ever names acts the partner actually logged. Absent, not apologised for. */}
-          {reply.reply.reveal && (
-            <div className="card card-warm">
-              <p className="caption" style={{ marginTop: 0, textTransform: 'uppercase', letterSpacing: '.06em' }}>
-                While you were under
-              </p>
-              <p className="body" style={{ marginBottom: 0 }}>{reply.reply.reveal}</p>
-            </div>
-          )}
-
-          {reply.reply.partner_item && (
-            <div className="card">
-              <p className="caption" style={{ marginTop: 0, textTransform: 'uppercase', letterSpacing: '.06em' }}>
-                One thing, if you have it in you
-              </p>
-              <p className="body" style={{ marginBottom: 0 }}>{reply.reply.partner_item}</p>
-            </div>
-          )}
-        </>
-      )}
-
-      <div className="card card-warm" style={{ marginTop: 14 }}>
-        <Pet pet={pet} hatching={reply.pet_hatched_now} />
-        {reply.pet_hatched_now && (
-          <p className="body" style={{ textAlign: 'center', marginBottom: 0 }}>
-            You both showed up. {pet.name} hatched.
-          </p>
-        )}
-      </div>
-
-      <p style={{ textAlign: 'center', marginTop: 18 }}>
-        <Link href="/calendar" className="link">📅 See today on your calendar</Link>
-      </p>
-      <p className="caption" style={{ textAlign: 'center', marginTop: 4 }}>
-        {partner} will never see what you wrote.
-      </p>
     </div>
   );
 }

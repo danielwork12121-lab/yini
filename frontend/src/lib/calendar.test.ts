@@ -60,3 +60,25 @@ describe('mock classifier jots', () => {
     expect(mockClassify('ok').jots).toEqual([]);
   });
 });
+
+import { DaySummarySchema } from '@/contract';
+import { mockDaySummary } from '@/lib/llm/mock';
+
+describe('day summary', () => {
+  it('clamps instead of rejecting, so one long note never loses the summary', () => {
+    const out = DaySummarySchema.parse({ headline: 'h'.repeat(200), emoji: 7, jots: ['a'.repeat(300), '', '  ok  ', ...Array(20).fill('x')] });
+    expect(out.headline).toHaveLength(80);
+    expect(out.emoji).toBeUndefined();
+    expect(out.jots[0]).toHaveLength(100);
+    expect(out.jots[1]).toBe('ok');
+    expect(out.jots).toHaveLength(10);
+  });
+  it('survives garbage fields', () => {
+    expect(DaySummarySchema.parse({ headline: null, jots: 'nope' })).toEqual({ headline: '', emoji: undefined, jots: [] });
+    expect(DaySummarySchema.parse({})).toMatchObject({ jots: [] });
+  });
+  it('mock summary is valid and never invents', () => {
+    expect(() => DaySummarySchema.parse(mockDaySummary('Work was brutal today and the deadline moved again.'))).not.toThrow();
+    expect(mockDaySummary('ok').jots).toEqual([]);
+  });
+});

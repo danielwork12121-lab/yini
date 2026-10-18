@@ -37,23 +37,6 @@ themes — up to 3, ONLY from: ${THEME_LIST}
 day_note — ≤80 chars, one plain line that sums up the day, for this person's own
   private calendar. Plain and factual, no advice.
 
-jots — up to 8 short notes for this person's own calendar. Cut a long, rambling
-  entry down to the specific things that happened or mattered, and drop the rest.
-    • One fact or feeling per jot, ≤90 characters, plain words, no filler
-    • Concrete beats vague: "Presentation went well, boss praised the slides"
-      beats "Work was okay"
-    • Keep real names, places and times they gave; these are for THEM alone
-    • Written in the order the day happened, no first-person "I"
-    • Cover the whole entry: the good, the hard and the ordinary
-    • Never invent anything they did not say. A short entry gets 1-3 jots.
-  GOOD: ["Skipped lunch to finish the report", "Call with mom, she sounds better",
-         "Dinner out with Sam, felt close"]
-  BAD:  ["Had a day", "Things happened at work"]   (vague)
-
-day_emoji — exactly ONE emoji that represents the whole day, e.g. 😴 for exhausted,
-  🎉 for a big win, 🌧️ for a gloomy one, 😊 for a good ordinary one. Output only the
-  emoji character itself.
-
 deliver_today — your recommendation on whether this person could absorb hearing one
   thing their partner needs. This is a RECOMMENDATION; deterministic policy decides.
   Lean false when they are depleted.
@@ -109,6 +92,40 @@ export function classifyUser(input: {
     input.raw_text,
     `"""`,
   ].join('\n');
+}
+
+/* ───────────────────────────── day summary ───────────────────────────── */
+
+export const DAY_SUMMARY_SYSTEM = `You write the private calendar notes for one person's journal entry.
+
+They will read these later, themselves, to remember their day at a glance. Nobody
+else ever sees them. Return a single JSON object and nothing else:
+  { "headline": string, "emoji": string, "jots": string[] }
+
+jots — the IDEAS worth remembering, each restated in your own compact words.
+  • Rewrite, never quote. Do not copy their sentences, even shortened. Drop filler,
+    hedges, "like", "um", and anything said twice.
+  • One idea per jot, about 30 to 70 characters, at most 8. Merge repeats. A short
+    entry gets 1 to 3 jots; never pad.
+  • Keep the specifics that make the memory come back: who, where, how long, what
+    caused it. "Food delivery 12 hours late, day felt ruined" beats "Had a bad
+    experience with food".
+  • Keep the feeling they named ("frustrated", "relieved") when they named one.
+  • Plain, neutral, no "I", no advice, no judging, nothing they did not say.
+  • In the order the day happened.
+  EXAMPLE
+    said: "Let's see today is going shit because my food has not arrived for like
+          12 hours, and there's some like dried mangoes on the table which has been
+          looking terrible."
+    jots: ["Food delivery 12 hours late, day felt ruined", "Dried mangoes on the table looking awful"]
+
+headline — the whole day in one short phrase, 60 characters or fewer, in plain words.
+
+emoji — exactly ONE emoji that stands for the day (😴 worn out, 🎉 a win, 🌧️ gloomy,
+  😊 good and ordinary). Output only the emoji character.`;
+
+export function daySummaryUser(input: { raw_text: string; author_display_name: string }): string {
+  return [`Author: ${input.author_display_name}`, ``, `ENTRY:`, `"""`, input.raw_text, `"""`].join('\n');
 }
 
 /* ───────────────────────────── compose ───────────────────────────── */

@@ -4,9 +4,8 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { YiniScreen, type ActHandler } from './YiniScreen';
 import { useToast } from './useToast';
-import { PetStep } from './PetStep';
 
-type Step = 'invite' | 'buddy' | 'privacy' | 'pet';
+type Step = 'invite' | 'buddy' | 'privacy';
 
 async function postJson(url: string, body: unknown) {
   const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
@@ -33,6 +32,8 @@ export function PairFlow() {
   const [joinOpen, setJoinOpen] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [busy, setBusy] = useState(false);
+  // Nothing is drawn until we know where this person is, so a paired person never sees the invite page flash.
+  const [ready, setReady] = useState(false);
   const name = useRef<string | undefined>(undefined);
 
   useEffect(() => {
@@ -42,14 +43,15 @@ export function PairFlow() {
       if (res.status === 401) { router.replace('/'); return; }
       const me = await res.json();
       if (cancelled) return;
-      if (me.paired) { router.replace('/today'); return; }
+      if (me.paired) { router.replace('/home'); return; }
       // 'You' is the database default for a profile with no name, so it counts as unset.
       name.current = me.display_name && me.display_name !== 'You' ? me.display_name : await googleFirstName();
-      if (me.invite_code) { setCode(me.invite_code); return; }
+      if (me.invite_code) { setCode(me.invite_code); setReady(true); return; }
       const made = await postJson('/api/connection', { display_name: name.current });
       if (cancelled) return;
       if (made.ok) setCode(made.json.invite_code);
       else toast(made.json.error ?? 'Could not make your code. Refresh to try again.');
+      setReady(true);
     })();
     return () => { cancelled = true; };
   }, [router, toast]);
@@ -117,15 +119,13 @@ export function PairFlow() {
       case 'join-open': setJoinOpen(true); break;
       case 'pick-buddy': setBuddy((cur) => (cur === target.dataset.buddy ? null : target.dataset.buddy ?? null)); break;
       case 'buddy-go': if (!busy) void bringBuddyHome(); break;
-      case 'privacy-go': setStep('pet'); break;
+      case 'privacy-go': router.push('/home'); router.refresh(); break;
     }
   };
 
   return (
     <div className="yini-page">
-      {step === 'pet'
-        ? <PetStep onBack={() => setStep('privacy')} onDone={() => { router.push('/today'); router.refresh(); }} />
-        : <YiniScreen screen={step} onAct={onAct} buddy={buddy} code={code} />}
+      {ready && <YiniScreen screen={step} onAct={onAct} buddy={buddy} code={code} />}
 
       {joinOpen && (
         <div className="yscrim" onClick={(e) => { if (e.target === e.currentTarget) setJoinOpen(false); }}>

@@ -96,6 +96,24 @@ export const ClassifyOutputSchema = z.object({
 });
 export type ClassifyOutput = z.infer<typeof ClassifyOutputSchema>;
 
+/* ─────────────────────── 1b. DAY SUMMARY (calendar) ─────────────────────── */
+
+/**
+ * The author's own calendar entry for the day. A separate, forgiving call: it sees the
+ * same text as classify and its output reaches the author alone, so it never touches
+ * the partner side. Fields are clamped rather than rejected, because a note that is a
+ * few characters too long is not worth losing the whole summary over.
+ */
+export const DaySummarySchema = z.object({
+  /** The day in one short phrase. */
+  headline: z.string().transform((s) => s.trim().slice(0, 80)).catch(''),
+  /** Exactly one emoji; anything else is ignored and the mood face is used. */
+  emoji: z.string().optional().catch(undefined),
+  /** The ideas worth remembering, restated in the model's own words. */
+  jots: z.array(z.string()).transform((a) => a.map((s) => s.trim().slice(0, 100)).filter(Boolean).slice(0, 10)).catch([]),
+});
+export type DaySummary = z.infer<typeof DaySummarySchema>;
+
 /* ───────────────────────────── 2. COMPOSE ───────────────────────────── */
 
 /**
