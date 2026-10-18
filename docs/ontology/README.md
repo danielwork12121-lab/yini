@@ -1,6 +1,6 @@
 <!-- Generated from src/ontology by `npm run ontology:docs`. Edit the TypeScript, not this file. -->
 
-# Corner ontology
+# Yini ontology
 
 Everything the app knows about, as three kinds of thing:
 

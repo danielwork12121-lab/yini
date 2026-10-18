@@ -38,4 +38,12 @@ Open http://localhost:3000 and tap **I'm Avery**, then open a private window and
 
 ## Deploy
 
-On Vercel, with the project root set to `frontend/`. Set the variables from `.env.example`, including `CRON_SECRET`; `vercel.json` schedules the nightly sweep. Apply migrations to the hosted project with `npm run db:migrate`.
+On Vercel:
+
+1. Import the GitHub repo and set **Root Directory** to `frontend/` (this is a project setting, not something `vercel.json` can set). The framework, install and build commands come from `vercel.json`.
+2. Add the variables from `.env.example` under Settings → Environment Variables. The app needs `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` to leave the setup screen; add `CRON_SECRET` and `ADMIN_TOKEN` for the nightly routes, and a model key (e.g. `GEMINI_API_KEY`) or leave it unset to run on the mock.
+3. `vercel.json` schedules the nightly sweep (`/api/cron/nightly`, daily at 09:00 UTC). Vercel sends `Authorization: Bearer $CRON_SECRET` automatically.
+4. In Supabase → Authentication → URL Configuration, add the Vercel domain to the site URL and redirect allow-list (`https://<your-domain>/auth/callback`).
+5. Apply migrations to the hosted project with `npm run db:migrate`.
+
+`NEXT_PUBLIC_DEMO_MODE=true` enables the one-tap demo login. Turn it off for any deployment with real users.
