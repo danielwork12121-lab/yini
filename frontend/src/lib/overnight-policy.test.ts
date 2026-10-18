@@ -12,6 +12,13 @@ describe('overnightDecision: when the overnight read starts', () => {
     expect(overnightDecision({ status: 'done', started_at: ago(5 * 86_400_000) }, NOW)).toBe('settled');
     expect(overnightDecision({ status: 'skipped', started_at: ago(1000) }, NOW)).toBe('settled');
   });
+  it('reads again when something was written after the last read finished', () => {
+    const run = { status: 'done' as const, started_at: ago(600_000), finished_at: ago(540_000) };
+    expect(overnightDecision(run, NOW, ago(60_000))).toBe('run');
+    expect(overnightDecision(run, NOW, ago(560_000))).toBe('settled');
+    expect(overnightDecision(run, NOW, null)).toBe('settled');
+    expect(overnightDecision({ status: 'skipped', started_at: ago(600_000), finished_at: ago(599_000) }, NOW, ago(1000))).toBe('run');
+  });
   it('waits for a read that is already running, so two phones never start two', () => {
     expect(overnightDecision({ status: 'running', started_at: ago(5_000) }, NOW)).toBe('wait');
     expect(overnightDecision({ status: 'running', started_at: ago(STALE_MS - 1) }, NOW)).toBe('wait');

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addDays, appDateFor, nightlyTargetDay, SAFE_BULLETS, SAFE_HEADLINE, scrubFeedback, sharesSpan } from './policy';
+import { addDays, appDateFor, nightlyTargetDay, SAFE_BULLETS, SAFE_HEADLINE, scrubFeedback, sharesSpan, specificsFromPartner } from './policy';
 
 const partner = 'I am so tired of always being the one who plans every single weekend for us.';
 
@@ -71,5 +71,23 @@ describe('the testing clock', () => {
     expect(appDateFor('America/Los_Angeles', 1, at)).toBe('2026-10-18');
     expect(appDateFor('America/Los_Angeles', 3, at)).toBe('2026-10-20');
     expect(appDateFor('Asia/Tokyo', 1, at)).toBe('2026-10-19');
+  });
+});
+
+
+describe('specificsFromPartner: only the partner\'s words count as a leak', () => {
+  const mine = 'I snapped at her during dinner about the dishes and then went quiet.';
+  const theirs = 'My sister is visiting next weekend and I am nervous about the cabin trip.';
+  it('echoing the recipient\'s own incident back is not a leak', () => {
+    expect(specificsFromPartner(['argument about the dishes at dinner'], theirs, mine)).toEqual([]);
+  });
+  it('something only the partner wrote is a leak', () => {
+    expect(specificsFromPartner(['sister visiting', 'cabin trip'], theirs, mine)).toEqual(['sister visiting', 'cabin trip']);
+  });
+  it('a word both people wrote is the recipient\'s own to see', () => {
+    expect(specificsFromPartner(['dinner plans'], 'Dinner was tense again.', mine)).toEqual([]);
+  });
+  it('with no partner entry there is nothing to leak', () => {
+    expect(specificsFromPartner(['anything at all'], null, mine)).toEqual([]);
   });
 });

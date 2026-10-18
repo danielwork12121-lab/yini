@@ -78,8 +78,8 @@ export const env = {
     opt('NIGHTLY_TARGET') === 'same_day' ? 'same_day' : 'previous_day',
   /** How many earlier days of ai_summary lines go into the agent's prompt. */
   agentHistoryDays: () => Math.min(30, Math.max(0, Number(opt('AGENT_HISTORY_DAYS') ?? 7) || 7)),
-  /** Gemini only: let the agent call its read tools before composing. */
-  agentUseTools: () => opt('AGENT_USE_TOOLS') !== 'false',
+  /** Off unless asked for: each tool round is another model call, and a couple has a few days of history, which the summaries already carry. */
+  agentUseTools: () => opt('AGENT_USE_TOOLS') === 'true',
   contextSignalEnabled: () => opt('CONTEXT_SIGNAL_ENABLED') !== 'false',
   demoMode: () => process.env.NEXT_PUBLIC_DEMO_MODE === 'true',
 

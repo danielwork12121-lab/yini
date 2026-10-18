@@ -1,18 +1,17 @@
-import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
-import { createServerSupabase } from '@/lib/supabase/server';
 import { env } from '@/lib/env';
 import { GrowView } from '@/components/GrowView';
 import { SetupNeeded } from '@/components/SetupNeeded';
 
 export const metadata: Metadata = { title: 'Grow · Yini' };
-export const dynamic = 'force-dynamic';
 
-export default async function GrowPage() {
+/**
+ * No sign-in check here on purpose: the page itself is the same for everyone and loads
+ * at once, and the API behind it is what knows who you are (it answers 401, and the view
+ * sends you back to sign in). One less round trip on every visit.
+ */
+export default function GrowPage() {
   if (!env.isSupabaseConfigured()) return <SetupNeeded />;
-  const supabase = await createServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/');
   return (
     <main className="phone" style={{ paddingTop: 28 }}>
       <GrowView />

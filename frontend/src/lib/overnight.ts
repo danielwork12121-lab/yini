@@ -9,44 +9,45 @@ import { overnightDecision, type OvernightDecision } from '@/lib/overnight-polic
 import { appToday } from '@/lib/clock';
 
 /**
- * The overnight read, started lazily. The nightly agent already writes everyone's
- * feedback (Grow). Rather than rely only on the daily cron, any signed-in visit to
- * Home or Grow after a day has ended starts the read for that day if it has not been
- * read yet. It is idempotent per (connection, day), so two phones asking at once, or
- * the cron arriving later, cost nothing extra.
+ * Yini's read of a day, kept up to date. The nightly agent writes everyone's feedback
+ * (Grow). It runs in the background right after someone logs, so Grow is already there
+ * when it is opened, and any visit to Home or Grow starts it if a day has not been read
+ * yet or something was written after the last read. It is idempotent: two phones asking
+ * at once, or the cron arriving later, cost nothing extra.
  */
 export interface Overnight {
-  /** The latest finished day that has something written in it. Null when there is none. */
+  /** The newest day that has something written in it. Null when nothing was ever logged. */
   day: string | null;
   decision: OvernightDecision;
   runStatus: 'running' | 'done' | 'skipped' | 'failed' | null;
 }
 
 export async function loadOvernight(db: SupabaseClient, connectionId: string, today: string): Promise<Overnight> {
-  const { data } = await db.from('entries').select('local_date')
-    .eq('connection_id', connectionId).lt('local_date', today)
-    .order('local_date', { ascending: false }).limit(1).maybeSingle();
+  const { data } = await db.from('entries').select('local_date, created_at')
+    .eq('connection_id', connectionId).lte('local_date', today)
+    .order('local_date', { ascending: false }).order('created_at', { ascending: false }).limit(1).maybeSingle();
   const day = (data?.local_date as string | undefined) ?? null;
   if (!day) return { day: null, decision: 'settled', runStatus: null };
   const run = await supabaseNightlyStore(db).getRun(connectionId, day);
-  return { day, decision: overnightDecision(run), runStatus: run?.status ?? null };
+  return { day, decision: overnightDecision(run, Date.now(), data?.created_at as string | null), runStatus: run?.status ?? null };
 }
 
-/** Runs the agent for one finished day. Never throws: it runs after a response has gone out. */
+/** Runs the agent for one day. Never throws: it runs after a response has gone out. */
 export async function runOvernight(connectionId: string, day: string): Promise<void> {
   try {
     const store = supabaseNightlyStore(createAdminSupabase());
     const conn = await store.connection(connectionId);
     if (!conn) return;
-    await analyzeConnection(store, conn, day, productionNightlyDeps());
+    // force: the day may already have a finished read that is now out of date.
+    await analyzeConnection(store, conn, day, productionNightlyDeps(), { force: true });
   } catch (e) {
     console.error('[overnight] run crashed', connectionId, day, e);
   }
 }
 
 /**
- * If a finished day has not been read yet, schedule the read for after this response
- * goes out, and say what state things are in. Never waits on a model.
+ * If the newest day needs reading, schedule the read for after this response goes out,
+ * and say what state things are in. Never waits on a model.
  */
 export async function startOvernightIfDue(db: SupabaseClient, connectionId: string, today: string): Promise<Overnight> {
   const overnight = await loadOvernight(db, connectionId, today);
@@ -57,14 +58,20 @@ export async function startOvernightIfDue(db: SupabaseClient, connectionId: stri
   return overnight;
 }
 
-/** For a page render: the same thing, found from just the signed-in user. Quiet on any failure. */
-export async function startOvernightForUser(userId: string): Promise<void> {
+/**
+ * Read the newest day now if it needs it (right after someone logs, or when Home opens), so Grow is ready before anyone opens it.
+ * Call from inside `after()`. If a read is already running it leaves it alone, and the
+ * next visit to Home or Grow picks up whatever was written in the meantime.
+ */
+export async function readNowForUser(userId: string): Promise<void> {
   try {
     const db = createAdminSupabase();
     const { data: me } = await db.from('profiles').select('timezone, default_connection_id').eq('id', userId).single();
     if (!me?.default_connection_id) return;
-    await startOvernightIfDue(db, me.default_connection_id, await appToday(me.timezone));
+    const today = await appToday(me.timezone);
+    const o = await loadOvernight(db, me.default_connection_id, today);
+    if (o.day && o.decision === 'run') await runOvernight(me.default_connection_id, o.day);
   } catch (e) {
-    console.warn('[overnight] could not check for an unread day:', (e as Error).message);
+    console.warn('[overnight] could not read right after a log:', (e as Error).message);
   }
 }

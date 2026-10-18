@@ -10,7 +10,7 @@
 import 'server-only';
 import { z } from 'zod';
 import {
-  LEAK_MAX_REWRITES, LeakCheckOutputSchema, scoreLeak, stripsClean,
+  LEAK_MAX_REWRITES, LeakCheckOutputSchema, scoreLeak, specificsFromPartner, stripsClean,
   type LeakCheckResult,
 } from '@/contract';
 import { generateJSON } from '@/lib/llm/provider';
@@ -28,9 +28,16 @@ export interface LeakCheckedText {
   dropped: boolean;
 }
 
+/**
+ * With `source`, a leak is something recovered from the message that is really in the
+ * PARTNER's words and not the recipient's own. Without it, any recovered specific fails.
+ */
+export interface LeakSource { partnerText: string | null; ownText: string | null }
+
 export async function leakCheckAndRewrite(
   candidate: string,
   forbiddenNames: readonly string[],
+  source?: LeakSource,
 ): Promise<LeakCheckedText> {
   if (!env.leakCheckEnabled()) {
     return {
@@ -65,7 +72,12 @@ export async function leakCheckAndRewrite(
       };
     }
 
-    const merged = { ...model, leaked_specifics: [...new Set([...model.leaked_specifics, ...strip.hits])] };
+    let merged = { ...model, leaked_specifics: [...new Set([...model.leaked_specifics, ...strip.hits])] };
+    if (source) {
+      const theirs = specificsFromPartner(model.leaked_specifics, source.partnerText, source.ownText);
+      // Guessing the recipient's own incident back is fine. Only the partner's words count.
+      merged = { ...model, confidence: theirs.length || strip.hits.length ? model.confidence : 0, leaked_specifics: [...new Set([...theirs, ...strip.hits])] };
+    }
     last = scoreLeak(merged, attempt);
     if (last.verdict === 'pass') return { text, result: last, rewrites: attempt, dropped: false };
     if (attempt === LEAK_MAX_REWRITES) break;

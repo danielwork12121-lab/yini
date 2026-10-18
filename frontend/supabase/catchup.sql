@@ -1,5 +1,5 @@
 -- Yini catch-up: safe to run any number of times, on any database.
--- Creates whatever 0002_nightly_agent.sql and 0003_app_clock.sql would have created,
+-- Creates whatever 0002_nightly_agent.sql, 0003_app_clock.sql and 0004_grow_done.sql would have created,
 -- and skips whatever already exists. Existing data is never touched.
 
 alter table public.entries
@@ -59,8 +59,20 @@ insert into public.app_clock (id, day_offset) values (1, 0) on conflict (id) do 
 alter table public.app_clock enable row level security;
 revoke all on public.app_clock from anon, authenticated;
 
+create table if not exists public.grow_done (
+  id            uuid primary key default gen_random_uuid(),
+  recipient_id  uuid not null references public.profiles(id) on delete cascade,
+  connection_id uuid not null references public.connections(id) on delete cascade,
+  body_text     text not null check (length(body_text) between 1 and 900),
+  done_at       timestamptz not null default now(),
+  unique (recipient_id, body_text)
+);
+create index if not exists grow_done_recipient_idx on public.grow_done (recipient_id, done_at desc);
+alter table public.grow_done enable row level security;
+revoke all on public.grow_done from anon, authenticated;
+
 -- Tell the API to notice the new tables right away.
 notify pgrst, 'reload schema';
 
 select 'ok' as catchup,
-  (select count(*) from information_schema.tables where table_schema='public' and table_name in ('analysis_runs','daily_feedback','app_clock')) as tables_present_of_3;
+  (select count(*) from information_schema.tables where table_schema='public' and table_name in ('analysis_runs','daily_feedback','app_clock','grow_done')) as tables_present_of_4;

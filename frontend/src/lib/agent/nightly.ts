@@ -21,7 +21,11 @@ import type { ConnectionInfo, DayEntry, NightlyStore } from './store';
 export interface NightlyDeps {
   agent(input: NightlyInput, tools: AgentTool[]): Promise<{ output: NightlyOutput; model: string; toolCalls: number }>;
   /** Adversarial reconstruction on the final text. Return verdict 'skipped' to opt out. */
-  adversarial(feedback: FeedbackFor, partnerName: string): Promise<{ feedback: FeedbackFor; verdict: LeakVerdict }>;
+  adversarial(
+    feedback: FeedbackFor,
+    partnerName: string,
+    source?: { partnerText: string | null; ownText: string | null },
+  ): Promise<{ feedback: FeedbackFor; verdict: LeakVerdict }>;
   historyDays: number;
   /** Label written to analysis_runs.model before the agent reports its own. */
   modelLabel: string;
@@ -83,18 +87,22 @@ export async function analyzeConnection(
 
     // A's feedback is checked against B's words, and B's against A's. Never against one's own.
     const sides = [
-      { me: a, fb: output.feedback_for_a, partnerText: input.side_b.entries_text, partnerName: b.display_name },
-      { me: b, fb: output.feedback_for_b, partnerText: input.side_a.entries_text, partnerName: a.display_name },
+      { me: a, fb: output.feedback_for_a, partnerText: input.side_b.entries_text, ownText: input.side_a.entries_text, partnerName: b.display_name },
+      { me: b, fb: output.feedback_for_b, partnerText: input.side_a.entries_text, ownText: input.side_b.entries_text, partnerName: a.display_name },
     ];
-    for (const s of sides) {
+    // The two sides are independent, so they are checked and written at the same time.
+    await Promise.all(sides.map(async (s) => {
       const scrubbed = scrubFeedback(s.fb, s.partnerText);
-      const adv = await deps.adversarial({ headline: scrubbed.headline, bullets: scrubbed.bullets }, s.partnerName);
+      const adv = await deps.adversarial(
+        { headline: scrubbed.headline, bullets: scrubbed.bullets }, s.partnerName,
+        { partnerText: s.partnerText, ownText: s.ownText },
+      );
       await store.upsertFeedback({
         run_id: runId, connection_id: conn.id, recipient_id: s.me.user_id, local_date: day,
         headline: adv.feedback.headline, bullets: adv.feedback.bullets,
         leak_dropped: scrubbed.dropped, leak_verdict: adv.verdict,
       });
-    }
+    }));
 
     await store.writeSummary(ea.map((e) => e.id), output.side_a.summary);
     await store.writeSummary(eb.map((e) => e.id), output.side_b.summary);

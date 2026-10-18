@@ -310,6 +310,23 @@ export const PartnerNeedViewSchema = z.object({
 });
 export type PartnerNeedView = z.infer<typeof PartnerNeedViewSchema>;
 
+/** A suggestion that has been ticked off. */
+export const GrowDoneViewSchema = z.object({
+  id: zUuid,
+  text: z.string(),
+  done_at: z.string(),
+});
+export type GrowDoneView = z.infer<typeof GrowDoneViewSchema>;
+
+/** POST /api/grow/done: tick a suggestion off, or take it back. */
+export const GrowDoneRequestSchema = z.object({
+  text: z.string().min(1).max(900),
+  done: z.boolean(),
+});
+export type GrowDoneRequest = z.infer<typeof GrowDoneRequestSchema>;
+export const GrowDoneResponseSchema = z.object({ done: z.array(GrowDoneViewSchema) });
+export type GrowDoneResponse = z.infer<typeof GrowDoneResponseSchema>;
+
 /**
  * GET /api/grow. Things you could do to grow the relationship, worked out overnight
  * from both people's logs. `working` means a day is still being read, so the client
@@ -322,6 +339,8 @@ export const GrowResponseSchema = z.object({
   status: z.enum(['empty', 'waiting', 'working', 'ready', 'failed']),
   feedback: z.array(DailyFeedbackViewSchema),
   from_partner: z.array(PartnerNeedViewSchema),
+  /** Suggestions already ticked off, newest first. */
+  done: z.array(GrowDoneViewSchema),
   /** Why the read could not run, in plain words, when status is `failed`. Null otherwise. */
   problem: z.string().nullable(),
 });

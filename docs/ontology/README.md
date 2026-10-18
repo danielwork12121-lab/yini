@@ -23,6 +23,7 @@ Regenerate these pages with `npm run ontology:docs` (in `frontend/`). The test s
 | [Connection member](objects/connectionMember.md) | `connection_members` | members |  |
 | [Connection peer (view)](objects/connectionPeer.md) | `connection_peers` | members | yes |
 | [Daily feedback](objects/dailyFeedback.md) | `daily_feedback` | recipient | yes |
+| [Grow: done](objects/growDone.md) | `grow_done` | server |  |
 | [Journal entry](objects/journalEntry.md) | `entries` | author |  |
 | [Kind word](objects/kindWord.md) | `kind_words` | recipient | yes |
 | [Mood day](objects/moodDay.md) | `mood_days` | author |  |
@@ -55,6 +56,7 @@ Regenerate these pages with `npm run ontology:docs` (in `frontend/`). The test s
 | [List feedback](actions/listFeedback.md) | `GET /api/feedback` | user |
 | [Run tonight's analysis now (demo)](actions/runMyAnalysis.md) | `POST /api/feedback/run` | user |
 | [Nightly sweep (cron)](actions/runNightlySweep.md) | `GET /api/cron/nightly` | cron |
+| [Tick off a Grow suggestion](actions/setGrowDone.md) | `POST /api/grow/done` | user |
 | [Transcribe audio](actions/transcribe.md) | `POST /api/transcribe` | user |
 
 ## Links

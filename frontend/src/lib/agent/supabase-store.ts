@@ -88,7 +88,7 @@ export function supabaseNightlyStore(db: SupabaseClient = createAdminSupabase())
     },
 
     async getRun(connectionId, day) {
-      return one(await db.from('analysis_runs').select('id, status, started_at, model, tool_calls, error')
+      return one(await db.from('analysis_runs').select('id, status, started_at, finished_at, model, tool_calls, error')
         .eq('connection_id', connectionId).eq('local_date', day).maybeSingle(), 'getRun');
     },
 
