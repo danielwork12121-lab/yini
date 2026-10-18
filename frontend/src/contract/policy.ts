@@ -277,6 +277,24 @@ export function derivePetState(args: {
   };
 }
 
+/**
+ * The shared feeding streak: how many days in a row BOTH people fed the pet.
+ * Today counts once both have fed. While today is still open the streak is whatever it
+ * was through yesterday, so it only goes back to zero once a whole day has passed without both.
+ * `fedBy` maps a day (YYYY-MM-DD) to how many different people fed that day.
+ */
+export function sharedStreak(fedBy: ReadonlyMap<string, number>, today: string): number {
+  const cursor = new Date(`${today}T00:00:00Z`);
+  if ((fedBy.get(today) ?? 0) < 2) cursor.setUTCDate(cursor.getUTCDate() - 1);
+  let streak = 0;
+  for (;;) {
+    const key = cursor.toISOString().slice(0, 10);
+    if ((fedBy.get(key) ?? 0) < 2) return streak;
+    streak++;
+    cursor.setUTCDate(cursor.getUTCDate() - 1);
+  }
+}
+
 /* ────────────────────────── integrity guards ────────────────────────── */
 
 /**

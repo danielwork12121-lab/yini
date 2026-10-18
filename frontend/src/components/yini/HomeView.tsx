@@ -1,10 +1,12 @@
 'use client';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ReplyCards } from '@/components/ReplyCards';
 import { dismissCheckin, retryCheckin, usePendingCheckin } from '@/lib/pendingCheckin';
 import { AppDateIcon } from '@/components/DateIcon';
-import { warmJson } from '@/lib/cachedJson';
+import { fetchJson, peekJson, warmJson } from '@/lib/cachedJson';
+import { Streak } from '@/components/app/Streak';
+import type { TodayResponse } from '@/contract';
 import { Room } from '@/components/app/Room';
 import { MicBig } from '@/components/app/icons';
 
@@ -13,18 +15,43 @@ const greeting = () => { const h = new Date().getHours(); return h < 12 ? 'Morni
 /** Home: the Check in button, your room and your cat. Feeding and the reply from Yini live here too. */
 export function HomeView({ name, partner }: { name: string; partner: string }) {
   const [request, setRequest] = useState(0);
-  const [feeding, setFeeding] = useState(false);
-  const [fed, setFed] = useState(false);
+  const [action, setAction] = useState<'feeding' | 'happy'>('feeding');
+  const [today, setToday] = useState<TodayResponse | null>(null);
   const pending = usePendingCheckin();
+  const wasDone = useRef(pending.status === 'done');
 
   // Fill Grow and Glow in the background, so they open already showing something.
-  useEffect(() => { warmJson('/api/today'); warmJson('/api/grow'); warmJson('/api/glow'); warmJson('/api/love'); }, []);
+  useEffect(() => { warmJson('/api/grow'); warmJson('/api/glow'); warmJson('/api/love'); }, []);
 
-  function feed() {
-    if (feeding) return;
-    setFeeding(true);
-    setRequest((n) => n + 1);
-  }
+  // The streak and who has fed today. Show the last answer at once, then ask again.
+  const refresh = useCallback(async () => {
+    try { return await fetchJson<TodayResponse>('/api/today'); } catch { return null; }
+  }, []);
+  useEffect(() => {
+    let cancelled = false;
+    const cached = peekJson<TodayResponse>('/api/today');
+    if (cached) queueMicrotask(() => { if (!cancelled) setToday(cached); });
+    void refresh().then((t) => {
+      if (cancelled || !t) return;
+      setToday(t);
+      // Both of you fed today: Yini is a little happier, once per visit to the app each day.
+      const key = `yini.happy.${t.local_date}`;
+      let seen = false;
+      try { seen = sessionStorage.getItem(key) === '1'; if (t.pet.both_fed_today) sessionStorage.setItem(key, '1'); } catch { /* a flourish only */ }
+      if (t.pet.both_fed_today && !seen) { setAction('happy'); setRequest((n) => n + 1); }
+    });
+    return () => { cancelled = true; };
+  }, [refresh]);
+
+  // Logging your day feeds Yini. When the reply lands, the cat eats and the streak catches up.
+  useEffect(() => {
+    const done = pending.status === 'done';
+    if (done && !wasDone.current) {
+      setAction('feeding'); setRequest((n) => n + 1);
+      void refresh().then((t) => { if (t) setToday(t); });
+    }
+    wasDone.current = done;
+  }, [pending.status, refresh]);
 
   return (
     <main>
@@ -50,15 +77,8 @@ export function HomeView({ name, partner }: { name: string; partner: string }) {
         </span>
       </Link>
 
-      <Room
-        request={request}
-        onComplete={() => { setFeeding(false); setFed(true); }}
-        feed={
-          <button type="button" className="pill pill-line" onClick={feed} disabled={feeding}>
-            {feeding ? 'Mmm…' : fed ? 'Feed again ♥' : 'Feed a little love ♥'}
-          </button>
-        }
-      />
+      <Room request={request} action={action} happy={!!today?.pet.both_fed_today} />
+      {today && <Streak today={today} />}
 
       {pending.status === 'done' && (
         <>

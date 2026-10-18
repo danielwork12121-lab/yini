@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addDays, appDateFor, nightlyTargetDay, SAFE_BULLETS, SAFE_HEADLINE, scrubFeedback, sharesSpan, specificsFromPartner } from './policy';
+import { sharedStreak, addDays, appDateFor, nightlyTargetDay, SAFE_BULLETS, SAFE_HEADLINE, scrubFeedback, sharesSpan, specificsFromPartner } from './policy';
 
 const partner = 'I am so tired of always being the one who plans every single weekend for us.';
 
@@ -89,5 +89,21 @@ describe('specificsFromPartner: only the partner\'s words count as a leak', () =
   });
   it('with no partner entry there is nothing to leak', () => {
     expect(specificsFromPartner(['anything at all'], null, mine)).toEqual([]);
+  });
+});
+
+describe('sharedStreak', () => {
+  const fed = (days: Record<string, number>) => new Map(Object.entries(days));
+  it('counts consecutive days both fed, including today once both have', () => {
+    expect(sharedStreak(fed({ '2026-10-18': 2, '2026-10-17': 2, '2026-10-16': 2 }), '2026-10-18')).toBe(3);
+  });
+  it('keeps yesterday\'s streak while today is still open', () => {
+    expect(sharedStreak(fed({ '2026-10-18': 1, '2026-10-17': 2, '2026-10-16': 2 }), '2026-10-18')).toBe(2);
+    expect(sharedStreak(fed({ '2026-10-17': 2 }), '2026-10-18')).toBe(1);
+  });
+  it('is zero once a whole day passed without both', () => {
+    expect(sharedStreak(fed({ '2026-10-16': 2, '2026-10-15': 2 }), '2026-10-18')).toBe(0);
+    expect(sharedStreak(fed({ '2026-10-17': 1 }), '2026-10-18')).toBe(0);
+    expect(sharedStreak(fed({}), '2026-10-18')).toBe(0);
   });
 });

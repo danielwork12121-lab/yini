@@ -1,4 +1,4 @@
-import { derivePetState, type TodayResponse } from '@/contract';
+import { derivePetState, sharedStreak, type TodayResponse } from '@/contract';
 import { actionTypes } from '@/ontology';
 import { actionRoute, ActionError } from '@/lib/http/action-route';
 import { createAdminSupabase } from '@/lib/supabase/admin';
@@ -26,7 +26,7 @@ export const GET = actionRoute(actionTypes.getToday, async ({ user }) => {
 
   const partner = (members ?? []).find((m) => m.user_id !== user.id)?.profiles as unknown as { display_name: string } | undefined;
 
-  // Shared streak: days where BOTH showed up. Nobody is ever told whose gap broke it.
+  // Shared streak: days where BOTH fed the pet. It stays through yesterday while today is still open.
   const { data: allFeeds } = await db.from('pet_feedings')
     .select('local_date, author_id').eq('connection_id', connectionId)
     .order('local_date', { ascending: false }).limit(200);
@@ -35,13 +35,9 @@ export const GET = actionRoute(actionTypes.getToday, async ({ user }) => {
     if (!byDate.has(f.local_date)) byDate.set(f.local_date, new Set());
     byDate.get(f.local_date)!.add(f.author_id);
   }
-  let streak = 0;
-  const cursor = new Date(`${today}T00:00:00Z`);
-  for (;;) {
-    const key = cursor.toISOString().slice(0, 10);
-    if ((byDate.get(key)?.size ?? 0) >= 2) { streak++; cursor.setUTCDate(cursor.getUTCDate() - 1); }
-    else break;
-  }
+  const streak = sharedStreak(new Map([...byDate].map(([d, who]) => [d, who.size])), today);
+  const youFed = (todayFeeds ?? []).some((r) => r.author_id === user.id);
+  const partnerFed = (todayFeeds ?? []).some((r) => r.author_id !== user.id);
 
   const body: TodayResponse = {
     you_checked_in: Boolean(entryToday),
@@ -53,11 +49,12 @@ export const GET = actionRoute(actionTypes.getToday, async ({ user }) => {
       name: petRow?.name ?? 'Egg', species: petRow?.species ?? null,
       hatched_at: petRow?.hatched_at ?? null, xp: petRow?.xp ?? 0,
       total_half_days: total ?? 0,
-      you_fed_today: (todayFeeds ?? []).some((r) => r.author_id === user.id),
+      you_fed_today: youFed,
       both_fed_today: (todayFeeds ?? []).length >= 2,
     }),
     today_nudge: nudge ?? null,
     shared_streak: streak,
+    partner_fed_today: partnerFed,
   };
   return body;
 });

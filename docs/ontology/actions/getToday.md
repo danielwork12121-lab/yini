@@ -25,6 +25,7 @@ Everything the home screen needs: whether you checked in, the pet, today's nudge
 | `pet` | object | yes |  |  | What the client renders for the pet, derived on every read. |
 | `today_nudge` | object \| null | yes |  |  |  |
 | `shared_streak` | integer | yes |  | ≥ 0 |  |
+| `partner_fed_today` | boolean | yes | `false` |  |  |
 
 Errors use one envelope: `{ "error": string, "code": ApiErrorCode, "recoverable": boolean }`.
 

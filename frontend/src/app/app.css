@@ -454,3 +454,25 @@ body { background: #FDF6EE; }
 .sug-cat-notice { background: #E7EDDA; color: #56663F; }
 .rf-tell { appearance: none; cursor: pointer; border: 2px solid #F3C3B8; background: #FDEEE8; color: #C9483A; border-radius: 9999px; min-height: 44px; font: inherit; font-size: max(14px, calc(30 * var(--u))); font-weight: 800; }
 .rf-tell:disabled { opacity: .5; cursor: default; }
+
+/* ── Feeding streak under the cat ── */
+.streak { display: flex; flex-direction: column; align-items: center; gap: calc(10 * var(--u)); margin: calc(34 * var(--u)) auto 0; }
+.streak-row { display: flex; align-items: center; justify-content: center; gap: calc(44 * var(--u)); }
+.streak-who { display: inline-flex; align-items: center; gap: 6px; font-size: max(12px, calc(25 * var(--u))); font-weight: 800; color: var(--faint); max-width: calc(220 * var(--u)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.streak-who i { flex: none; width: calc(36 * var(--u)); min-width: 18px; aspect-ratio: 1; border-radius: 50%; border: 2px solid #E3D3C3; display: grid; place-items: center; font-style: normal; font-size: max(10px, calc(21 * var(--u))); font-weight: 900; color: #fff; line-height: 1; }
+.streak-who[data-fed="true"] { color: var(--ink2); }
+.streak-who[data-fed="true"] i { background: var(--coral); border-color: var(--coral); }
+.streak-num { display: inline-flex; align-items: center; gap: calc(8 * var(--u)); }
+.streak-num svg { width: calc(62 * var(--u)); min-width: 26px; height: auto; }
+.streak-num b { font-size: max(30px, calc(86 * var(--u))); font-weight: 900; line-height: 1; letter-spacing: -1px; color: #A99C92; font-variant-numeric: tabular-nums; }
+.flame-out { fill: #D9CFC6; } .flame-in { fill: #EFE8E1; }
+.streak[data-hot="true"] .streak-num b { color: #E5412D; }
+.streak[data-hot="true"] .flame-out { fill: #F25A2C; } .streak[data-hot="true"] .flame-in { fill: #FFC24A; }
+.streak[data-hot="true"] .streak-num svg { animation: flicker 1.6s ease-in-out infinite; transform-origin: 50% 90%; }
+@keyframes flicker { 0%, 100% { transform: scale(1) rotate(0); } 30% { transform: scale(1.06, 1.1) rotate(-2deg); } 60% { transform: scale(.97, 1.04) rotate(2deg); } }
+.streak-note { margin: 0; font-size: max(12px, calc(25 * var(--u))); font-weight: 700; color: var(--muted); text-align: center; }
+.room-hearts { position: absolute; left: 50%; bottom: calc(300 * var(--u)); width: calc(260 * var(--u)); height: calc(200 * var(--u)); transform: translateX(-50%); pointer-events: none; }
+.room-hearts i { position: absolute; bottom: 0; font-style: normal; font-size: max(14px, calc(34 * var(--u))); color: var(--coral); opacity: 0; animation: heartrise 3.6s ease-in infinite; }
+.room-hearts i:nth-child(1) { left: 12%; animation-delay: 0s; } .room-hearts i:nth-child(2) { left: 48%; animation-delay: 1.2s; font-size: max(18px, calc(44 * var(--u))); } .room-hearts i:nth-child(3) { left: 80%; animation-delay: 2.3s; }
+@keyframes heartrise { 0% { transform: translateY(0) scale(.6); opacity: 0; } 15% { opacity: .9; } 100% { transform: translateY(calc(-180 * var(--u))) scale(1.05); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .streak[data-hot="true"] .streak-num svg, .room-hearts i { animation: none; } .room-hearts i { opacity: .7; } }

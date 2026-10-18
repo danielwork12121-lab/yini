@@ -132,6 +132,8 @@ export const TodayResponseSchema = z.object({
   today_nudge: NudgeViewSchema.nullable(),
   /** Shared, milestone-only. Breaks quietly; nobody is told whose fault it was. */
   shared_streak: z.number().int().nonnegative(),
+  /** Whether your person has fed the pet today. Feeding is just checking in. */
+  partner_fed_today: z.boolean().default(false),
 });
 export type TodayResponse = z.infer<typeof TodayResponseSchema>;
 
