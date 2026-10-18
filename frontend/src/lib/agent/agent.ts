@@ -42,8 +42,14 @@ export function productionNightlyDeps(): NightlyDeps {
         schema: NightlyOutputSchema, kind: 'compose', system: NIGHTLY_SYSTEM,
         user: `${rendered}\n\nWORKING NOTES:\n${notes || '(none)'}\n\n${COMPOSE_INSTRUCTIONS}`,
         mockFn: () => mockNightly(input),
+      }).catch((e) => {
+        // A night that fails leaves Grow empty. A plainer night is a better outcome than none.
+        console.error('[nightly] model output unusable, using the keyless fallback:', (e as Error).message);
+        return null;
       });
-      return { output, model: label, toolCalls };
+      return output
+        ? { output, model: label, toolCalls }
+        : { output: mockNightly(input), model: 'mock-fallback', toolCalls };
     },
 
     async adversarial(feedback) {

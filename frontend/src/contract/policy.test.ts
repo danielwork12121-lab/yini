@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { nightlyTargetDay, SAFE_BULLETS, SAFE_HEADLINE, scrubFeedback, sharesSpan } from './policy';
+import { addDays, appDateFor, nightlyTargetDay, SAFE_BULLETS, SAFE_HEADLINE, scrubFeedback, sharesSpan } from './policy';
 
 const partner = 'I am so tired of always being the one who plans every single weekend for us.';
 
@@ -48,5 +48,28 @@ describe('nightlyTargetDay', () => {
   });
   it('steps across month boundaries', () => {
     expect(nightlyTargetDay('UTC', 'previous_day', new Date('2026-11-01T10:00:00Z'))).toBe('2026-10-31');
+  });
+});
+
+describe('the testing clock', () => {
+  it('steps whole days across month, year and leap-day edges', () => {
+    expect(addDays('2026-10-17', 1)).toBe('2026-10-18');
+    expect(addDays('2026-10-31', 1)).toBe('2026-11-01');
+    expect(addDays('2026-12-31', 1)).toBe('2027-01-01');
+    expect(addDays('2028-02-28', 1)).toBe('2028-02-29');
+    expect(addDays('2026-10-17', -17)).toBe('2026-09-30');
+    expect(addDays('2026-10-17', 0)).toBe('2026-10-17');
+  });
+  it('does not skip or repeat a day over a daylight-saving change', () => {
+    expect(addDays('2026-03-07', 1)).toBe('2026-03-08');
+    expect(addDays('2026-03-08', 1)).toBe('2026-03-09');
+    expect(addDays('2026-11-01', 1)).toBe('2026-11-02');
+  });
+  it('moves today by the offset, in the person\'s own timezone', () => {
+    const at = new Date('2026-10-18T05:30:00Z'); // 10:30pm on the 17th in Los Angeles
+    expect(appDateFor('America/Los_Angeles', 0, at)).toBe('2026-10-17');
+    expect(appDateFor('America/Los_Angeles', 1, at)).toBe('2026-10-18');
+    expect(appDateFor('America/Los_Angeles', 3, at)).toBe('2026-10-20');
+    expect(appDateFor('Asia/Tokyo', 1, at)).toBe('2026-10-19');
   });
 });

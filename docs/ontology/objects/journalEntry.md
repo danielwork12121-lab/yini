@@ -53,5 +53,5 @@ What one person wrote or said on one day. The most protected object in the syste
 
 ## Actions
 
-- Written by: [Analyse now (admin)](../actions/analyzeNow.md), [Check in](../actions/checkIn.md), [Run tonight's analysis now (demo)](../actions/runMyAnalysis.md), [Nightly sweep (cron)](../actions/runNightlySweep.md)
-- Read by: [Analyse now (admin)](../actions/analyzeNow.md), [Get my calendar month](../actions/getCalendar.md), [Get today](../actions/getToday.md), [List my entries](../actions/listEntries.md), [Run tonight's analysis now (demo)](../actions/runMyAnalysis.md), [Nightly sweep (cron)](../actions/runNightlySweep.md)
+- Written by: [Analyse now (admin)](../actions/analyzeNow.md), [Check in](../actions/checkIn.md), [Get my Grow](../actions/getGrow.md), [Run tonight's analysis now (demo)](../actions/runMyAnalysis.md), [Nightly sweep (cron)](../actions/runNightlySweep.md)
+- Read by: [Analyse now (admin)](../actions/analyzeNow.md), [Get my calendar month](../actions/getCalendar.md), [Get my Glow](../actions/getGlow.md), [Get my Grow](../actions/getGrow.md), [Get today](../actions/getToday.md), [List my entries](../actions/listEntries.md), [Run tonight's analysis now (demo)](../actions/runMyAnalysis.md), [Nightly sweep (cron)](../actions/runNightlySweep.md)

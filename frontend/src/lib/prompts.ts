@@ -56,11 +56,17 @@ concerns — up to 3. Things THIS PERSON needs from their partner.
   Only emit a concern if they actually expressed an unmet need. Venting about work
   is not a concern about their partner. An empty array is a correct answer.
 
-kind_words — up to 3. Positive things they said ABOUT their partner.
+kind_words — up to 5. Warm things they said ABOUT their partner: thanks, praise,
+  admiration, affection, something their partner did or is that they loved.
   text MUST be copied character-for-character from the entry. It will be shown to
   their partner in their own words, so a paraphrase is a fabrication. Code verifies
-  this is a literal substring and silently drops anything that is not. If they said
-  nothing kind, return an empty array. Never manufacture affection.
+  this is a literal substring and silently drops anything that is not.
+    • Pick a whole sentence or clause that reads as a compliment on its own, about 30
+      to 200 characters. Do not stitch two sentences together, and do not fix grammar,
+      filler words or punctuation: copy it exactly as it appears.
+    • Skip a kind line that carries private incident detail (an argument, a health
+      matter, somebody else's business). The partner will read it word for word.
+    • If they said nothing kind, return an empty array. Never manufacture affection.
 
 care_acts — up to 3. Things THIS PERSON did FOR their partner, which they mentioned.
   source_span: copied character-for-character from the entry (verified, as above).

@@ -1,8 +1,8 @@
-import { localDateFor } from '@/contract';
 import { actionTypes } from '@/ontology';
 import { actionRoute, ActionError } from '@/lib/http/action-route';
 import { createAdminSupabase } from '@/lib/supabase/admin';
 import { env } from '@/lib/env';
+import { appToday } from '@/lib/clock';
 import { productionNightlyDeps } from '@/lib/agent/agent';
 import { supabaseNightlyStore } from '@/lib/agent/supabase-store';
 import { sweep } from '@/lib/agent/nightly';
@@ -18,7 +18,7 @@ export const POST = actionRoute(actionTypes.runMyAnalysis, async ({ input, user 
 
   const runs = await sweep(supabaseNightlyStore(db), productionNightlyDeps(), {
     connectionId: me.default_connection_id,
-    day: input.local_date ?? localDateFor(me.timezone),
+    day: input.local_date ?? await appToday(me.timezone),
     force: true,
     target: 'same_day',
   });

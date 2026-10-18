@@ -43,4 +43,5 @@ The one place a partner's literal words reach the other person, deliberately: a 
 
 ## Actions
 
-- Written by: [Check in](../actions/checkIn.md)
+- Written by: [Check in](../actions/checkIn.md), [Get my Glow](../actions/getGlow.md)
+- Read by: [Get my Glow](../actions/getGlow.md)

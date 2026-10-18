@@ -16,6 +16,7 @@ Regenerate these pages with `npm run ontology:docs` (in `frontend/`). The test s
 | Object | Table | Who can read | Crosses boundary |
 |---|---|---|---|
 | [Analysis run](objects/analysisRun.md) | `analysis_runs` | server |  |
+| [App clock](objects/appClock.md) | `app_clock` | server |  |
 | [Care act](objects/careAct.md) | `care_acts` | server | yes |
 | [Concern](objects/concern.md) | `concerns` | author | yes |
 | [Connection](objects/connection.md) | `connections` | members |  |
@@ -43,7 +44,10 @@ Regenerate these pages with `npm run ontology:docs` (in `frontend/`). The test s
 | [Create connection](actions/createConnection.md) | `POST /api/connection` | user |
 | [Demo login](actions/demoLogin.md) | `POST /api/demo/login` | public |
 | [Get my calendar month](actions/getCalendar.md) | `GET /api/calendar` | user |
+| [Get the testing clock](actions/getClock.md) | `GET /api/clock` | public |
 | [Get connection status](actions/getConnection.md) | `GET /api/connection` | user |
+| [Get my Glow](actions/getGlow.md) | `GET /api/glow` | user |
+| [Get my Grow](actions/getGrow.md) | `GET /api/grow` | user |
 | [Get latest feedback](actions/getLatestFeedback.md) | `GET /api/feedback/latest` | user |
 | [Get today](actions/getToday.md) | `GET /api/today` | user |
 | [Join connection](actions/joinConnection.md) | `POST /api/connection/join` | user |

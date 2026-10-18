@@ -219,3 +219,45 @@ button.cal-cell:focus-visible, .cal-step:focus-visible, .cal-close:focus-visible
 .yhome-reply .card + .card { margin-top: 0; }
 .yhome-donebar { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
 .yhome-calink { color: #D9533F; font-weight: 800; text-decoration: none; padding: 8px 0; }
+
+/* Home: Grow and Glow sit side by side under the calendar */
+.yhome-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.yhome-grow { background: #EEF4E3; border-color: #D5E3BE; }
+.yhome-glow { background: #FFF3CF; border-color: #F4DE96; }
+
+/* ── Grow and Glow ── */
+.gg { padding-bottom: 12px; }
+.gg-title { font-size: 34px; margin: 6px 0 6px; line-height: 1.1; }
+.gg-sub { margin: 0 0 18px; text-wrap: pretty; }
+.gg-note { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 13px 16px;
+  margin-bottom: 16px; font-size: 15px; font-weight: 600; line-height: 1.4; color: var(--ink-muted); }
+.gg-note-warn { justify-content: space-between; color: #9E4A33; }
+.gg-section { margin-top: 26px; }
+.gg-h { font-family: var(--font-display), Georgia, serif; font-size: 19px; margin: 0 0 10px; letter-spacing: -.2px; }
+.gg-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.gg-item { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; }
+.gg-item-soft { background: var(--surface-warm); flex-direction: column; gap: 4px; }
+.gg-sprout { font-size: 20px; line-height: 1.5; flex: none; }
+.gg-text { margin: 0; font-size: 16px; line-height: 1.5; }
+.gg-when { margin: 0; }
+.gg-grow .gg-latest { background: linear-gradient(180deg, #F2F7E8 0%, var(--canvas) 100%); border: 1px solid #D9E6C4; border-radius: 26px; padding: 20px 16px 16px; }
+.gg-kicker { margin: 0 0 6px; text-transform: uppercase; letter-spacing: .06em; color: #667A51; }
+.gg-headline { font-size: 23px; line-height: 1.25; margin: 0 0 14px; text-wrap: balance; }
+.gg-earlier { border-top: 1px solid var(--line); padding: 10px 0; }
+.gg-earlier summary { cursor: pointer; display: grid; gap: 2px; list-style: none; padding: 4px 0; }
+.gg-earlier summary::-webkit-details-marker { display: none; }
+.gg-earlier summary span { font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-faint); }
+.gg-earlier summary em { font-style: normal; font-weight: 600; font-size: 16px; color: var(--ink); }
+.gg-earlier .gg-list { margin-top: 10px; }
+.gg-empty { text-align: center; padding: 34px 8px 10px; color: var(--ink-muted); }
+.gg-empty-emoji { font-size: 44px; margin: 0 0 8px; }
+.gg-foot { text-align: center; margin: 30px 0 0; }
+.gg a.yhome-btn { color: #3A2418; }
+
+.gg-quotes { gap: 14px; }
+.gg-quote { position: relative; background: linear-gradient(160deg, #FFF6D8 0%, #FFFDF4 70%); border: 1px solid #F1DFA4; border-radius: 24px; padding: 22px 20px 18px; }
+.gg-quote::before { content: '\201C'; position: absolute; top: 2px; left: 14px; font-family: var(--font-display), Georgia, serif; font-size: 64px; line-height: 1; color: #E9C24D; }
+.gg-quote blockquote { margin: 0; padding-top: 14px; }
+.gg-quote blockquote p { margin: 0 0 12px; font-family: var(--font-display), Georgia, serif; font-size: 20px; line-height: 1.4; text-wrap: pretty; }
+.gg-quote footer { font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: #9A7A22; font-weight: 700; }
+.gg-pill { position: absolute; top: 14px; right: 14px; background: #F0857A; color: #fff; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; border-radius: 9999px; padding: 4px 10px; }
