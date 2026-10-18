@@ -8,16 +8,23 @@ import {
 import { DAY_MOOD_EMOJI, moodOfDay } from './calendar';
 
 describe('the three calendar moods', () => {
-  it('maps the faces Yini uses to happy, down or stressed', () => {
+  it('sorts days into happy (positive), neutral and sad (negative)', () => {
     expect(moodOfDay('🙂', 4)).toBe('happy');
-    expect(moodOfDay('😔', 2)).toBe('down');
-    expect(moodOfDay('😣', 3)).toBe('stressed');
-    expect(moodOfDay('😮‍💨', 1)).toBe('stressed');
+    expect(moodOfDay('😐', 3)).toBe('neutral');
+    expect(moodOfDay('😔', 2)).toBe('sad');
   });
 
-  it('falls back to the 1 to 5 face for emoji from before the three faces', () => {
+  it('counts stress, worry and anger as negative, never neutral', () => {
+    expect(moodOfDay('😣', 3)).toBe('sad');
+    expect(moodOfDay('😮‍💨', 1)).toBe('sad');
+    expect(moodOfDay('😡', 3)).toBe('sad');
+    expect(moodOfDay('😰', 3)).toBe('sad');
+  });
+
+  it('falls back to the 1 to 5 face for emoji it does not know', () => {
     expect(moodOfDay('🎉', 5)).toBe('happy');
-    expect(moodOfDay('🧃', 1)).toBe('down');
+    expect(moodOfDay('🧃', 1)).toBe('sad');
+    expect(moodOfDay('🧃', 3)).toBe('neutral');
     expect(moodOfDay(undefined, 4)).toBe('happy');
   });
 

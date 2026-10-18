@@ -328,6 +328,7 @@ export const SAFE_HEADLINE = 'A few thoughts for you tonight.';
 export const SAFE_BULLETS = [
   'Ask them one open question tonight about how their day really felt, then just listen.',
   'Pick one small thing that would make tomorrow a little easier for the two of you, and do just that.',
+  '[notice] Think back over the last few days. Has your person done anything, even something tiny, that made things easier or warmer for you? Pick one and hold on to it.',
 ] as const;
 
 const words = (t: string) =>

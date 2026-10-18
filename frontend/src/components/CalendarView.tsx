@@ -8,9 +8,9 @@ const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const CLAMP = 150;
 
 const MOODS: { key: DayMood; label: string }[] = [
-  { key: 'happy', label: 'Happy' }, { key: 'down', label: 'Down' }, { key: 'stressed', label: 'Stressed' },
+  { key: 'happy', label: 'Happy' }, { key: 'neutral', label: 'Neutral' }, { key: 'sad', label: 'Sad' },
 ];
-const MOOD_LABEL: Record<DayMood, string> = { happy: 'Happy', down: 'Down', stressed: 'Stressed' };
+const MOOD_LABEL: Record<DayMood, string> = { happy: 'Happy', neutral: 'Neutral', sad: 'Sad' };
 const OUTCOME_LINE: Record<GrowOutcome, string> = {
   went_well: 'It went well!', okay: 'It was okay', hard: 'It was a little hard', no_time: 'Ran out of time', not_right: 'Did not feel right',
 };
@@ -191,7 +191,8 @@ export function CalendarView() {
               {open.grow.map((g, i) => (
                 <div key={i} className="step-row">
                   <span className="step-tick"><CheckIcon /></span>
-                  <span className="step-body"><b>{g.text}</b>{g.outcome && <small>{OUTCOME_LINE[g.outcome]}</small>}</span>
+                  <span className="step-body"><b>{g.kind === 'notice' ? 'You noticed something kind' : g.text}</b>
+                    {g.kind === 'notice' ? (g.note && <small>{g.note}</small>) : (g.outcome && <small>{OUTCOME_LINE[g.outcome]}</small>)}</span>
                 </div>
               ))}
             </div>

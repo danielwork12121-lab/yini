@@ -18,14 +18,14 @@ Replaces the face Yini picked for one of your days with the one you choose. It i
 | Field | Type | Required | Default | Bounds | Description |
 |---|---|---|---|---|---|
 | `local_date` | string | yes |  |  |  |
-| `mood` | `happy` \| `down` \| `stressed` | yes |  |  |  |
+| `mood` | `happy` \| `neutral` \| `sad` | yes |  |  |  |
 
 ## Output
 
 | Field | Type | Required | Default | Bounds | Description |
 |---|---|---|---|---|---|
 | `local_date` | string | yes |  |  |  |
-| `mood` | `happy` \| `down` \| `stressed` | yes |  |  |  |
+| `mood` | `happy` \| `neutral` \| `sad` | yes |  |  |  |
 | `mood_by` | `"you"` | yes |  |  |  |
 
 Errors use one envelope: `{ "error": string, "code": ApiErrorCode, "recoverable": boolean }`.

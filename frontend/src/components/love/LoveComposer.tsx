@@ -13,10 +13,13 @@ const Heart = () => (
  * Write a love note: say it out loud or write it down. Nothing is sent until you confirm,
  * and your person gets exactly what you confirmed: your words, and your voice if you spoke.
  */
-export function LoveComposer({ partner, onClose, onSent }: { partner: string; onClose: () => void; onSent: (r: LoveSendResponse) => void }) {
+/** Where Grow leaves the words someone wants to send, for the composer to pick up. */
+export const LOVE_DRAFT_KEY = 'yini.love.draft';
+
+export function LoveComposer({ partner, initialText = '', onClose, onSent }: { partner: string; initialText?: string; onClose: () => void; onSent: (r: LoveSendResponse) => void }) {
   const voice = useVoiceNote();
-  const [typing, setTyping] = useState(false);
-  const [text, setText] = useState('');
+  const [typing, setTyping] = useState(initialText.length > 0);
+  const [text, setText] = useState(initialText);
   const [step, setStep] = useState<'compose' | 'confirm' | 'sent'>('compose');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');

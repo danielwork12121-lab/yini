@@ -1,6 +1,7 @@
 import { actionTypes } from '@/ontology';
 import { actionRoute, ActionError } from '@/lib/http/action-route';
-import type { GrowOutcome } from '@/contract';
+import type { CalendarGrow, GrowOutcome } from '@/contract';
+import { questOf } from '@/lib/quest';
 import { decodeDayNote, moodOfDay } from '@/lib/calendar';
 import { createAdminSupabase } from '@/lib/supabase/admin';
 
@@ -19,7 +20,7 @@ export const GET = actionRoute(actionTypes.getCalendar, async ({ input, supabase
     supabase.from('entries').select('id, local_date, raw_text, input_mode, created_at')
       .gte('local_date', from).lt('local_date', to).order('created_at', { ascending: true }),
     // Little steps you did, from Grow. Missing before the Grow update is applied: the calendar still opens.
-    createAdminSupabase().from('grow_done').select('body_text, outcome, done_on')
+    createAdminSupabase().from('grow_done').select('body_text, outcome, reflection, done_on')
       .eq('recipient_id', user.id).eq('status', 'done').gte('done_on', from).lt('done_on', to).order('done_at', { ascending: true }),
   ]);
   if (dayErr || entryErr) throw new ActionError('server_error', (dayErr ?? entryErr)!.message, 500);
@@ -31,10 +32,11 @@ export const GET = actionRoute(actionTypes.getCalendar, async ({ input, supabase
     byDate.set(e.local_date, list);
   }
 
-  const growByDate = new Map<string, { text: string; outcome: GrowOutcome | null }[]>();
+  const growByDate = new Map<string, CalendarGrow[]>();
   for (const g of grow.error ? [] : grow.data ?? []) {
     const list = growByDate.get(g.done_on as string) ?? [];
-    list.push({ text: g.body_text, outcome: (g.outcome as GrowOutcome | null) ?? null });
+    const q = questOf(g.body_text as string);
+    list.push({ text: q.text, kind: q.kind, note: (g.reflection as string | null) || null, outcome: (g.outcome as GrowOutcome | null) ?? null });
     growByDate.set(g.done_on as string, list);
   }
 

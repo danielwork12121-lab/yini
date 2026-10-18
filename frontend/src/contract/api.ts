@@ -262,11 +262,15 @@ export const CalendarEntryViewSchema = z.object({
   input_mode: z.enum(INPUT_MODES),
   created_at: z.string(),
 });
-export const DAY_MOODS = ['happy', 'down', 'stressed'] as const;
+export const DAY_MOODS = ['happy', 'neutral', 'sad'] as const;
 export type DayMood = (typeof DAY_MOODS)[number];
 /** A little step you took that day, with how it went. */
 export const CalendarGrowSchema = z.object({
   text: z.string(),
+  /** 'notice' when it was a look-back-and-notice quest rather than something to do. */
+  kind: z.enum(['do', 'notice']),
+  /** What they wrote about it, if anything. Only they see their calendar. */
+  note: z.string().nullable(),
   outcome: z.enum(GROW_OUTCOMES).nullable(),
 });
 export const CalendarDaySchema = z.object({
@@ -274,7 +278,7 @@ export const CalendarDaySchema = z.object({
   mood_face: z.number().int().min(1).max(5),
   /** One emoji standing for the day. */
   emoji: z.string(),
-  /** The day's face on the calendar: happy, down or stressed. */
+  /** The day's face on the calendar: happy, neutral or sad. */
   mood: z.enum(DAY_MOODS),
   /** Who chose it: Yini, or you when you changed it. */
   mood_by: z.enum(['yini', 'you']),
@@ -288,6 +292,7 @@ export const CalendarDaySchema = z.object({
   entries: z.array(CalendarEntryViewSchema),
 });
 export type CalendarDay = z.infer<typeof CalendarDaySchema>;
+export type CalendarGrow = z.infer<typeof CalendarGrowSchema>;
 export const CalendarResponseSchema = z.object({ month: z.string(), days: z.array(CalendarDaySchema) });
 
 /** POST /api/calendar/mood: change a day's face. */

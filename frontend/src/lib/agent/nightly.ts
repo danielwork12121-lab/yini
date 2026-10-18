@@ -15,6 +15,7 @@ import {
   scrubFeedback, nightlyTargetDay,
   type AnalysisRunView, type FeedbackFor, type LeakVerdict, type NightlyInput, type NightlyOutput, type NightlyTarget,
 } from '@/contract';
+import { normalizeQuest } from '@/lib/quest';
 import { buildTools, type AgentTool } from './tools';
 import type { ConnectionInfo, DayEntry, NightlyStore } from './store';
 
@@ -99,7 +100,7 @@ export async function analyzeConnection(
       );
       await store.upsertFeedback({
         run_id: runId, connection_id: conn.id, recipient_id: s.me.user_id, local_date: day,
-        headline: adv.feedback.headline, bullets: adv.feedback.bullets,
+        headline: adv.feedback.headline, bullets: adv.feedback.bullets.map(normalizeQuest),
         leak_dropped: scrubbed.dropped, leak_verdict: adv.verdict,
       });
     }));
