@@ -32,7 +32,6 @@ export function ReplyCards({ reply }: { reply: CheckinResponse }) {
           )}
         </>
       )}
-      {reply.pet_hatched_now && <p className="reply-foot" style={{ fontSize: 'var(--t-body)' }}>You both showed up. Your egg hatched.</p>}
     </>
   );
 }
