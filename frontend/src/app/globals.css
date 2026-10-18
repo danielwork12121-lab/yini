@@ -113,3 +113,39 @@ textarea.entry:focus { outline:2px solid var(--primary-tint); outline-offset:1px
 .legal p, .legal li { color: var(--ink); }
 .legal ul { padding-left: 20px; display: grid; gap: 10px; }
 .legal a { color: var(--primary-press); }
+
+/* ── Yini art-board screens ──
+   The boards are drawn at 941×1672 and scaled to the phone column by YiniScreen. */
+.yini-page { min-height: 100dvh; background: #FDF6EE; padding-bottom: 32px; }
+.art { position: relative; width: 100%; max-width: 430px; margin: 0 auto; overflow: hidden; }
+.art-in { position: absolute; left: 0; top: 0; width: 941px; height: 1672px; transform-origin: 0 0;
+  font-family: var(--font-art), 'Nunito', system-ui, sans-serif; }
+.art-in button, .art-in input { font-family: inherit; }
+.art-in button, .art-in a { -webkit-tap-highlight-color: transparent; }
+.art-in input:focus-visible, .art-in button:focus-visible { outline: 3px solid #EF8A73; outline-offset: 3px; }
+.art-in [data-act="pick-buddy"]:focus-visible, .art-in [data-act="pick-lover"]:focus-visible { outline-offset: -3px; }
+.art-in label:focus-within { box-shadow: 0 0 0 3px rgba(239, 138, 115, .45); }
+
+.yini-foot { text-align: center; margin: 4px 0 0; font: 700 15px/1.4 var(--font-art), system-ui, sans-serif; color: #7D6D63; }
+.yini-foot a { color: #D9533F; font-weight: 800; text-decoration: none; }
+.yini-demo { display: flex; gap: 8px; align-items: center; justify-content: center; margin-top: 14px;
+  font: 700 13px/1 var(--font-art), system-ui, sans-serif; color: #7D6D63; }
+.yini-demo button { border: 1px solid #EEDFD0; background: #FFFDF9; color: #3A2418; border-radius: 9999px;
+  padding: 8px 14px; font: inherit; cursor: pointer; }
+
+.ytoast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+  max-width: min(92vw, 380px); padding: 12px 18px; border-radius: 9999px; background: #3A2418; color: #fff;
+  font: 700 14px/1.3 var(--font-art), system-ui, sans-serif; text-align: center; z-index: 50; }
+.yscrim { position: fixed; inset: 0; background: rgba(58, 36, 24, .42); display: flex; align-items: flex-end;
+  justify-content: center; z-index: 40; }
+.ysheet { width: 100%; max-width: 430px; background: #FDF6EE; color: #3A2418; border-radius: 28px 28px 0 0;
+  padding: 28px 24px calc(24px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 14px;
+  font-family: var(--font-art), 'Nunito', system-ui, sans-serif; }
+.ytitle { font-size: 24px; font-weight: 800; margin: 0; }
+.yfield { background: #FBF1E7; border: 2px solid #EEDFD0; border-radius: 9999px; font-family: inherit; font-size: 24px; font-weight: 700; letter-spacing: .16em;
+  text-align: center; color: #3A2418; min-height: 56px; width: 100%; }
+.ybtn { appearance: none; border: 0; cursor: pointer; min-height: 56px; border-radius: 9999px; background: #F0857A; color: #fff;
+  font-family: inherit; font-size: 18px; font-weight: 800; }
+.ybtn:disabled { opacity: .5; cursor: not-allowed; }
+.ylink { appearance: none; border: 0; background: none; color: #7D6D63; font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer; padding: 8px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
