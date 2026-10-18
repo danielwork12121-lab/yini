@@ -149,3 +149,17 @@ textarea.entry:focus { outline:2px solid var(--primary-tint); outline-offset:1px
 .ybtn:disabled { opacity: .5; cursor: not-allowed; }
 .ylink { appearance: none; border: 0; background: none; color: #7D6D63; font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer; padding: 8px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Onboarding: meet the cat (after the privacy page) */
+.ypet { max-width: 430px; margin: 0 auto; padding: 14px 24px 40px; display: flex; flex-direction: column; align-items: center; text-align: center;
+  font-family: var(--font-art), 'Nunito', system-ui, sans-serif; color: #3A2418; }
+.ypet-back { align-self: flex-start; width: 48px; height: 48px; margin-left: -8px; border: 0; background: transparent; color: #3A2418; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.ypet-title { margin: 28px 0 8px; font-size: 34px; line-height: 1.15; font-weight: 900; letter-spacing: -.3px; text-wrap: balance; }
+.ypet-sub { margin: 0 0 20px; font-size: 17px; font-weight: 600; line-height: 1.4; color: #7D6D63; }
+.ypet-stage { width: 100%; background: #FEF8EE; border: 2px solid #F2E6D9; border-radius: 30px; padding: 36px 28px 24px; margin-bottom: 28px; }
+.ypet-btn { appearance: none; border: 0; cursor: pointer; width: 100%; min-height: 62px; border-radius: 9999px; background: #F0857A; color: #fff;
+  font-family: inherit; font-size: 21px; font-weight: 800; }
+.ypet-btn:disabled { opacity: .7; cursor: default; }
+.ypet-btn:focus-visible, .ypet-again:focus-visible, .ypet-back:focus-visible { outline: 3px solid #EF8A73; outline-offset: 3px; }
+.ypet-again { appearance: none; border: 0; background: none; margin-top: 10px; padding: 10px; color: #7D6D63; font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer; }
+.ypet-again:disabled { opacity: .5; cursor: default; }
