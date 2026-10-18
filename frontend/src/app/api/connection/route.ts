@@ -34,7 +34,11 @@ export const POST = actionRoute(actionTypes.createConnection, async ({ input, us
   const { data: me } = await db.from('profiles').select('default_connection_id').eq('id', user.id).single();
   if (me?.default_connection_id) {
     const { data: existing } = await db.from('connections').select('invite_code').eq('id', me.default_connection_id).single();
-    if (existing) return { invite_code: existing.invite_code };
+    if (existing) {
+      // The buddy is picked after the code is shown, so a repeat call may carry the species.
+      if (input.species) await db.from('pets').update({ species: input.species }).eq('connection_id', me.default_connection_id);
+      return { invite_code: existing.invite_code };
+    }
   }
 
   // Codes are short enough to collide; retry rather than fail the user.

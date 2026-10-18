@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Fraunces, Figtree } from 'next/font/google';
+import { Fraunces, Figtree, Nunito } from 'next/font/google';
 import './globals.css';
 
 // Fraunces is variable: SOFT rounds the terminals and WONK adds a deliberate
@@ -7,6 +7,8 @@ import './globals.css';
 const display = Fraunces({
   subsets: ['latin'], variable: '--font-display', axes: ['SOFT', 'WONK'],
 });
+// Nunito is the typeface of the Yini art boards.
+const art = Nunito({ subsets: ['latin'], variable: '--font-art', weight: ['500', '600', '700', '800', '900'] });
 const body = Figtree({ subsets: ['latin'], variable: '--font-body', weight: ['400', '500', '600'] });
 
 export const metadata: Metadata = {
@@ -19,7 +21,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable}`}>
+    <html lang="en" className={`${display.variable} ${body.variable} ${art.variable}`}>
       <body>{children}</body>
     </html>
   );
