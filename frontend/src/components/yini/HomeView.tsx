@@ -84,7 +84,8 @@ export function HomeView({ name }: { name: string; partner: string }) {
       <Room request={request} action={action} happy={!!today?.pet.both_fed_today} />
       {today && <Streak today={today} />}
 
-      {pending.status === 'done' && (
+      {/* Yini's reply lives on the calendar now. The one thing Home still shows is the safety card, with its resources. */}
+      {pending.status === 'done' && pending.reply.safety && (
         <div className="reply"><ReplyCards reply={pending.reply} /></div>
       )}
     </main>
