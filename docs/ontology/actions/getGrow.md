@@ -22,9 +22,10 @@ Only when it starts the overnight read, and then exactly what runNightlySweep se
 | Field | Type | Required | Default | Bounds | Description |
 |---|---|---|---|---|---|
 | `partner_display_name` | string | yes |  |  |  |
-| `status` | `empty` \| `working` \| `ready` \| `failed` | yes |  |  |  |
+| `status` | `empty` \| `waiting` \| `working` \| `ready` \| `failed` | yes |  |  |  |
 | `feedback` | object[] | yes |  |  |  |
 | `from_partner` | object[] | yes |  |  |  |
+| `problem` | string \| null | yes |  |  |  |
 
 Errors use one envelope: `{ "error": string, "code": ApiErrorCode, "recoverable": boolean }`.
 

@@ -38,10 +38,10 @@ describe('Grow: overnight feedback', () => {
     expect(FeedbackForSchema.safeParse({ headline: '', bullets: ['a', 'b'] }).success).toBe(false);
     expect(FeedbackForSchema.safeParse(null).success).toBe(false);
   });
-  it('knows its four states', () => {
-    for (const status of ['empty', 'working', 'ready', 'failed'] as const) {
-      expect(GrowResponseSchema.parse({ partner_display_name: 'Mia', status, feedback: [], from_partner: [] }).status).toBe(status);
+  it('knows its five states', () => {
+    for (const status of ['empty', 'waiting', 'working', 'ready', 'failed'] as const) {
+      expect(GrowResponseSchema.parse({ partner_display_name: 'Mia', status, feedback: [], from_partner: [], problem: null }).status).toBe(status);
     }
-    expect(GrowResponseSchema.safeParse({ partner_display_name: 'Mia', status: 'nope', feedback: [], from_partner: [] }).success).toBe(false);
+    expect(GrowResponseSchema.safeParse({ partner_display_name: 'Mia', status: 'nope', feedback: [], from_partner: [], problem: null }).success).toBe(false);
   });
 });

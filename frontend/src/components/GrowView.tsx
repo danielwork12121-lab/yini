@@ -26,14 +26,18 @@ export function GrowView() {
     const load = async () => {
       try {
         const res = await fetch('/api/grow', { cache: 'no-store' });
-        if (!res.ok) throw new Error();
+        if (!res.ok) {
+          const why = ((await res.json().catch(() => null)) as { error?: string } | null)?.error;
+          throw new Error(why ?? '');
+        }
         const body = (await res.json()) as GrowResponse;
         if (cancelled) return;
         setError('');
         setData(body);
         if (body.status === 'working') timer = setTimeout(load, POLL_MS);
-      } catch {
-        if (!cancelled) setError('Could not load Grow. Check your connection and try again.');
+      } catch (e) {
+        const why = (e as Error).message;
+        if (!cancelled) setError(why ? `Could not load Grow. ${why}` : 'Could not load Grow. Check your connection and try again.');
       }
     };
     void load();
@@ -61,7 +65,10 @@ export function GrowView() {
       )}
       {data?.status === 'failed' && (
         <div className="gg-note gg-note-warn" role="status">
-          <span>Last night&apos;s read did not go through. It will try again in a few minutes.</span>
+          <span>
+            Last night&apos;s read did not go through. It will try again in a few minutes.
+            {data.problem && <small className="gg-why">{data.problem}</small>}
+          </span>
           <button type="button" className="link" onClick={() => setAttempt((n) => n + 1)}>Check again</button>
         </div>
       )}
@@ -94,6 +101,12 @@ export function GrowView() {
         </section>
       )}
 
+      {data?.status === 'waiting' && (
+        <div className="gg-empty">
+          <p className="gg-empty-emoji" aria-hidden="true">🌙</p>
+          <p className="body">You have told Yini about today. Yini reads it once the day ends, and your first Grow shows up here.</p>
+        </div>
+      )}
       {data?.status === 'empty' && (
         <div className="gg-empty">
           <p className="gg-empty-emoji" aria-hidden="true">🌱</p>
