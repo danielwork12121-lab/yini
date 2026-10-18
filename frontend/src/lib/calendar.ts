@@ -6,6 +6,8 @@
  */
 export const FACE_EMOJI = ['😶', '😞', '😕', '😐', '🙂', '😄'] as const;
 export const MAX_JOTS = 12;
+/** The most key points a single day ever shows, so a talkative day never overflows the sheet. */
+export const MAX_DAY_JOTS = 6;
 export const MAX_JOT_LENGTH = 120;
 
 export type DayNote = { emoji: string; headline: string; jots: string[] };
@@ -23,17 +25,34 @@ export function isSingleEmoji(s: string | null | undefined): s is string {
 
 const clean = (s: string) => s.replace(/\s+/g, ' ').trim().slice(0, MAX_JOT_LENGTH);
 
+export const wordCount = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
+
+/**
+ * How many key points a day deserves, from how much was said across all of it.
+ * A few words: keep the ideas as they are. A long ramble: condense hard. Never more
+ * than MAX_DAY_JOTS.
+ */
+export function jotBudget(words: number): number {
+  if (words < 6) return 0;
+  if (words <= 20) return 1;
+  if (words <= 45) return 2;
+  if (words <= 90) return 3;
+  if (words <= 160) return 4;
+  if (words <= 300) return 5;
+  return MAX_DAY_JOTS;
+}
+
 /** Short, deduplicated, bounded. */
-export function normalizeJots(jots: readonly string[]): string[] {
+export function normalizeJots(jots: readonly string[], max = MAX_JOTS): string[] {
   const seen = new Set<string>();
   const out: string[] = [];
   for (const raw of jots) {
+    if (out.length >= max) break;
     const j = clean(raw.replace(/^[\s•\-*–—·]+/, ''));
     const key = j.toLowerCase();
     if (!j || seen.has(key)) continue;
     seen.add(key);
     out.push(j);
-    if (out.length >= MAX_JOTS) break;
   }
   return out;
 }
@@ -58,20 +77,17 @@ export function decodeDayNote(raw: string | null | undefined, face: number): Day
   return { ...fallback, headline: raw.slice(0, 200) };
 }
 
-/**
- * A second check-in the same day adds to the day instead of replacing it:
- * its jots follow the earlier ones, and its headline and emoji describe the day so far.
- */
-export function mergeDayNotes(previous: DayNote | null, next: DayNote): DayNote {
-  return {
-    emoji: next.emoji,
-    headline: next.headline || previous?.headline || '',
-    jots: normalizeJots([...(previous?.jots ?? []), ...next.jots]),
-  };
-}
-
 /** One line for the entry's own memory (`entries.ai_summary`), so the joint AI can read it right away. */
 export function noteAsSummary(n: DayNote, limit = 600): string {
   const text = [n.headline, ...n.jots].filter(Boolean).join(' · ');
   return text.length <= limit ? text : text.slice(0, limit - 1) + '…';
+}
+
+/** "morning, 9:12 AM": when in their day something was said, so a whole-day summary can see how the day moved. */
+export function timeLabel(iso: string, timezone: string): string {
+  const at = new Date(iso);
+  const hour = Number(new Intl.DateTimeFormat('en-US', { hour: 'numeric', hourCycle: 'h23', timeZone: timezone }).format(at));
+  const part = hour < 5 ? 'late night' : hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : hour < 21 ? 'evening' : 'night';
+  const clock = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', timeZone: timezone }).format(at);
+  return `${part}, ${clock}`;
 }

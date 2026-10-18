@@ -110,6 +110,12 @@ export const DaySummarySchema = z.object({
   headline: z.string().transform((s) => s.trim().slice(0, 80)).catch(''),
   /** Exactly one emoji; anything else is ignored and the mood face is used. */
   emoji: z.string().optional().catch(undefined),
+  /** How the whole day felt, 1 (very hard) to 5 (great), weighing everything said that day. */
+  // null and blanks mean "no opinion", not a 0 that would clamp to the worst day.
+  mood: z.preprocess(
+    (v) => (v === null || v === '' || typeof v === 'boolean' ? undefined : v),
+    z.coerce.number().transform((n) => Math.min(5, Math.max(1, Math.round(n)))).optional(),
+  ).catch(undefined),
   /** The ideas worth remembering, restated in the model's own words. */
   jots: z.array(z.string()).transform((a) => a.map((s) => s.trim().slice(0, 100)).filter(Boolean).slice(0, 10)).catch([]),
 });

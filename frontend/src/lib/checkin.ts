@@ -22,7 +22,7 @@ import {
 import { createAdminSupabase } from '@/lib/supabase/admin';
 import { leakCheckAndRewrite } from '@/lib/leakcheck';
 import { env } from '@/lib/env';
-import { decodeDayNote, encodeDayNote, faceEmoji, isSingleEmoji, mergeDayNotes, noteAsSummary, normalizeJots } from '@/lib/calendar';
+import { encodeDayNote, faceEmoji, isSingleEmoji, jotBudget, noteAsSummary, normalizeJots, timeLabel, wordCount, type DayNote } from '@/lib/calendar';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 const SAFETY_RESOURCES = [
@@ -71,7 +71,19 @@ export async function runCheckin(
 
   // ── 2. classify. The only call that sees raw_text. ──
   const recent = await recentStates(db, userId, req.local_date, 7);
-  // The calendar summary runs alongside classify (same text, author-only output), so it adds no wait.
+
+  // The calendar summarises the WHOLE day: everything said so far today plus this entry, oldest
+  // first. It runs alongside classify (author-only output), so it adds no wait.
+  const { data: earlier } = await db.from('entries').select('raw_text, created_at')
+    .eq('author_id', userId).eq('connection_id', connectionId).eq('local_date', req.local_date)
+    .neq('id', entry.id).order('created_at', { ascending: true });
+  const dayEntries = [
+    ...(earlier ?? []).map((e) => ({ when: timeLabel(e.created_at, me.timezone), text: e.raw_text as string })),
+    { when: timeLabel(new Date().toISOString(), me.timezone), text: req.text },
+  ];
+  const dayText = dayEntries.map((e) => e.text).join('\n\n');
+  // Say a little and the ideas stay as they are; say a lot and they are condensed to fit.
+  const maxJots = jotBudget(wordCount(dayText));
   const [cls, daySummary] = await Promise.all([
     generateJSON({
       schema: ClassifyOutputSchema, kind: 'classify',
@@ -88,11 +100,11 @@ export async function runCheckin(
     generateJSON({
       schema: DaySummarySchema, kind: 'classify',
       system: DAY_SUMMARY_SYSTEM,
-      user: daySummaryUser({ raw_text: req.text, author_display_name: me.display_name }),
-      mockFn: () => mockDaySummary(req.text),
+      user: daySummaryUser({ author_display_name: me.display_name, max_jots: maxJots, entries: dayEntries }),
+      mockFn: () => mockDaySummary(dayText, maxJots),
     }).catch((e) => {
       console.error('[checkin] day summary fell back to the keyless mock:', (e as Error).message);
-      return mockDaySummary(req.text);
+      return mockDaySummary(dayText, maxJots);
     }),
   ]);
 
@@ -101,18 +113,15 @@ export async function runCheckin(
     safety_flag: cls.safety.flag, classifier_model: env.model('classify'), classified_at: new Date().toISOString(),
   }).eq('id', entry.id);
 
-  // The calendar: one emoji and a short list of jot notes per day, private to the author.
-  // A second check-in the same day adds to the day instead of replacing it.
-  const dayFace = await dayMoodFace(db, userId, connectionId, req.local_date, entry.id, cls.mood_face);
-  const { data: existingDay } = await db.from('mood_days').select('note, mood_face')
-    .eq('author_id', userId).eq('connection_id', connectionId).eq('local_date', req.local_date).maybeSingle();
-  const dayNote = mergeDayNotes(
-    existingDay ? decodeDayNote(existingDay.note, existingDay.mood_face) : null,
-    {
-      emoji: isSingleEmoji(daySummary.emoji) ? daySummary.emoji.trim() : faceEmoji(dayFace),
-      headline: daySummary.headline || cls.day_note, jots: normalizeJots(daySummary.jots.length ? daySummary.jots : cls.jots),
-    },
-  );
+  // The calendar: one emoji, one overall mood and a few key points per day, private to the author.
+  // Every check-in rewrites the day from everything said that day, so a rough morning and a good
+  // afternoon settle into one honest mood instead of the last entry winning.
+  const dayFace = daySummary.mood ?? await dayMoodFace(db, userId, connectionId, req.local_date, entry.id, cls.mood_face);
+  const dayNote: DayNote = {
+    emoji: isSingleEmoji(daySummary.emoji) ? daySummary.emoji.trim() : faceEmoji(dayFace),
+    headline: daySummary.headline || cls.day_note,
+    jots: normalizeJots(daySummary.jots.length ? daySummary.jots : maxJots ? cls.jots : [], maxJots),
+  };
   await db.from('mood_days').upsert({
     author_id: userId, connection_id: connectionId, local_date: req.local_date,
     mood_face: dayFace, source: 'derived', note: encodeDayNote(dayNote),
@@ -121,7 +130,7 @@ export async function runCheckin(
   // This entry's own memory, so the nightly joint analysis can read it straight away.
   // Separate from the classification write: a missing column must never cost the calendar.
   await db.from('entries').update({
-    ai_summary: noteAsSummary({ emoji: dayNote.emoji, headline: daySummary.headline || cls.day_note, jots: normalizeJots(daySummary.jots) }),
+    ai_summary: noteAsSummary(dayNote),
   }).eq('id', entry.id);
 
   // ── 3. feeding. Participation only — a brutal day feeds it exactly as well. ──

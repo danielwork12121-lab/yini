@@ -261,3 +261,26 @@ button.cal-cell:focus-visible, .cal-step:focus-visible, .cal-close:focus-visible
 .gg-quote blockquote p { margin: 0 0 12px; font-family: var(--font-display), Georgia, serif; font-size: 20px; line-height: 1.4; text-wrap: pretty; }
 .gg-quote footer { font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: #9A7A22; font-weight: 700; }
 .gg-pill { position: absolute; top: 14px; right: 14px; background: #F0857A; color: #fff; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; border-radius: 9999px; padding: 4px 10px; }
+
+/* ── The calendar icon: shows the app's own day, and flips when it changes ── */
+.dateicon { display: inline-flex; flex-direction: column; width: 26px; height: 28px; border-radius: 6px; overflow: hidden; vertical-align: -6px; margin-right: 8px;
+  background: #fff; border: 1.5px solid #E4553F; box-shadow: 0 1px 0 rgba(58,36,24,.12); font-family: var(--font-art), 'Nunito', system-ui, sans-serif; line-height: 1; flex: none; }
+.dateicon-m { background: #E4553F; color: #fff; font-size: 7.5px; font-weight: 900; letter-spacing: .08em; text-align: center; padding: 2px 0 1.5px; }
+.dateicon-d { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; color: #3A2418; animation: dateflip .45s var(--ease-bounce); transform-origin: 50% 0; }
+@keyframes dateflip { from { transform: rotateX(-90deg); opacity: 0; } to { transform: rotateX(0); opacity: 1; } }
+.dateicon-lg { width: 96px; height: 104px; border-radius: 20px; border-width: 3px; margin: 0 0 18px; box-shadow: 0 10px 28px rgba(58,36,24,.18); }
+.dateicon-lg .dateicon-m { font-size: 20px; padding: 7px 0 5px; }
+.dateicon-lg .dateicon-d { font-size: 52px; }
+
+/* ── New day card ── */
+.daywatch { position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; padding: 24px;
+  background: rgba(42, 37, 32, .42); animation: daywatchin .25s var(--ease); }
+@keyframes daywatchin { from { opacity: 0; } to { opacity: 1; } }
+.daywatch-card { width: 100%; max-width: 340px; background: var(--canvas); border-radius: 30px; padding: 30px 24px 18px; text-align: center; display: flex; flex-direction: column; align-items: center;
+  font-family: var(--font-art), 'Nunito', system-ui, sans-serif; color: #3A2418; box-shadow: 0 24px 60px rgba(42,37,32,.3); animation: daywatchup .4s var(--ease-bounce); }
+@keyframes daywatchup { from { transform: translateY(24px) scale(.96); opacity: 0; } to { transform: none; opacity: 1; } }
+.daywatch-title { margin: 0; font-size: 28px; font-weight: 900; letter-spacing: -.2px; }
+.daywatch-date { margin: 4px 0 20px; font-size: 17px; font-weight: 700; color: #7D6D63; }
+.daywatch-actions { width: 100%; display: grid; gap: 2px; }
+.daywatch-go { min-height: 54px; font-size: 18px; }
+@media (prefers-reduced-motion: reduce) { .dateicon-d, .daywatch, .daywatch-card { animation: none; } }
