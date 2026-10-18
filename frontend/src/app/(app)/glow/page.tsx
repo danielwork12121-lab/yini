@@ -12,9 +12,5 @@ export const metadata: Metadata = { title: 'Glow · Yini' };
  */
 export default function GlowPage() {
   if (!env.isSupabaseConfigured()) return <SetupNeeded />;
-  return (
-    <main className="phone" style={{ paddingTop: 28 }}>
-      <GlowView />
-    </main>
-  );
+  return <GlowView />;
 }

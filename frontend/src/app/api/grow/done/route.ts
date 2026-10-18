@@ -10,10 +10,13 @@ export const POST = actionRoute(actionTypes.setGrowDone, async ({ input, user, s
   const db = createAdminSupabase();
 
   if (input.done) {
-    // Only one of this person's own suggestions can be ticked off. RLS on daily_feedback is the check.
-    const { data: own, error } = await supabase.from('daily_feedback').select('id').contains('bullets', [input.text]).limit(1);
+    // Only one of this person's own suggestions can be ticked off. RLS limits these rows to their own.
+    // Checked here rather than with a PostgREST array filter, which mis-encodes commas and quotes.
+    const { data: rows, error } = await supabase.from('daily_feedback').select('bullets').order('local_date', { ascending: false }).limit(60);
     if (error) throw new ActionError('server_error', error.message, 500);
-    if (!own?.length) throw new ActionError('invalid_input', 'That is not one of your suggestions', 400);
+    if (!(rows ?? []).some((r) => (r.bullets as string[]).includes(input.text))) {
+      throw new ActionError('invalid_input', 'That is not one of your suggestions', 400);
+    }
     const { data: me } = await db.from('profiles').select('default_connection_id').eq('id', user.id).single();
     if (!me?.default_connection_id) throw new ActionError('no_connection', 'Not connected yet', 400, false);
     const up = await db.from('grow_done').upsert(
