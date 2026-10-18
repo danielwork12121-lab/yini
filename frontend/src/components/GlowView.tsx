@@ -1,5 +1,5 @@
 'use client';
-import Link from 'next/link';
+import { GlowBig, HeartSmall } from '@/components/app/icons';
 import { useEffect, useState } from 'react';
 import type { GlowResponse } from '@/contract';
 import { fetchJson, HttpError, peekJson } from '@/lib/cachedJson';
@@ -15,6 +15,7 @@ export function GlowView() {
   const [data, setData] = useState<GlowResponse | null>(null);
   const [error, setError] = useState('');
   const [attempt, setAttempt] = useState(0);
+  const [tab, setTab] = useState<'notes' | 'things'>('things');
 
   useEffect(() => {
     let cancelled = false;
@@ -30,38 +31,54 @@ export function GlowView() {
   }, [attempt]);
 
   const partner = data?.partner_display_name ?? 'your person';
+  const things = tab === 'things';
 
   return (
-    <div className="gg gg-glow">
-      <Link href="/home" className="cal-back">← Home</Link>
-      <h1 className="display gg-title">Glow <span aria-hidden="true">✨</span></h1>
-      <p className="small gg-sub">The kind things {partner} has said about you, in their own words. Yini never rewrites them.</p>
+    <main className="pg">
+      <header className="ph">
+        <GlowBig />
+        <h1>Glow</h1>
+      </header>
 
-      {error && <p className="small" role="alert" style={{ color: '#9E4A33' }}>{error} <button type="button" className="link" onClick={() => setAttempt((n) => n + 1)}>Retry</button></p>}
-      {!data && !error && <p className="caption" style={{ textAlign: 'center' }}>Loading…</p>}
+      <div className="seg" role="tablist" aria-label="Glow categories">
+        <button type="button" role="tab" aria-selected={!things} onClick={() => setTab('notes')}>Love Notes</button>
+        <button type="button" role="tab" aria-selected={things} onClick={() => setTab('things')}>Little Things</button>
+      </div>
+      <p className="seg-sub">{things ? `The kind things ${partner} has said about you` : 'Words they wanted you to hear'}</p>
 
-      {data && data.compliments.length > 0 && (
-        <ul className="gg-list gg-quotes">
+      {things && error && <div className="note note-warn" role="alert"><span>{error}</span><button type="button" className="linkbtn" onClick={() => setAttempt((n) => n + 1)}>Retry</button></div>}
+      {things && !data && !error && <div className="note" role="status"><span className="dots" aria-hidden="true"><i /><i /><i /></span>Loading…</div>}
+
+      {things && data && data.compliments.length > 0 && (
+        <ul className="pg-list" style={{ marginTop: 'calc(34 * var(--u))' }}>
           {data.compliments.map((c) => (
-            <li key={c.id} className={`gg-quote${c.is_new ? ' gg-new' : ''}`}>
-              {c.is_new && <span className="gg-pill">New</span>}
-              <blockquote>
-                <p>{c.text}</p>
-                <footer>{partner}{c.said_on ? ` · ${shortDate(c.said_on)}` : ''}</footer>
-              </blockquote>
+            <li key={c.id} className={`gcard${c.is_new ? ' gcard-new' : ''}`}>
+              <div className="gcard-top">
+                <span className="gcard-date">{c.said_on ? shortDate(c.said_on) : 'Recently'}</span>
+                {c.is_new && <span className="gcard-pill">New</span>}
+              </div>
+              <blockquote><p>{c.text}</p></blockquote>
+              <span className="gcard-from">— {partner}</span>
             </li>
           ))}
         </ul>
       )}
 
-      {data && data.compliments.length === 0 && (
-        <div className="gg-empty">
-          <p className="gg-empty-emoji" aria-hidden="true">✨</p>
-          <p className="body">No glows yet. When {partner} says something kind about you in their log, it shows up here, exactly as they said it.</p>
+      {things && data && data.compliments.length === 0 && (
+        <div className="empty">
+          <HeartSmall /><b>No little things yet</b>
+          <span>When {partner} says something kind about you in their log, it shows up here, exactly as they said it.</span>
         </div>
       )}
 
-      <p className="caption gg-foot">Only the kind parts cross over. Everything else {partner} writes stays {partner}&apos;s.</p>
-    </div>
+      {!things && (
+        <div className="empty">
+          <HeartSmall /><b>Love Notes are coming soon ♡</b>
+          <span>Soon you will be able to send each other a little something. For now, Little Things has the kind words already on their way.</span>
+        </div>
+      )}
+
+      <p className="foot">Only the kind parts cross over. Everything else {partner} writes stays {partner}&apos;s.</p>
+    </main>
   );
 }

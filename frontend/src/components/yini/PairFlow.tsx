@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { YiniScreen, type ActHandler } from './YiniScreen';
 import { useToast } from './useToast';
 
-type Step = 'invite' | 'buddy' | 'privacy';
+type Step = 'howjoin' | 'invite' | 'joincode' | 'buddy' | 'privacy';
 
 async function postJson(url: string, body: unknown) {
   const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
@@ -27,11 +27,9 @@ async function googleFirstName(): Promise<string | undefined> {
 export function PairFlow() {
   const router = useRouter();
   const { toast, toastNode } = useToast();
-  const [step, setStep] = useState<Step>('invite');
+  const [step, setStep] = useState<Step>('howjoin');
   const [code, setCode] = useState('');
   const [buddy, setBuddy] = useState<string | null>('fluffy'); // the cat is the one live buddy for now
-  const [joinOpen, setJoinOpen] = useState(false);
-  const [joinCode, setJoinCode] = useState('');
   const [busy, setBusy] = useState(false);
   // Nothing is drawn until we know where this person is, so a paired person never sees the invite page flash.
   const [ready, setReady] = useState(false);
@@ -57,10 +55,10 @@ export function PairFlow() {
     return () => { cancelled = true; };
   }, [router, toast]);
 
-  // Keep the two phones in step. Waiting on the invite page: move on when the other person joins.
+  // Keep the two phones in step. Before pairing: move on when the other person joins with your code.
   // On the buddy page: move on when either of you confirms the buddy.
   useEffect(() => {
-    if (step !== 'invite' && step !== 'buddy') return;
+    if (step !== 'howjoin' && step !== 'invite' && step !== 'buddy') return;
     let stopped = false;
     const tick = async () => {
       try {
@@ -68,7 +66,7 @@ export function PairFlow() {
         if (!res.ok || stopped) return;
         const me = await res.json();
         if (stopped || !me.paired) return;
-        if (step === 'invite') { toast(`${me.partner_display_name ?? 'Your person'} joined.`); setStep('buddy'); }
+        if (step === 'howjoin' || step === 'invite') { toast(`${me.partner_display_name ?? 'Your person'} joined.`); setStep('buddy'); }
         else if (me.pet_species) setStep('privacy');
       } catch { /* offline for a moment; try again next tick */ }
     };
@@ -101,23 +99,29 @@ export function PairFlow() {
   }
 
   async function join() {
+    if (busy) return;
+    const joinCode = (document.getElementById('join-code') as HTMLInputElement | null)?.value ?? '';
+    if (joinCode.trim().length !== 6) { toast('Enter the 6-character code they sent you.'); return; }
     setBusy(true);
     const joined = await postJson('/api/connection/join', { invite_code: joinCode.trim().toUpperCase(), display_name: name.current });
     if (!joined.ok) { toast(joined.json.error ?? 'That code did not work.'); setBusy(false); return; }
     // Paired now. They still pick a buddy and read the privacy page, like everyone else.
-    setBusy(false); setJoinOpen(false); setStep('buddy');
+    setBusy(false); setStep('buddy');
   }
 
   const onAct: ActHandler = (act, target) => {
     switch (act) {
       case 'auth-back':
         if (step === 'privacy') setStep('buddy');
-        else if (step === 'buddy') setStep('invite');
+        else if (step === 'buddy') setStep('howjoin');
+        else if (step === 'invite' || step === 'joincode') setStep('howjoin');
         else void createClient().auth.signOut().then(() => { clearJsonCache(); router.push('/'); router.refresh(); });
         break;
       case 'invite-share': void share(); break;
       case 'invite-copy': if (code) void copy(code, 'Code copied.'); break;
-      case 'join-open': setJoinOpen(true); break;
+      case 'join-invite': setStep('invite'); break;
+      case 'join-code': setStep('joincode'); break;
+      case 'join-go': void join(); break;
       case 'pick-buddy': setBuddy((cur) => (cur === target.dataset.buddy ? null : target.dataset.buddy ?? null)); break;
       case 'buddy-go': if (!busy) void bringBuddyHome(); break;
       case 'privacy-go': router.push('/home'); router.refresh(); break;
@@ -128,23 +132,6 @@ export function PairFlow() {
     <div className="yini-page">
       {ready && <YiniScreen screen={step} onAct={onAct} buddy={buddy} code={code} />}
 
-      {joinOpen && (
-        <div className="yscrim" onClick={(e) => { if (e.target === e.currentTarget) setJoinOpen(false); }}>
-          <div className="ysheet" role="dialog" aria-modal="true" aria-label="Join with a code">
-            <p className="ytitle">Enter your person’s code</p>
-            <label htmlFor="joincode" className="sr-only">Invite code</label>
-            <input
-              id="joincode" className="yfield" maxLength={6} placeholder="ABC123" autoFocus
-              autoCapitalize="characters" autoComplete="off"
-              value={joinCode} onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-            />
-            <button type="button" className="ybtn" disabled={busy || joinCode.trim().length !== 6} onClick={join}>
-              {busy ? 'Checking…' : 'Join them'}
-            </button>
-            <button type="button" className="ylink" onClick={() => setJoinOpen(false)}>Close</button>
-          </div>
-        </div>
-      )}
       {toastNode}
     </div>
   );

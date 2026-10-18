@@ -13,9 +13,5 @@ export default async function CalendarPage() {
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/');
-  return (
-    <main className="phone" style={{ paddingTop: 28 }}>
-      <CalendarView />
-    </main>
-  );
+  return <CalendarView />;
 }

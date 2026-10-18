@@ -1,10 +1,11 @@
 'use client';
-import Link from 'next/link';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { CalendarBig, ChevLeft, ChevRight, SparkIcon } from '@/components/app/icons';
+import { useEffect, useMemo, useState } from 'react';
 import type { CalendarDay, CalendarResponse } from '@/contract';
 import { useAppToday } from '@/lib/appClock';
 
 const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+const CLAMP = 150;
 
 const monthOf = (date: string) => date.slice(0, 7);
 const shiftMonth = (month: string, by: number) => {
@@ -26,9 +27,8 @@ export function CalendarView() {
   const month = picked ?? (today ? monthOf(today) : '');
   const [cache, setCache] = useState<Record<string, CalendarDay[]>>({});
   const [error, setError] = useState('');
-  const [open, setOpen] = useState<CalendarDay | null>(null);
-  const closeRef = useRef<HTMLButtonElement>(null);
-
+  const [openDate, setOpenDate] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
@@ -40,18 +40,14 @@ export function CalendarView() {
       .catch(() => { if (!cancelled) setError('Could not load your calendar. Check your connection and try again.'); });
     return () => { cancelled = true; };
   }, [month, cache, attempt]);
-  useEffect(() => {
-    if (!open) return;
-    closeRef.current?.focus();
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(null); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [open]);
 
   const days = month ? cache[month] : undefined;
   const byDate = useMemo(() => new Map((days ?? []).map((d) => [d.local_date, d])), [days]);
+  // Today's page opens on today when there is something to show; otherwise on the latest day with an entry.
+  const open: CalendarDay | undefined = (openDate ? byDate.get(openDate) : undefined)
+    ?? (picked === null && today ? byDate.get(today) : undefined);
 
-  if (!month) return <div className="cal"><p className="caption" style={{ textAlign: 'center' }}>Loading…</p></div>;
+  if (!month) return <main className="pg"><div className="note" role="status"><span className="dots" aria-hidden="true"><i /><i /><i /></span>Loading…</div></main>;
 
   const first = parse(`${month}-01`);
   const lead = first.getDay();
@@ -62,80 +58,89 @@ export function CalendarView() {
   ];
 
   return (
-    <div className="cal">
-      <header className="cal-head">
-        <Link href="/home" className="cal-back">← Home</Link>
-        <h1 className="display cal-title">Your calendar</h1>
-        <p className="small cal-sub">A little emoji for every day you told Yini about. Tap one to see what you said.</p>
+    <main className="pg">
+      <header className="ph">
+        <CalendarBig />
+        <h1>Calendar</h1>
       </header>
 
       <div className="cal-nav">
-        <button type="button" className="cal-step" onClick={() => setMonth(shiftMonth(month, -1))} aria-label="Previous month">‹</button>
-        <h2 className="display cal-month" aria-live="polite">{monthTitle(month)}</h2>
-        <button type="button" className="cal-step" onClick={() => setMonth(shiftMonth(month, 1))} aria-label="Next month">›</button>
+        <button type="button" className="cal-step" onClick={() => { setMonth(shiftMonth(month, -1)); setOpenDate(null); }} aria-label="Previous month"><ChevLeft /></button>
+        <h2 className="cal-month" aria-live="polite">{monthTitle(month)}</h2>
+        <button type="button" className="cal-step" onClick={() => { setMonth(shiftMonth(month, 1)); setOpenDate(null); }} aria-label="Next month"><ChevRight /></button>
       </div>
 
-      <div className="cal-grid" role="grid" aria-label={monthTitle(month)}>
-        {WEEKDAYS.map((w, i) => <div key={i} className="cal-dow" role="columnheader">{w}</div>)}
-        {cells.map((date, i) => {
-          if (!date) return <div key={`b${i}`} className="cal-cell cal-blank" role="gridcell" />;
-          const day = byDate.get(date);
-          const n = Number(date.slice(8));
-          const cls = `cal-cell${date === today ? ' cal-today' : ''}${day ? ' cal-has' : ''}`;
-          return day ? (
-            <button key={date} type="button" role="gridcell" className={cls} onClick={() => setOpen(day)}
-              aria-label={`${longDate(date)}, ${day.emoji}, ${day.jots.length} ${day.jots.length === 1 ? 'note' : 'notes'}`}>
-              <span className="cal-num">{n}</span>
-              <span className="cal-emoji" aria-hidden="true">{day.emoji}</span>
-            </button>
-          ) : (
-            <div key={date} role="gridcell" className={cls} aria-label={longDate(date)}>
-              <span className="cal-num">{n}</span>
-            </div>
-          );
-        })}
-      </div>
-
-      {error && <p className="small" role="alert" style={{ color: '#9E4A33', textAlign: 'center' }}>{error} <button className="link" onClick={() => setAttempt((n) => n + 1)}>Retry</button></p>}
-      {!error && !days && <p className="caption" style={{ textAlign: 'center' }}>Loading…</p>}
-      {days && days.length === 0 && !error && (
-        <p className="small" style={{ textAlign: 'center', marginTop: 18 }}>
-          Nothing here yet. Tell Yini about your day and it will show up on this page.
-        </p>
-      )}
-
-      <p className="caption" style={{ textAlign: 'center', marginTop: 26 }}>Only you can see your calendar. Your person never sees it.</p>
-
-      {open && (
-        <div className="cal-scrim" onClick={(e) => { if (e.target === e.currentTarget) setOpen(null); }}>
-          <div className="cal-sheet" role="dialog" aria-modal="true" aria-label={longDate(open.local_date)}>
-            <button type="button" ref={closeRef} className="cal-close" onClick={() => setOpen(null)} aria-label="Close">×</button>
-            <p className="caption cal-sheet-date">{longDate(open.local_date)}</p>
-            <div className="cal-sheet-top">
-              <span className="cal-big" aria-hidden="true">{open.emoji}</span>
-              <h3 className="display cal-sheet-title">{open.headline || 'You checked in'}</h3>
-            </div>
-
-            {open.jots.length > 0 ? (
-              <ul className="cal-jots">{open.jots.map((j, i) => <li key={i}>{j}</li>)}</ul>
+      <div className="cal-card">
+        <div className="cal-dows" aria-hidden="true">{WEEKDAYS.map((w, i) => <span key={i}>{w}</span>)}</div>
+        <div className="cal-grid" role="grid" aria-label={monthTitle(month)}>
+          {cells.map((date, i) => {
+            if (!date) return <span key={`b${i}`} className="cal-cell blank" />;
+            const day = byDate.get(date);
+            const n = Number(date.slice(8));
+            const cls = `cal-cell${today && date <= today ? ' past' : ''}${today && date > today ? ' future' : ''}${day ? ' has' : ''}${date === today ? ' today' : ''}${open?.local_date === date ? ' sel' : ''}`;
+            return day ? (
+              <button key={date} type="button" role="gridcell" className={cls} aria-selected={open?.local_date === date}
+                onClick={() => setOpenDate(date)}
+                aria-label={`${longDate(date)}, ${day.emoji}, ${day.jots.length} ${day.jots.length === 1 ? 'note' : 'notes'}`}>
+                <span className="n">{n}</span>
+                <span className="em" aria-hidden="true">{day.emoji}</span>
+              </button>
             ) : (
-              <p className="small">No short notes for this day.</p>
-            )}
-
-            {open.entries.length > 0 && (
-              <details className="cal-said">
-                <summary>What you said</summary>
-                {open.entries.map((e) => (
-                  <div key={e.id} className="cal-entry">
-                    <p className="caption">{timeOf(e.created_at)} · {e.input_mode === 'voice' ? 'Voice' : 'Typed'}</p>
-                    <p className="body" style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{e.text}</p>
-                  </div>
-                ))}
-              </details>
-            )}
-          </div>
+              <span key={date} role="gridcell" className={cls} aria-label={longDate(date)}><span className="n">{n}</span></span>
+            );
+          })}
         </div>
-      )}
-    </div>
+      </div>
+
+      {error && <div className="note note-warn" role="alert"><span>{error}</span><button className="linkbtn" onClick={() => setAttempt((n) => n + 1)}>Retry</button></div>}
+      {!error && !days && <div className="note" role="status"><span className="dots" aria-hidden="true"><i /><i /><i /></span>Loading…</div>}
+
+      {open ? (
+        <section className="day" aria-label={longDate(open.local_date)}>
+          <div className="day-row">
+            <span className="day-em" aria-hidden="true">{open.emoji}</span>
+            <span className="day-date">{longDate(open.local_date)}</span>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(10 * var(--u))' }}>
+            <span className="day-sum"><SparkIcon />Yini’s summary</span>
+            <p>{open.headline || 'You checked in.'}</p>
+          </div>
+
+          {open.jots.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(12 * var(--u))' }}>
+              <span className="day-h">Little notes</span>
+              <ul className="day-jots">{open.jots.map((j, i) => <li key={i}>{j}</li>)}</ul>
+            </div>
+          )}
+
+          {open.entries.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(12 * var(--u))' }}>
+              <span className="day-h">{open.entries.length === 1 ? 'What you said' : 'What you said today'}</span>
+              {open.entries.map((e) => {
+                const long = e.text.length > CLAMP;
+                const full = expanded[e.id];
+                const shown = long && !full ? `${e.text.slice(0, CLAMP).replace(/\s+\S*$/, '')}…` : e.text;
+                return (
+                  <div key={e.id} className="day-entry">
+                    <div className="day-entry-top">
+                      <span>{timeOf(e.created_at)} · {e.input_mode === 'voice' ? 'Voice' : 'Typed'}</span>
+                      {long && <button type="button" className="linkbtn" aria-expanded={!!full} onClick={() => setExpanded((x) => ({ ...x, [e.id]: !full }))}>{full ? 'Show less' : 'Read more'}</button>}
+                    </div>
+                    <p>{shown}</p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      ) : days && days.length === 0 && !error ? (
+        <p className="day-hint">Nothing here yet. Check in with Yini and your day will show up on this page.</p>
+      ) : days && !error ? (
+        <p className="day-hint">Tap a day to see what you told Yini.</p>
+      ) : null}
+
+      <p className="foot">Only you can see your calendar. Your person never sees it.</p>
+    </main>
   );
 }

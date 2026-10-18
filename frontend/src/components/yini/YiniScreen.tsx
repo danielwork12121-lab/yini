@@ -4,7 +4,7 @@ import { SCREENS, type ScreenKey } from './screens';
 
 const LABELS: Record<ScreenKey, string> = {
   welcome: 'Welcome', signin: 'Sign in', create: 'Create account',
-  invite: 'Invite your person', buddy: 'Pick your buddy', privacy: 'How your feelings stay yours',
+  howjoin: 'How are you joining', invite: 'Invite your person', joincode: 'Join with a code', buddy: 'Pick your buddy', privacy: 'How your feelings stay yours',
 };
 
 /** The art boards are drawn at 941×1672 and scaled to the phone column. */
@@ -75,6 +75,7 @@ export function YiniScreen({ screen, onAct, buddy = null, lover = false, code = 
     const target = (e.target as HTMLElement).closest<HTMLElement>('[data-act]');
     if (!target) return;
     const act = target.dataset.act!;
+    if (target.tagName === 'A') e.preventDefault();
     if (act === 'toggle-pw') {
       const input = inner.current?.querySelector<HTMLInputElement>(`#${target.dataset.for}`);
       if (input) {

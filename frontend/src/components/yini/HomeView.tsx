@@ -1,15 +1,16 @@
 'use client';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { AnimatedPet } from '@/components/pets/AnimatedPet';
 import { ReplyCards } from '@/components/ReplyCards';
 import { dismissCheckin, retryCheckin, usePendingCheckin } from '@/lib/pendingCheckin';
 import { AppDateIcon } from '@/components/DateIcon';
 import { warmJson } from '@/lib/cachedJson';
+import { Room } from '@/components/app/Room';
+import { MicBig } from '@/components/app/icons';
 
 const greeting = () => { const h = new Date().getHours(); return h < 12 ? 'Morning' : h < 18 ? 'Afternoon' : 'Evening'; };
 
-/** The temporary home: your cat, a feed button, and the way to the calendar and to telling Yini about your day. */
+/** Home: the Check in button, your room and your cat. Feeding and the reply from Yini live here too. */
 export function HomeView({ name, partner }: { name: string; partner: string }) {
   const [request, setRequest] = useState(0);
   const [feeding, setFeeding] = useState(false);
@@ -26,52 +27,48 @@ export function HomeView({ name, partner }: { name: string; partner: string }) {
   }
 
   return (
-    <main className="ypet yhome">
-      <h1 className="ypet-title">{greeting()}{name ? `, ${name}` : ''}.</h1>
-      <p className="ypet-sub">{fed ? 'Your cat loves it. A little love goes a long way.' : 'Your cat is waiting for you.'}</p>
+    <main>
+      <h1 className="sr-only">{greeting()}{name ? `, ${name}` : ''}.</h1>
 
       {pending.status === 'working' && (
-        <div className="yhome-status" role="status" aria-live="polite">
-          <span className="yhome-dots" aria-hidden="true"><i /><i /><i /></span>
+        <div className="pg"><div className="note" role="status" aria-live="polite">
+          <span className="dots" aria-hidden="true"><i /><i /><i /></span>
           Yini is reading your day. Your calendar will update when it is done.
-        </div>
+        </div></div>
       )}
       {pending.status === 'error' && (
-        <div className="yhome-status yhome-error" role="alert">
-          <p style={{ margin: 0 }}>{pending.message}</p>
-          <button type="button" className="ypet-again" onClick={retryCheckin}>Try again</button>
-        </div>
+        <div className="pg"><div className="note note-warn" role="alert">
+          <span>{pending.message}</span>
+          <button type="button" className="linkbtn" onClick={retryCheckin}>Try again</button>
+        </div></div>
       )}
+
+      <Link href="/today" className="checkin" aria-label="Check in: tell Yini about your day">
+        <span className="checkin-in">
+          <MicBig />
+          <span className="checkin-label">Check in</span>
+        </span>
+      </Link>
+
+      <Room
+        request={request}
+        onComplete={() => { setFeeding(false); setFed(true); }}
+        feed={
+          <button type="button" className="pill pill-line" onClick={feed} disabled={feeding}>
+            {feeding ? 'Mmm…' : fed ? 'Feed again ♥' : 'Feed a little love ♥'}
+          </button>
+        }
+      />
+
       {pending.status === 'done' && (
-        <div className="yhome-done">
-          <ReplyCards reply={pending.reply} partner={partner} />
-          <div className="yhome-donebar">
-            <Link href="/calendar" className="yhome-calink"><AppDateIcon /> See it on your calendar</Link>
-            <button type="button" className="ypet-again" onClick={dismissCheckin}>Dismiss</button>
+        <>
+          <div className="reply"><ReplyCards reply={pending.reply} partner={partner} /></div>
+          <div className="reply-bar">
+            <Link href="/calendar"><AppDateIcon /> See it on your calendar</Link>
+            <button type="button" className="linkbtn" onClick={dismissCheckin}>Dismiss</button>
           </div>
-        </div>
+        </>
       )}
-
-      <div className="ypet-stage">
-        <AnimatedPet
-          animation={request ? 'feeding' : 'idle'}
-          requestId={request}
-          onComplete={() => { setFeeding(false); setFed(true); }}
-        />
-      </div>
-
-      <button type="button" className="ypet-btn" onClick={feed} disabled={feeding}>
-        {feeding ? 'Mmm…' : fed ? 'Feed again ♥' : 'Feed a little love ♥'}
-      </button>
-
-      <div className="yhome-links">
-        <Link href="/today" className="yhome-btn">🎙 Tell Yini about your day</Link>
-        <Link href="/calendar" className="yhome-btn"><AppDateIcon /> Calendar</Link>
-        <div className="yhome-pair">
-          <Link href="/grow" className="yhome-btn yhome-grow">🌱 Grow</Link>
-          <Link href="/glow" className="yhome-btn yhome-glow">✨ Glow</Link>
-        </div>
-      </div>
     </main>
   );
 }

@@ -40,24 +40,20 @@ export function DailyFeedback({ demo }: { demo: boolean }) {
   if (!feedback && !demo) return null;
 
   return (
-    <div className="card" style={{ marginTop: 14 }}>
-      <p className="caption" style={{ marginTop: 0, textTransform: 'uppercase', letterSpacing: '.06em' }}>
-        {feedback ? `Overnight · ${feedback.local_date}` : 'Overnight'}
-      </p>
+    <div className="reply-card">
+      <p className="kick">{feedback ? `Overnight · ${feedback.local_date}` : 'Overnight'}</p>
       {feedback ? (
         <>
-          <p className="body" style={{ marginTop: 0 }}>{feedback.headline}</p>
-          <ul className="body" style={{ margin: 0, paddingLeft: 18, color: 'var(--ink-muted)' }}>
+          <p style={{ color: 'var(--ink)', fontWeight: 700 }}>{feedback.headline}</p>
+          <ul style={{ margin: '8px 0 0', paddingLeft: 18 }}>
             {feedback.bullets.map((b, i) => <li key={i} style={{ marginBottom: 6 }}>{b}</li>)}
           </ul>
         </>
       ) : (
-        <p className="body" style={{ margin: 0, color: 'var(--ink-muted)' }}>
-          After you both write, tonight&apos;s reflection lands here.
-        </p>
+        <p>After you both write, tonight&apos;s reflection lands here.</p>
       )}
       {demo && (
-        <button className="link" style={{ marginTop: 10 }} disabled={running} onClick={runNow}>
+        <button className="linkbtn" style={{ marginTop: 10 }} disabled={running} onClick={runNow}>
           {running ? 'Reading both days…' : "Demo: run tonight's reflection now"}
         </button>
       )}

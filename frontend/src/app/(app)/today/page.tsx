@@ -1,11 +1,9 @@
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
-import Link from 'next/link';
 import type { TodayResponse } from '@/contract';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { env } from '@/lib/env';
 import { CheckIn } from '@/components/CheckIn';
-import { AppDateIcon } from '@/components/DateIcon';
 import { DailyFeedback } from '@/components/DailyFeedback';
 import { SetupNeeded } from '@/components/SetupNeeded';
 
@@ -28,13 +26,9 @@ export default async function TodayPage() {
   const today = (await res.json()) as TodayResponse;
 
   return (
-    <main className="phone" style={{ paddingTop: 36 }}>
-      <p style={{ display: 'flex', justifyContent: 'space-between', margin: '-12px 0 8px' }}>
-        <Link href="/home" className="small" style={{ textDecoration: 'none' }}>← Home</Link>
-        <Link href="/calendar" className="small" style={{ textDecoration: 'none' }}><AppDateIcon /> Calendar</Link>
-      </p>
+    <>
       <CheckIn today={today} />
-      <DailyFeedback demo={env.demoMode()} />
-    </main>
+      {env.demoMode() && <div className="reply"><DailyFeedback demo /></div>}
+    </>
   );
 }

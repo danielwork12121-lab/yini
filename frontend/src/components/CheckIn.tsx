@@ -4,7 +4,8 @@ import { useRouter } from 'next/navigation';
 import type { TodayResponse } from '@/contract';
 import { startCheckin } from '@/lib/pendingCheckin';
 import { fetchAppToday } from '@/lib/appClock';
-import { Pet } from './Pet';
+import { Room } from '@/components/app/Room';
+import { KeyboardIcon, MicSmall, WaveIcon } from '@/components/app/icons';
 
 // No pitch-deck timer: people talk as long as they need. The only limits are
 // practical. Ten minutes of 24 kbps audio is about 1.8 MB, well inside the 4.5 MB
@@ -136,32 +137,38 @@ export function CheckIn({ today }: { today: TodayResponse }) {
   const overLimit = text.trim().length > MAX_CHARS;
   const nearCap = recording && elapsed >= WARN_MS;
 
-  return (
-    <div>
-      <p className="display h1" style={{ marginBottom: 6 }}>
-        {greeting()}, {today.display_name}.
-      </p>
-      <p className="body" style={{ color: 'var(--ink-muted)', marginTop: 0 }}>
-        How did today actually go? Say it out loud or type it. Take as long as you like.
-      </p>
+  const showText = (typing || phase === 'preview') && phase !== 'transcribing';
+  const tag = recording ? 'Listening…' : phase === 'transcribing' ? 'Writing it down…' : phase === 'preview' ? 'Here is what I heard' : typing ? 'Type it here' : `${greeting()}, ${today.display_name}`;
 
-      <div className="card" style={{ textAlign: 'center', marginTop: 20 }}>
-        {phase === 'capture' && (
+  return (
+    <main>
+      <h1 className="sr-only">Tell Yini about your day</h1>
+      <section className={`listen listen-wide${recording ? ' listen-live' : ''}`} aria-label="Check in">
+        <div className="listen-top">
+          <span className="listen-tag"><span className="listen-dot" aria-hidden="true" />{tag}</span>
+          {recording && <span className="listen-wave"><WaveIcon /></span>}
+        </div>
+
+        {phase === 'capture' && !typing && (
+          <p className="listen-text">
+            {recording ? 'Take as long as you like. Your words will show up here when you let go.' : 'How did today actually go? Say it out loud, and take as long as you like.'}
+          </p>
+        )}
+
+        {phase === 'capture' && !typing && (
           <>
             <button
-              className="mic" data-recording={recording}
+              className="listen-micbtn" data-recording={recording}
               onClick={recording ? stop : start}
               aria-label={recording ? 'Stop recording' : 'Start recording'}
             >
-              {recording
-                ? <span style={{ width: 26, height: 26, background: '#fff', borderRadius: 4, display: 'block' }} />
-                : <MicGlyph />}
+              {recording ? <span className="listen-stop" /> : <MicSmall />}
             </button>
-            <p className="caption" style={{ marginTop: 14, fontVariantNumeric: 'tabular-nums' }} aria-live="polite">
-              {recording ? `Recording ${formatClock(elapsed)}` : 'Tap to start, tap to stop'}
+            <p className="listen-hint" aria-live="polite">
+              {recording ? `Recording ${formatClock(elapsed)} · tap to finish` : 'Tap to start, tap to stop'}
             </p>
             {nearCap && (
-              <p className="caption" style={{ marginTop: 4, color: '#9E4A33' }}>
+              <p className="listen-hint" style={{ color: '#9E4A33' }}>
                 One minute left. Recording stops at {MAX_MS / 60_000} minutes.
               </p>
             )}
@@ -169,63 +176,57 @@ export function CheckIn({ today }: { today: TodayResponse }) {
         )}
 
         {phase === 'transcribing' && (
-          <p className="body" style={{ margin: 0 }} aria-live="polite">Turning your voice into words…</p>
+          <p className="listen-text" aria-live="polite">Turning your voice into words…</p>
         )}
 
         {phase === 'preview' && audioUrl && (
-          <audio controls src={audioUrl} style={{ width: '100%' }} />
+          <audio controls src={audioUrl} />
         )}
 
-        {(typing || phase === 'preview') && phase !== 'transcribing' && (
+        {showText && (
           <>
             <textarea
-              className="entry" value={text} onChange={(e) => setText(e.target.value)}
+              className="listen-area" value={text} onChange={(e) => setText(e.target.value)}
               aria-label={blob ? 'What you said. Edit it if anything is off.' : 'Your entry'}
               placeholder={blob ? 'Your words will show up here.' : 'Type it here.'}
-              style={{ marginTop: 14 }}
             />
-            <p className="caption" style={{ textAlign: 'right', margin: '4px 2px 0', color: overLimit ? '#9E4A33' : undefined }}>
-              {blob && !transcriptFailed && text ? 'Edit anything that sounds off. ' : ''}
-              {text.length.toLocaleString()} / {MAX_CHARS.toLocaleString()}
-            </p>
+            <div className="listen-foot" style={overLimit ? { color: '#9E4A33' } : undefined}>
+              <span>{blob && !transcriptFailed && text ? 'Edit anything that sounds off.' : ''}</span>
+              <span>{text.length.toLocaleString()} / {MAX_CHARS.toLocaleString()}</span>
+            </div>
           </>
         )}
 
         {phase === 'preview' && (
-          <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-            <button className="btn btn-quiet" onClick={discard}>Re-record</button>
-            <button className="btn" onClick={send} disabled={!text.trim() || overLimit}>Send</button>
+          <div className="listen-actions">
+            <button className="cta cta-white" onClick={discard}>Re-record</button>
+            <button className="cta" onClick={send} disabled={!text.trim() || overLimit}>Send</button>
           </div>
         )}
 
         {typing && phase === 'capture' && text.trim().length > 0 && (
-          <button className="btn" style={{ marginTop: 12 }} onClick={send} disabled={overLimit}>Send</button>
+          <button className="cta" onClick={send} disabled={overLimit} style={{ height: 'max(48px, calc(90 * var(--u)))' }}>Send</button>
         )}
-      </div>
+      </section>
 
       {/* Non-negotiable: you cannot speak a reflection about your partner while
           sitting next to them, or on a bus. */}
       {!typing && phase === 'capture' && !recording && (
-        <p style={{ textAlign: 'center', marginTop: 6 }}>
-          <button className="link" onClick={() => setTyping(true)}>⌨ Type instead</button>
-        </p>
+        <div className="typeinstead">
+          <button type="button" onClick={() => setTyping(true)}><KeyboardIcon />Type instead</button>
+        </div>
       )}
 
-      {error && <p className="small" style={{ color: '#9E4A33', textAlign: 'center' }} role="alert">{error}</p>}
+      {error && <p className="err" role="alert">{error}</p>}
 
-      <div className="card card-warm" style={{ marginTop: 22 }}>
-        <Pet pet={pet} />
-      </div>
-    </div>
+      <Room />
+      <p className="reply-foot" style={{ margin: 'calc(24 * var(--u)) calc(60 * var(--u)) 0' }}>
+        {pet.hatched ? pet.name : 'An egg, for now'} · {pet.bond_name} · {pet.total_half_days} {pet.total_half_days === 1 ? 'half-day' : 'half-days'}
+        {' · '}{pet.both_fed_today ? 'Fully fed today.' : pet.you_fed_today ? 'Half fed today.' : 'Napping.'}
+      </p>
+    </main>
   );
 }
-
-const MicGlyph = () => (
-  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-       strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <rect x="9" y="2" width="6" height="12" rx="3" /><path d="M5 11a7 7 0 0 0 14 0" /><path d="M12 18v4" />
-  </svg>
-);
 
 /** m:ss for the running clock. */
 function formatClock(ms: number) {

@@ -6,16 +6,17 @@
    read layered. Ink is never #000 — near-black with a brown bias so it sits on
    cream without looking like a rendering bug. */
 :root {
-  --canvas:#FFFCEC; --canvas-sunk:#FAF4E4;
-  --surface:#FFFFFF; --surface-warm:#FFF8EC;
-  --ink:#2A2520; --ink-muted:#6B6560; --ink-faint:#9A938C;
-  --line:#E8DFCE; --line-strong:#D6C9B0;
-  --primary:#C56B4B; --primary-press:#9E4A33; --primary-tint:#E0A081;
+  --canvas:#FDF6EE; --canvas-sunk:#F6ECE1;
+  --surface:#FFFBF5; --surface-warm:#FBF1E6;
+  --ink:#3A2418; --ink-muted:#7D6D63; --ink-faint:#9A8A7F;
+  --line:#F2E6D9; --line-strong:#EEDFD0;
+  --primary:#F0857A; --primary-press:#C9483A; --primary-tint:#F6B8AF;
   --sage:#9CAF88; --butter:#FFD66E; --blush:#FCC9D8;
   --r-md:14px; --r-lg:20px; --r-xl:28px; --r-pill:9999px;
   --sh-md:0 8px 24px rgba(74,60,45,.08);
   --ease:cubic-bezier(.4,0,.2,1);
   --ease-bounce:cubic-bezier(.34,1.56,.64,1);
+  --font-display: var(--font-art); --font-body: var(--font-art);
 }
 
 * { box-sizing: border-box; }
@@ -23,14 +24,14 @@ html, body { margin:0; padding:0; }
 body {
   background: var(--canvas);
   color: var(--ink);
-  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-art), 'Nunito', ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
 /* Phone-shaped on desktop so a projector sees an app, not a website. */
 .phone { max-width: 430px; margin: 0 auto; min-height: 100dvh; padding: 0 20px 40px; }
 
-.display { font-family: var(--font-display), Georgia, serif; font-weight:600; letter-spacing:-.5px; }
+.display { font-family: var(--font-art), 'Nunito', system-ui, sans-serif; font-weight:900; letter-spacing:-.3px; }
 .h1 { font-size:28px; line-height:1.2; }
 .h2 { font-size:22px; line-height:1.25; letter-spacing:-.3px; }
 .body { font-size:16px; line-height:1.6; }
@@ -117,7 +118,7 @@ textarea.entry:focus { outline:2px solid var(--primary-tint); outline-offset:1px
 /* ── Yini art-board screens ──
    The boards are drawn at 941×1672 and scaled to the phone column by YiniScreen. */
 .yini-page { min-height: 100dvh; background: #FDF6EE; padding-bottom: 32px; }
-.art { position: relative; width: 100%; max-width: 430px; margin: 0 auto; overflow: hidden; }
+.art { position: relative; width: 100%; max-width: 470px; margin: 0 auto; overflow: hidden; }
 .art-in { position: absolute; left: 0; top: 0; width: 941px; height: 1672px; transform-origin: 0 0;
   font-family: var(--font-art), 'Nunito', system-ui, sans-serif; }
 .art-in button, .art-in input { font-family: inherit; }
@@ -163,124 +164,6 @@ textarea.entry:focus { outline:2px solid var(--primary-tint); outline-offset:1px
 .ypet-btn:focus-visible, .ypet-again:focus-visible, .ypet-back:focus-visible { outline: 3px solid #EF8A73; outline-offset: 3px; }
 .ypet-again { appearance: none; border: 0; background: none; margin-top: 10px; padding: 10px; color: #7D6D63; font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer; }
 .ypet-again:disabled { opacity: .5; cursor: default; }
-
-/* ── Calendar: one emoji per day, tap for the jot notes ── */
-.cal-back { display: inline-block; color: var(--ink-muted); text-decoration: none; font-size: 14px; padding: 6px 0; }
-.cal-title { font-size: 30px; margin: 6px 0 6px; line-height: 1.15; }
-.cal-sub { margin: 0 0 18px; }
-.cal-nav { display: flex; align-items: center; justify-content: space-between; margin: 6px 0 10px; }
-.cal-month { font-size: 22px; margin: 0; }
-.cal-step { appearance: none; width: 44px; height: 44px; border-radius: 9999px; border: 1px solid var(--line-strong); background: var(--surface);
-  color: var(--ink); font-size: 24px; line-height: 1; cursor: pointer; }
-.cal-step:active { background: var(--canvas-sunk); }
-.cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
-.cal-dow { text-align: center; font-size: 12px; letter-spacing: .08em; color: var(--ink-faint); padding: 4px 0; }
-.cal-cell { position: relative; aspect-ratio: 1 / 1.12; border-radius: 14px; background: var(--surface); border: 1px solid var(--line);
-  display: flex; align-items: center; justify-content: center; padding: 0; font: inherit; color: var(--ink); }
-.cal-blank { background: transparent; border-color: transparent; }
-.cal-num { position: absolute; top: 4px; left: 6px; font-size: 11px; color: var(--ink-faint); }
-.cal-emoji { font-size: clamp(20px, 6.2vw, 28px); line-height: 1; margin-top: 12px; }
-button.cal-cell { cursor: pointer; background: var(--surface-warm); border-color: var(--line-strong); transition: transform 120ms var(--ease); }
-button.cal-cell:active { transform: scale(.94); }
-button.cal-cell:focus-visible, .cal-step:focus-visible, .cal-close:focus-visible { outline: 3px solid var(--primary-tint); outline-offset: 2px; }
-.cal-today { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-tint) inset; }
-.cal-today .cal-num { color: var(--primary-press); font-weight: 700; }
-.cal-scrim { position: fixed; inset: 0; background: rgba(42, 37, 32, .45); display: flex; align-items: flex-end; justify-content: center; z-index: 50; }
-.cal-sheet { position: relative; width: 100%; max-width: 430px; max-height: 86dvh; overflow-y: auto; background: var(--canvas); border-radius: 28px 28px 0 0;
-  padding: 26px 22px calc(26px + env(safe-area-inset-bottom, 0px)); box-shadow: 0 -12px 40px rgba(42, 37, 32, .18); }
-.cal-close { position: absolute; top: 12px; right: 14px; width: 40px; height: 40px; border-radius: 9999px; border: 0; background: var(--canvas-sunk);
-  color: var(--ink-muted); font-size: 24px; line-height: 1; cursor: pointer; }
-.cal-sheet-date { margin: 0 0 8px; text-transform: uppercase; letter-spacing: .06em; }
-.cal-sheet-top { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; padding-right: 36px; }
-.cal-big { font-size: 52px; line-height: 1; }
-.cal-sheet-title { font-size: 22px; margin: 0; line-height: 1.25; text-wrap: balance; }
-.cal-jots { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 8px; }
-.cal-jots li { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 11px 14px 11px 34px; font-size: 15.5px; line-height: 1.45; }
-.cal-jots li::before { content: ''; position: absolute; left: 14px; top: 17px; width: 8px; height: 8px; border-radius: 9999px; background: var(--primary-tint); }
-.cal-said { border-top: 1px solid var(--line); padding-top: 12px; }
-.cal-said summary { cursor: pointer; font-weight: 600; font-size: 15px; color: var(--ink-muted); padding: 4px 0; }
-.cal-entry { margin-top: 12px; background: var(--surface-warm); border-radius: 14px; padding: 14px; }
-.cal-entry p.caption { margin: 0 0 6px; }
-
-/* Home: cat, feed, calendar, check-in status */
-.yhome-links { width: 100%; display: grid; gap: 10px; margin-top: 18px; }
-.yhome-btn { display: flex; align-items: center; justify-content: center; min-height: 56px; border-radius: 9999px; border: 2px solid #EBDDCE; background: #FFFDF9;
-  color: #3A2418; font-weight: 800; font-size: 18px; text-decoration: none; }
-.yhome-btn:focus-visible, .yhome-calink:focus-visible { outline: 3px solid #EF8A73; outline-offset: 3px; }
-.yhome-status { width: 100%; background: #FFFDF9; border: 2px solid #F2E6D9; border-radius: 22px; padding: 14px 16px; margin-bottom: 18px; font-size: 15.5px; font-weight: 700;
-  color: #6B5A50; line-height: 1.4; display: flex; gap: 12px; align-items: center; text-align: left; }
-.yhome-error { flex-direction: column; align-items: flex-start; gap: 4px; color: #9E4A33; }
-.yhome-dots { display: inline-flex; gap: 4px; flex: none; }
-.yhome-dots i { width: 8px; height: 8px; border-radius: 9999px; background: #F0857A; animation: yhomepulse 1.2s ease-in-out infinite; }
-.yhome-dots i:nth-child(2) { animation-delay: .15s; } .yhome-dots i:nth-child(3) { animation-delay: .3s; }
-@keyframes yhomepulse { 0%, 80%, 100% { opacity: .25; transform: scale(.8); } 40% { opacity: 1; transform: scale(1); } }
-.yhome-done { width: 100%; text-align: left; margin-bottom: 18px; }
-.yhome-reply { display: grid; gap: 12px; }
-.yhome-reply .card + .card { margin-top: 0; }
-.yhome-donebar { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
-.yhome-calink { color: #D9533F; font-weight: 800; text-decoration: none; padding: 8px 0; }
-
-/* Home: Grow and Glow sit side by side under the calendar */
-.yhome-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.yhome-grow { background: #EEF4E3; border-color: #D5E3BE; }
-.yhome-glow { background: #FFF3CF; border-color: #F4DE96; }
-
-/* ── Grow and Glow ── */
-.gg { padding-bottom: 12px; }
-.gg-title { font-size: 34px; margin: 6px 0 6px; line-height: 1.1; }
-.gg-sub { margin: 0 0 18px; text-wrap: pretty; }
-.gg-note { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 13px 16px;
-  margin-bottom: 16px; font-size: 15px; font-weight: 600; line-height: 1.4; color: var(--ink-muted); }
-.gg-note-warn { justify-content: space-between; color: #9E4A33; }
-.gg-why { display: block; margin-top: 4px; font-size: 12px; opacity: .8; word-break: break-word; }
-.gg-section { margin-top: 26px; }
-.gg-h { font-family: var(--font-display), Georgia, serif; font-size: 19px; margin: 0 0 10px; letter-spacing: -.2px; }
-.gg-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-.gg-item { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; }
-.gg-item-soft { background: var(--surface-warm); flex-direction: column; gap: 4px; }
-.gg-sprout { font-size: 20px; line-height: 1.5; flex: none; }
-.gg-text { margin: 0; font-size: 16px; line-height: 1.5; }
-.gg-when { margin: 0; }
-.gg-grow .gg-latest { background: linear-gradient(180deg, #F2F7E8 0%, var(--canvas) 100%); border: 1px solid #D9E6C4; border-radius: 26px; padding: 20px 16px 16px; }
-.gg-kicker { margin: 0 0 6px; text-transform: uppercase; letter-spacing: .06em; color: #667A51; }
-.gg-headline { font-size: 23px; line-height: 1.25; margin: 0 0 14px; text-wrap: balance; }
-/* tap-to-complete */
-.gg-tap { width: 100%; text-align: left; font: inherit; color: inherit; cursor: pointer; align-items: center; -webkit-tap-highlight-color: transparent;
-  transition: transform .2s var(--ease), opacity .3s var(--ease), box-shadow .2s var(--ease), background .2s var(--ease); }
-.gg-tap:active { transform: scale(.985); }
-.gg-body { display: grid; gap: 6px; min-width: 0; }
-.gg-strong { box-shadow: 0 6px 18px rgba(102,122,81,.16); border-color: #D9E6C4; }
-.gg-newitem { border-color: #F0857A; box-shadow: 0 6px 20px rgba(240,133,122,.22); }
-.gg-newpill { background: #F0857A; color: #fff; font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; border-radius: 9999px; padding: 3px 8px; margin-right: 8px; }
-.gg-meta { display: block; }
-.gg-check { flex: none; width: 26px; height: 26px; border-radius: 50%; border: 2px solid #B9C9A3; display: grid; place-items: center; font-size: 15px; font-weight: 800; color: transparent; background: #fff;
-  transition: background .2s var(--ease), border-color .2s var(--ease), color .2s var(--ease); }
-.gg-checked { background: #7FA05F; border-color: #7FA05F; color: #fff; }
-.gg-task { transition: opacity .32s var(--ease), transform .32s var(--ease); }
-.gg-leaving { opacity: 0; transform: translateX(28px); }
-.gg-caughtup { margin: 0; color: var(--ink-muted); }
-.gg-donesec .gg-isdone { background: transparent; border-style: dashed; opacity: .72; box-shadow: none; }
-.gg-donesec .gg-isdone .gg-text { color: var(--ink-muted); }
-.gg-count { font-family: var(--font-body, inherit); font-size: 13px; color: var(--ink-faint); margin-left: 6px; }
-@media (prefers-reduced-motion: reduce) { .gg-task, .gg-tap, .gg-check { transition: none; } .gg-leaving { transform: none; } }
-.gg-earlier { border-top: 1px solid var(--line); padding: 10px 0; }
-.gg-earlier summary { cursor: pointer; display: grid; gap: 2px; list-style: none; padding: 4px 0; }
-.gg-earlier summary::-webkit-details-marker { display: none; }
-.gg-earlier summary span { font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-faint); }
-.gg-earlier summary em { font-style: normal; font-weight: 600; font-size: 16px; color: var(--ink); }
-.gg-earlier .gg-list { margin-top: 10px; }
-.gg-empty { text-align: center; padding: 34px 8px 10px; color: var(--ink-muted); }
-.gg-empty-emoji { font-size: 44px; margin: 0 0 8px; }
-.gg-foot { text-align: center; margin: 30px 0 0; }
-.gg a.yhome-btn { color: #3A2418; }
-
-.gg-quotes { gap: 14px; }
-.gg-quote { position: relative; background: linear-gradient(160deg, #FFF6D8 0%, #FFFDF4 70%); border: 1px solid #F1DFA4; border-radius: 24px; padding: 22px 20px 18px; }
-.gg-quote::before { content: '\201C'; position: absolute; top: 2px; left: 14px; font-family: var(--font-display), Georgia, serif; font-size: 64px; line-height: 1; color: #E9C24D; }
-.gg-quote blockquote { margin: 0; padding-top: 14px; }
-.gg-quote blockquote p { margin: 0 0 12px; font-family: var(--font-display), Georgia, serif; font-size: 20px; line-height: 1.4; text-wrap: pretty; }
-.gg-quote footer { font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: #9A7A22; font-weight: 700; }
-.gg-pill { position: absolute; top: 14px; right: 14px; background: #F0857A; color: #fff; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; border-radius: 9999px; padding: 4px 10px; }
 
 /* ── The calendar icon: shows the app's own day, and flips when it changes ── */
 .dateicon { display: inline-flex; flex-direction: column; width: 26px; height: 28px; border-radius: 6px; overflow: hidden; vertical-align: -6px; margin-right: 8px;

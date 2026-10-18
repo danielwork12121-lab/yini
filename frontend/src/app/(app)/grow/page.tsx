@@ -12,9 +12,5 @@ export const metadata: Metadata = { title: 'Grow · Yini' };
  */
 export default function GrowPage() {
   if (!env.isSupabaseConfigured()) return <SetupNeeded />;
-  return (
-    <main className="phone" style={{ paddingTop: 28 }}>
-      <GrowView />
-    </main>
-  );
+  return <GrowView />;
 }
