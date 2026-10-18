@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { YiniScreen, type ActHandler } from './YiniScreen';
 import { signInWithGoogle } from './google';
 import { createClient } from '@/lib/supabase/client';
-import { checkCredentials, usernameToEmail } from '@/lib/auth/username';
+import { checkSignup, normalizeEmail, usernameToEmail } from '@/lib/auth/username';
 import { useToast } from './useToast';
 import type { ScreenKey } from './screens';
 
@@ -26,37 +26,37 @@ export function AuthFlow({ screen, demo = false }: { screen: Extract<ScreenKey, 
 
   const field = (id: string) => (document.getElementById(id) as HTMLInputElement | null)?.value ?? '';
 
-  /** Sign in with an email, or with a username mapped to its private address. */
+  /** Sign in with the email. (An older username-only account has no email, so it still works typed as its username.) */
   async function passwordSignIn(who: string, password: string) {
-    const email = who.includes('@') ? who.trim().toLowerCase() : usernameToEmail(who);
+    const email = who.includes('@') ? normalizeEmail(who) : usernameToEmail(who);
     const { error } = await createClient().auth.signInWithPassword({ email, password });
-    if (error) throw new Error('That email or username and password do not match.');
+    if (error) throw new Error('That email and password do not match.');
   }
 
-  async function usernameSignIn() {
+  async function emailSignIn() {
     if (busy) return;
-    const username = field('si-email'), password = field('si-pw');
-    if (!username.trim() || !password) { toast('Enter your email or username and your password.'); return; }
+    const who = field('si-email'), password = field('si-pw');
+    if (!who.trim() || !password) { toast('Enter your email and your password.'); return; }
     setBusy(true);
     try {
-      await passwordSignIn(username, password);
+      await passwordSignIn(who, password);
       router.push('/pair'); router.refresh();
     } catch (e) { toast(e instanceof Error ? e.message : 'Could not sign in.'); setBusy(false); }
   }
 
-  async function usernameSignUp() {
+  async function emailSignUp() {
     if (busy) return;
-    const username = field('ca-user'), password = field('ca-pw');
-    const problem = checkCredentials(username, password);
+    const name = field('ca-name'), email = field('ca-email'), password = field('ca-pw');
+    const problem = checkSignup(name, email, password);
     if (problem) { toast(problem); return; }
     if (!lover) { toast('Pick who you’re here with first.'); return; }
     setBusy(true);
     try {
       const res = await fetch('/api/auth/signup', {
-        method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username, password }),
+        method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name, email, password }),
       });
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? 'Could not create your account.');
-      await passwordSignIn(username, password);
+      await passwordSignIn(email, password);
       router.push('/pair'); router.refresh();
     } catch (e) { toast(e instanceof Error ? e.message : 'Could not create your account.'); setBusy(false); }
   }
@@ -80,8 +80,8 @@ export function AuthFlow({ screen, demo = false }: { screen: Extract<ScreenKey, 
       case 'to-create': e.preventDefault(); router.push('/create'); break;
       case 'pick-lover': setLover((v) => !v); break;
       case 'auth-google': void google(); break;
-      case 'signin-go': void usernameSignIn(); break;
-      case 'create-go': void usernameSignUp(); break;
+      case 'signin-go': void emailSignIn(); break;
+      case 'create-go': void emailSignUp(); break;
     }
   };
 

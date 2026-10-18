@@ -106,7 +106,6 @@ body { background: #FDF6EE; }
 .reply-card p + p { margin-top: 10px; }
 .reply-card .kick { font-size: var(--t-small); font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: var(--faint); }
 .reply-card-warm { background: var(--paper); }
-.reply-foot { text-align: center; margin: 4px 0 0; font-size: var(--t-small); font-weight: 700; color: var(--faint); }
 .reply-bar { display: flex; align-items: center; justify-content: space-between; margin: calc(14 * var(--u)) calc(35 * var(--u)) 0; }
 .reply-bar a { display: inline-flex; align-items: center; gap: 4px; font-size: var(--t-body); font-weight: 800; color: var(--coral-ink); text-decoration: none; padding: 8px 0; }
 

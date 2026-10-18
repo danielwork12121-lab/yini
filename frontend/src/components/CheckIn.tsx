@@ -32,7 +32,6 @@ export function CheckIn({ today }: { today: TodayResponse | null }) {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const [stream, setStream] = useState<MediaStream | null>(null);
-  const pet = today?.pet ?? null;
 
   const recorder = useRef<MediaRecorder | null>(null);
   const chunks = useRef<Blob[]>([]);
@@ -224,12 +223,6 @@ export function CheckIn({ today }: { today: TodayResponse | null }) {
       {error && <p className="err" role="alert">{error}</p>}
 
       <Room />
-      {pet && (
-        <p className="reply-foot" style={{ margin: 'calc(24 * var(--u)) calc(60 * var(--u)) 0' }}>
-          {pet.hatched ? pet.name : 'An egg, for now'} · {pet.bond_name} · {pet.total_half_days} {pet.total_half_days === 1 ? 'half-day' : 'half-days'}
-          {' · '}{pet.both_fed_today ? 'Fully fed today.' : pet.you_fed_today ? 'Half fed today.' : 'Napping.'}
-        </p>
-      )}
     </main>
   );
 }
