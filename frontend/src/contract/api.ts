@@ -208,6 +208,8 @@ export const ConnectionStatusResponseSchema = z.object({
   display_name: z.string().nullable(),
   invite_code: z.string().nullable(),
   partner_display_name: z.string().nullable(),
+  /** The buddy this pair has settled on; null until someone confirms it. The other phone polls this to move on together. */
+  pet_species: z.string().nullable(),
 });
 export type ConnectionStatusResponse = z.infer<typeof ConnectionStatusResponseSchema>;
 

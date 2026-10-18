@@ -54,6 +54,25 @@ export function PairFlow() {
     return () => { cancelled = true; };
   }, [router, toast]);
 
+  // Keep the two phones in step. Waiting on the invite page: move on when the other person joins.
+  // On the buddy page: move on when either of you confirms the buddy.
+  useEffect(() => {
+    if (step !== 'invite' && step !== 'buddy') return;
+    let stopped = false;
+    const tick = async () => {
+      try {
+        const res = await fetch('/api/connection', { cache: 'no-store' });
+        if (!res.ok || stopped) return;
+        const me = await res.json();
+        if (stopped || !me.paired) return;
+        if (step === 'invite') { toast(`${me.partner_display_name ?? 'Your person'} joined.`); setStep('buddy'); }
+        else if (me.pet_species) setStep('privacy');
+      } catch { /* offline for a moment; try again next tick */ }
+    };
+    const id = setInterval(tick, 2000);
+    return () => { stopped = true; clearInterval(id); };
+  }, [step, toast]);
+
   async function copy(text: string, done: string) {
     try { await navigator.clipboard.writeText(text); toast(done); }
     catch { toast(`Your code is ${code}.`); }
