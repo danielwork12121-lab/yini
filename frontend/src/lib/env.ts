@@ -68,6 +68,18 @@ export const env = {
   },
 
   leakCheckEnabled: () => opt('LEAKCHECK_ENABLED') !== 'false',
+
+  /** `x-admin-token` for POST /api/admin/analyze. Unset means the route refuses everyone. */
+  adminToken: () => opt('ADMIN_TOKEN'),
+  /** Vercel Cron sends `Authorization: Bearer $CRON_SECRET`. Unset means the cron route refuses. */
+  cronSecret: () => opt('CRON_SECRET'),
+  /** Which day the nightly sweep analyses. See `nightlyTargetDay`. */
+  nightlyTarget: (): 'previous_day' | 'same_day' =>
+    opt('NIGHTLY_TARGET') === 'same_day' ? 'same_day' : 'previous_day',
+  /** How many earlier days of ai_summary lines go into the agent's prompt. */
+  agentHistoryDays: () => Math.min(30, Math.max(0, Number(opt('AGENT_HISTORY_DAYS') ?? 7) || 7)),
+  /** Gemini only: let the agent call its read tools before composing. */
+  agentUseTools: () => opt('AGENT_USE_TOOLS') !== 'false',
   contextSignalEnabled: () => opt('CONTEXT_SIGNAL_ENABLED') !== 'false',
   demoMode: () => process.env.NEXT_PUBLIC_DEMO_MODE === 'true',
 

@@ -8,8 +8,8 @@
  * Gated on NEXT_PUBLIC_DEMO_MODE. It creates real accounts with a known password,
  * so it must be off anywhere real people have data.
  */
-import { NextResponse } from 'next/server';
-import { DemoLoginRequestSchema } from '@/contract';
+import { actionTypes } from '@/ontology';
+import { actionRoute, ActionError } from '@/lib/http/action-route';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { createAdminSupabase } from '@/lib/supabase/admin';
 import { env } from '@/lib/env';
@@ -22,14 +22,8 @@ const DEMO = {
 const DEMO_PASSWORD = 'corner-demo-not-a-real-account';
 const INVITE = 'CORNER';
 
-export async function POST(request: Request) {
-  if (!env.demoMode()) {
-    return NextResponse.json({ error: 'Demo mode is off', code: 'unauthenticated', recoverable: false }, { status: 403 });
-  }
-  const parsed = DemoLoginRequestSchema.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) {
-    return NextResponse.json({ error: 'Pick avery or sam', code: 'invalid_input', recoverable: true }, { status: 400 });
-  }
+export const POST = actionRoute(actionTypes.demoLogin, async ({ input }) => {
+  if (!env.demoMode()) throw new ActionError('forbidden', 'Demo mode is off', 403, false);
 
   const db = createAdminSupabase();
 
@@ -42,9 +36,7 @@ export async function POST(request: Request) {
       email: who.email, password: DEMO_PASSWORD, email_confirm: true,
       user_metadata: { display_name: who.name },
     });
-    if (error || !created.user) {
-      return NextResponse.json({ error: `Seed failed: ${error?.message}`, code: 'server_error', recoverable: false }, { status: 500 });
-    }
+    if (error || !created.user) throw new ActionError('server_error', `Seed failed: ${error?.message}`, 500, false);
     ids[key] = created.user.id;
     await db.from('profiles').upsert({ id: created.user.id, display_name: who.name });
   }
@@ -64,10 +56,8 @@ export async function POST(request: Request) {
 
   const supabase = await createServerSupabase();
   const { error: signInError } = await supabase.auth.signInWithPassword({
-    email: DEMO[parsed.data.role].email, password: DEMO_PASSWORD,
+    email: DEMO[input.role].email, password: DEMO_PASSWORD,
   });
-  if (signInError) {
-    return NextResponse.json({ error: signInError.message, code: 'server_error', recoverable: false }, { status: 500 });
-  }
-  return NextResponse.json({ ok: true, display_name: DEMO[parsed.data.role].name });
-}
+  if (signInError) throw new ActionError('server_error', signInError.message, 500, false);
+  return { ok: true as const, display_name: DEMO[input.role].name };
+});
