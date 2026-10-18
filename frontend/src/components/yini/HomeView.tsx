@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ReplyCards } from '@/components/ReplyCards';
-import { retryCheckin, usePendingCheckin } from '@/lib/pendingCheckin';
+import { retryCheckin, takeFeedOnHome, usePendingCheckin } from '@/lib/pendingCheckin';
 import { fetchJson, peekJson, warmJson } from '@/lib/cachedJson';
 import { Streak } from '@/components/app/Streak';
 import type { TodayResponse } from '@/contract';
@@ -18,6 +18,7 @@ export function HomeView({ name }: { name: string; partner: string }) {
   const [today, setToday] = useState<TodayResponse | null>(null);
   const pending = usePendingCheckin();
   const wasDone = useRef(pending.status === 'done');
+  const feedAtLanding = useRef<boolean | null>(null);
 
   // Fill Grow and Glow in the background, so they open already showing something.
   useEffect(() => { warmJson('/api/grow'); warmJson('/api/glow'); warmJson('/api/love'); }, []);
@@ -37,18 +38,22 @@ export function HomeView({ name }: { name: string; partner: string }) {
       const key = `yini.happy.${t.local_date}`;
       let seen = false;
       try { seen = sessionStorage.getItem(key) === '1'; if (t.pet.both_fed_today) sessionStorage.setItem(key, '1'); } catch { /* a flourish only */ }
-      if (t.pet.both_fed_today && !seen) { setAction('happy'); setRequest((n) => n + 1); }
+      if (t.pet.both_fed_today && !seen && !feedAtLanding.current) { setAction('happy'); setRequest((n) => n + 1); }
     });
     return () => { cancelled = true; };
   }, [refresh]);
 
-  // Logging your day feeds Yini. When the reply lands, the cat eats and the streak catches up.
+  // Logging your day feeds Yini: the moment you land on Home after sending, the cat eats, and the
+  // whole animation plays before anything else moves. The streak catches up once the reply lands.
+  useEffect(() => {
+    if (feedAtLanding.current === null) feedAtLanding.current = takeFeedOnHome();
+    if (!feedAtLanding.current) return;
+    const t = setTimeout(() => { setAction('feeding'); setRequest((n) => n + 1); }, 450);
+    return () => clearTimeout(t);
+  }, []);
   useEffect(() => {
     const done = pending.status === 'done';
-    if (done && !wasDone.current) {
-      setAction('feeding'); setRequest((n) => n + 1);
-      void refresh().then((t) => { if (t) setToday(t); });
-    }
+    if (done && !wasDone.current) void refresh().then((t) => { if (t) setToday(t); });
     wasDone.current = done;
   }, [pending.status, refresh]);
 

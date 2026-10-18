@@ -520,14 +520,12 @@ body { background: #FDF6EE; }
 
 /* The big Check in button: a hand-painted blob that breathes. */
 .checkin { background: radial-gradient(circle at 50% 45%, #FDEBE3 0%, #FBE0D4 100%); border-radius: 50% 49% 51% 50% / 50% 51% 49% 50%; animation: ci-ring 5s ease-in-out infinite; }
-.checkin::before { content: ''; position: absolute; inset: calc(-10 * var(--u)); border-radius: inherit; border: max(2px, calc(4 * var(--u))) dashed #F1C4B6; opacity: .8; animation: ci-spin 60s linear infinite; }
-@keyframes ci-spin { to { transform: rotate(360deg); } }
 @keyframes ci-ring { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.018); } }
 .checkin-in { border-radius: 51% 49% 50% 50% / 49% 51% 49% 51%; border: max(4px, calc(9 * var(--u))) solid var(--ink); background: radial-gradient(circle at 35% 28%, #F7A092 0%, #F0857A 55%, #E97469 100%); box-shadow: 0 calc(16 * var(--u)) 0 #C9594E, 0 calc(30 * var(--u)) calc(36 * var(--u)) rgba(201, 89, 78, .25); transition: transform .12s, box-shadow .12s; inset: calc(20 * var(--u)) calc(20 * var(--u)) calc(36 * var(--u)); }
 .checkin-in::after { content: ''; position: absolute; left: 17%; top: 11%; width: 30%; height: 15%; border-radius: 50%; background: #fff; opacity: .26; transform: rotate(-24deg); }
 .checkin:active .checkin-in { transform: translateY(calc(12 * var(--u))); box-shadow: 0 calc(4 * var(--u)) 0 #C9594E, 0 8px 14px rgba(201, 89, 78, .2); }
 .checkin-label { text-shadow: 0 max(2px, calc(4 * var(--u))) 0 rgba(58, 36, 24, .35); letter-spacing: .3px; }
-@media (prefers-reduced-motion: reduce) { .checkin, .checkin::before, .ph svg { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .checkin, .ph svg { animation: none; } }
 
 /* Cards read like paper cards: a warm edge and a little lift. */
 .sug, .ncard, .cal-card, .day, .note { border-color: #EBD8C4; box-shadow: 0 max(2px, calc(5 * var(--u))) 0 rgba(58, 36, 24, .06); }

@@ -24,6 +24,11 @@ let state: PendingState = IDLE;
 let restored = false;
 const listeners = new Set<() => void>();
 
+/** Set when a check-in is sent, so Home plays the feeding animation as soon as you land there. */
+let feedOnHome = false;
+export const queueFeedOnHome = () => { feedOnHome = true; };
+export const takeFeedOnHome = () => { const v = feedOnHome; feedOnHome = false; return v; };
+
 function set(next: PendingState) {
   state = next;
   try {
@@ -44,6 +49,7 @@ function restore() {
 
 export function startCheckin(body: CheckinBody) {
   restored = true;
+  feedOnHome = true;
   set({ status: 'working', body });
   // keepalive lets the request finish even if the tab is closed right after Send.
   fetch('/api/checkin', {
