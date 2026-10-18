@@ -4,6 +4,15 @@
   "installCommand": "npm ci",
   "buildCommand": "npm run build",
   "crons": [
-    { "path": "/api/cron/nightly", "schedule": "0 9 * * *" }
+    {
+      "path": "/api/cron/nightly",
+      "schedule": "0 9 * * *"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/prototype",
+      "destination": "/prototype/index.html"
+    }
   ]
 }
