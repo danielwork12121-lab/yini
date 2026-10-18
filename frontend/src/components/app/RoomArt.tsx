@@ -30,15 +30,6 @@ export function RoomArt() {
       </g>
       <rect y="500" width="870" height="46" fill={INK} opacity=".035" />
 
-      {/* a framed heart on the wall */}
-      <g transform="translate(96 108)"><g className="ra-frame" filter="url(#hd-wobble)">
-        <path d="M32 8 L62 -22 L92 8" fill="none" stroke={INK} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-        <rect width="124" height="152" rx="12" fill="#FFFDF7" stroke={INK} strokeWidth="6" />
-        <rect x="16" y="16" width="92" height="120" rx="6" fill="#FCE5DA" />
-        <path d="M62 110 C36 92 28 76 34 62 A16 16 0 0 1 62 58 A16 16 0 0 1 90 62 C96 76 88 92 62 110 Z" fill="#F28D80" stroke={INK} strokeWidth="4" strokeLinejoin="round" />
-        <path d="M44 66 q4 -6 10 -4" fill="none" stroke="#fff" strokeOpacity=".7" strokeWidth="4" strokeLinecap="round" />
-      </g></g>
-
       {/* the window */}
       <g transform="translate(560 58)">
         <g filter="url(#hd-wobble)">
@@ -57,9 +48,6 @@ export function RoomArt() {
                 })}
               </g>
               <circle r="34" fill="#FFD567" stroke={INK} strokeWidth="4.5" />
-              <path d="M-14 -4 q5 -6 10 0 M4 -4 q5 -6 10 0" fill="none" stroke={INK} strokeWidth="3" strokeLinecap="round" />
-              <ellipse cx="-20" cy="8" rx="6" ry="4" fill="#F6A58F" opacity=".8" /><ellipse cx="20" cy="8" rx="6" ry="4" fill="#F6A58F" opacity=".8" />
-              <path d="M-5 8 q5 5 10 0" fill="none" stroke={INK} strokeWidth="3" strokeLinecap="round" />
             </g>
             <path d="M30 20 L96 8 M20 60 L120 30" stroke="#fff" strokeOpacity=".22" strokeWidth="18" strokeLinecap="round" />
           </g>
