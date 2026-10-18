@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- Corner — executable proof that a partner cannot read the other's journal.
+-- Yini — executable proof that a partner cannot read the other's journal.
 --
 -- Seeds two real users in one connection, then logs in as each and attacks.
 -- Every assertion runs as the `authenticated` role, which is exactly the role

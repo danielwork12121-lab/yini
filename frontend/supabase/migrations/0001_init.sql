@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- Corner — schema + row level security
+-- Yini — schema + row level security
 --
 -- The security claim this app is pitched on:
 --   No partner can read another partner's journal. Not by a bug, not by a bad

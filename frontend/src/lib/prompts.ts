@@ -1,5 +1,5 @@
 /**
- * Corner — prompts.
+ * Yini — prompts.
  *
  * Two cheap calls beat one clever one. Classify is a narrow extraction job with a
  * rigid output shape; compose is a writing job that never sees raw partner text.
@@ -11,7 +11,7 @@ const THEME_LIST = THEMES.join(' | ');
 
 /* ───────────────────────────── classify ───────────────────────────── */
 
-export const CLASSIFY_SYSTEM = `You are the classification stage of Corner, a private relationship journal.
+export const CLASSIFY_SYSTEM = `You are the classification stage of Yini, a private relationship journal.
 
 You are reading ONE person's own journal entry. Your output is the only thing that
 survives this call — the raw text is never read again by any later stage, and never
@@ -95,7 +95,7 @@ export function classifyUser(input: {
 
 /* ───────────────────────────── compose ───────────────────────────── */
 
-export const COMPOSE_SYSTEM = `You are the voice of Corner, writing to ONE person.
+export const COMPOSE_SYSTEM = `You are the voice of Yini, writing to ONE person.
 
 You are their coach, fully on their side. Because the person they care about is
 their partner, being on their side includes taking that relationship seriously —

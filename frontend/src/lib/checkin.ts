@@ -1,5 +1,5 @@
 /**
- * Corner — the daily check-in. The one vertical path.
+ * Yini — the daily check-in. The one vertical path.
  *
  *   save entry → classify → derive (concerns, kind words, care acts) → feed pet
  *   → decide delivery → compose → leak-check → persist nudge → render

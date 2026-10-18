@@ -10,7 +10,7 @@ const display = Fraunces({
 const body = Figtree({ subsets: ['latin'], variable: '--font-body', weight: ['400', '500', '600'] });
 
 export const metadata: Metadata = {
-  title: 'Corner',
+  title: 'Yini',
   description: 'A private journal for two people, and one thing a day worth doing.',
 };
 export const viewport: Viewport = {

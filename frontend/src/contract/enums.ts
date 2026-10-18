@@ -1,5 +1,5 @@
 /**
- * Corner — closed vocabularies.
+ * Yini — closed vocabularies.
  *
  * Every value here is a wire value: it goes in the DB, comes out of the model,
  * and is rendered by the client. Changing a string is a breaking change for all

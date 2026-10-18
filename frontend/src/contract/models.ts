@@ -1,5 +1,5 @@
 /**
- * Corner — database row shapes. Zod schema is the source of truth; the TS type is
+ * Yini — database row shapes. Zod schema is the source of truth; the TS type is
  * inferred, so there is exactly one definition to change.
  *
  * ── THE RULE THAT SHAPES EVERYTHING ──────────────────────────────────────────

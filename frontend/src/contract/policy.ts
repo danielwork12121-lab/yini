@@ -1,5 +1,5 @@
 /**
- * Corner — deterministic policy.
+ * Yini — deterministic policy.
  *
  * Pure functions, no model calls, no I/O. The model RECOMMENDS; this file DECIDES.
  * That split is deliberate: it is testable, it behaves identically on every demo
