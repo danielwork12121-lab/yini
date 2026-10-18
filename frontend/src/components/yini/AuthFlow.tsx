@@ -26,16 +26,17 @@ export function AuthFlow({ screen, demo = false }: { screen: Extract<ScreenKey, 
 
   const field = (id: string) => (document.getElementById(id) as HTMLInputElement | null)?.value ?? '';
 
-  /** Sign in with the username mapped to its private address. */
-  async function passwordSignIn(username: string, password: string) {
-    const { error } = await createClient().auth.signInWithPassword({ email: usernameToEmail(username), password });
-    if (error) throw new Error('That username and password do not match.');
+  /** Sign in with an email, or with a username mapped to its private address. */
+  async function passwordSignIn(who: string, password: string) {
+    const email = who.includes('@') ? who.trim().toLowerCase() : usernameToEmail(who);
+    const { error } = await createClient().auth.signInWithPassword({ email, password });
+    if (error) throw new Error('That email or username and password do not match.');
   }
 
   async function usernameSignIn() {
     if (busy) return;
     const username = field('si-email'), password = field('si-pw');
-    if (!username.trim() || !password) { toast('Enter your username and password.'); return; }
+    if (!username.trim() || !password) { toast('Enter your email or username and your password.'); return; }
     setBusy(true);
     try {
       await passwordSignIn(username, password);

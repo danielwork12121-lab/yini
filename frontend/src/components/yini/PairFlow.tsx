@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { YiniScreen, type ActHandler } from './YiniScreen';
 import { useToast } from './useToast';
 
-type Step = 'invite' | 'buddy';
+type Step = 'invite' | 'buddy' | 'privacy';
 
 async function postJson(url: string, body: unknown) {
   const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
@@ -28,7 +28,7 @@ export function PairFlow() {
   const { toast, toastNode } = useToast();
   const [step, setStep] = useState<Step>('invite');
   const [code, setCode] = useState('');
-  const [buddy, setBuddy] = useState<string | null>(null);
+  const [buddy, setBuddy] = useState<string | null>('fluffy'); // the cat is the one live buddy for now
   const [joinOpen, setJoinOpen] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [busy, setBusy] = useState(false);
@@ -74,20 +74,22 @@ export function PairFlow() {
     setBusy(true);
     const saved = await postJson('/api/connection', { display_name: name.current, species: buddy });
     if (!saved.ok) { toast(saved.json.error ?? 'Could not save your buddy.'); setBusy(false); return; }
-    router.push('/today'); router.refresh();
+    setBusy(false); setStep('privacy');
   }
 
   async function join() {
     setBusy(true);
     const joined = await postJson('/api/connection/join', { invite_code: joinCode.trim().toUpperCase(), display_name: name.current });
     if (!joined.ok) { toast(joined.json.error ?? 'That code did not work.'); setBusy(false); return; }
-    router.push('/today'); router.refresh();
+    // Paired now. They still pick a buddy and read the privacy page, like everyone else.
+    setBusy(false); setJoinOpen(false); setStep('buddy');
   }
 
   const onAct: ActHandler = (act, target) => {
     switch (act) {
       case 'auth-back':
-        if (step === 'buddy') setStep('invite');
+        if (step === 'privacy') setStep('buddy');
+        else if (step === 'buddy') setStep('invite');
         else void createClient().auth.signOut().then(() => { router.push('/'); router.refresh(); });
         break;
       case 'invite-share': void share(); break;
@@ -95,6 +97,7 @@ export function PairFlow() {
       case 'join-open': setJoinOpen(true); break;
       case 'pick-buddy': setBuddy((cur) => (cur === target.dataset.buddy ? null : target.dataset.buddy ?? null)); break;
       case 'buddy-go': if (!busy) void bringBuddyHome(); break;
+      case 'privacy-go': router.push('/today'); router.refresh(); break;
     }
   };
 
