@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { HandDrawnDefs } from './HandDrawn';
 import { BellIcon, CalendarTabIcon, GearIcon, GlowTabIcon, GrowTabIcon, HomeTabIcon } from './icons';
 
 const TABS = [
@@ -25,6 +26,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="app">
+      <HandDrawnDefs />
       {showHeader && (
         <header className="ah">
           <Link href="/home" aria-label="Yini home"><img className="ah-logo" src="/yini/signin-logo.png" alt="yini" /></Link>
