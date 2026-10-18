@@ -4,6 +4,7 @@ import type { TodayResponse } from '@/contract';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { env } from '@/lib/env';
 import { CheckIn } from '@/components/CheckIn';
+import { DailyFeedback } from '@/components/DailyFeedback';
 import { SetupNeeded } from '@/components/SetupNeeded';
 
 export const dynamic = 'force-dynamic';
@@ -27,6 +28,7 @@ export default async function TodayPage() {
   return (
     <main className="phone" style={{ paddingTop: 36 }}>
       <CheckIn today={today} />
+      <DailyFeedback demo={env.demoMode()} />
     </main>
   );
 }

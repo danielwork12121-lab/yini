@@ -13,7 +13,7 @@
 
 -- ─────────────────────────── seed ───────────────────────────
 do $$
-declare avery uuid; sam uuid; conn uuid; e_avery uuid; e_sam uuid; c1 uuid; n1 uuid;
+declare avery uuid; sam uuid; conn uuid; e_avery uuid; e_sam uuid; c1 uuid; n1 uuid; run1 uuid;
 begin
   -- Scoped teardown: only this test's own fixture, never the whole table.
   delete from public.connections where invite_code = 'RLSTST';
@@ -54,6 +54,14 @@ begin
 
   insert into public.safety_events (connection_id, user_id, entry_id, flag)
     values (conn, avery, e_avery, 'distress');
+
+  -- the nightly agent's output: one private row each, and a pair summary nobody may read
+  insert into public.analysis_runs (connection_id, local_date, status, pair_summary)
+    values (conn, current_date, 'done', 'PAIR_SECRET: both are stretched thin')
+    returning id into run1;
+  insert into public.daily_feedback (run_id, connection_id, recipient_id, local_date, headline, bullets)
+    values (run1, conn, avery, current_date, 'For Avery', array['AVERY_FEEDBACK: a small thing for you']),
+           (run1, conn, sam,   current_date, 'For Sam',   array['SAM_FEEDBACK: a small thing for you']);
 
   perform set_config('test.avery', avery::text, false);
   perform set_config('test.sam',   sam::text,   false);
@@ -113,6 +121,12 @@ perform pg_temp.expect('safety_events: table is ungranted entirely', sam,
   'select count(*)::text from public.safety_events', 'DENIED');
 perform pg_temp.expect('mood_days: Avery''s calendar is invisible', sam,
   'select count(*)::text from public.mood_days', '0');
+perform pg_temp.expect('daily_feedback: Sam cannot read Avery''s feedback', sam,
+  format('select count(*)::text from public.daily_feedback where recipient_id = %L', avery), '0');
+perform pg_temp.expect('analysis_runs: pair summary is ungranted', sam,
+  'select count(*)::text from public.analysis_runs', 'DENIED');
+perform pg_temp.expect('daily_feedback: Sam cannot write feedback', sam,
+  format('insert into public.daily_feedback (run_id, connection_id, recipient_id, local_date, headline, bullets) select run_id, connection_id, %L, local_date, ''x'', array[''x''] from public.daily_feedback limit 1 returning ''inserted''', avery), 'DENIED');
 
 raise notice '';
 raise notice '── What Sam is SUPPOSED to see ──';
@@ -120,6 +134,8 @@ perform pg_temp.expect('nudges: his own delivered item', sam,
   'select count(*)::text from public.nudges', '1');
 perform pg_temp.expect('kind_words: surfaced praise about him', sam,
   'select count(*)::text from public.kind_words', '1');
+perform pg_temp.expect('daily_feedback: his own nightly feedback', sam,
+  'select bullets[1] from public.daily_feedback', 'SAM_FEEDBACK: a small thing for you');
 perform pg_temp.expect('pet: the shared object', sam,
   'select count(*)::text from public.pets', '1');
 perform pg_temp.expect('peers: Avery''s NAME only', sam,
@@ -133,6 +149,8 @@ perform pg_temp.expect('nudges: Avery sees none (it went to Sam)', avery,
   'select count(*)::text from public.nudges', '0');
 perform pg_temp.expect('entries: Avery sees only her own', avery,
   'select count(*)::text from public.entries', '1');
+perform pg_temp.expect('daily_feedback: Avery sees only her own', avery,
+  'select headline from public.daily_feedback', 'For Avery');
 
 raise notice '';
 raise notice '── Signed out ──';

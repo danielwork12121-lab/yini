@@ -1,45 +1,26 @@
-import { NextResponse } from 'next/server';
-import { JoinRequestSchema } from '@/contract';
-import { createServerSupabase } from '@/lib/supabase/server';
+import { actionTypes } from '@/ontology';
+import { actionRoute, ActionError } from '@/lib/http/action-route';
 import { createAdminSupabase } from '@/lib/supabase/admin';
 
-export async function POST(request: Request) {
-  const supabase = await createServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Sign in first', code: 'unauthenticated', recoverable: false }, { status: 401 });
-
-  const raw = await request.json().catch(() => null);
-  const parsed = JoinRequestSchema.safeParse(
-    raw && typeof raw.invite_code === 'string' ? { invite_code: raw.invite_code.trim().toUpperCase() } : raw,
-  );
-  if (!parsed.success) {
-    return NextResponse.json({ error: 'That code should be 6 characters', code: 'invalid_input', recoverable: true }, { status: 400 });
-  }
-
+export const POST = actionRoute(actionTypes.joinConnection, async ({ input, user }) => {
   const db = createAdminSupabase();
-  const { data: conn } = await db.from('connections').select('id').eq('invite_code', parsed.data.invite_code).maybeSingle();
-  if (!conn) {
-    return NextResponse.json({ error: "No connection with that code. Check it with your partner.", code: 'invalid_input', recoverable: true }, { status: 404 });
-  }
+  const { data: conn } = await db.from('connections').select('id').eq('invite_code', input.invite_code).maybeSingle();
+  if (!conn) throw new ActionError('not_found', 'No connection with that code. Check it with your partner.', 404);
 
   const { data: members } = await db.from('connection_members').select('user_id').eq('connection_id', conn.id);
   if ((members ?? []).some((m) => m.user_id === user.id)) {
     await db.from('profiles').update({ default_connection_id: conn.id }).eq('id', user.id);
-    return NextResponse.json({ ok: true, already: true });
+    return { ok: true as const, already: true };
   }
   if ((members ?? []).length >= 2) {
-    return NextResponse.json({ error: 'That connection already has two people in it.', code: 'invalid_input', recoverable: false }, { status: 409 });
+    throw new ActionError('conflict', 'That connection already has two people in it.', 409, false);
   }
 
-  const body = await Promise.resolve(raw);
-  const displayName = typeof body?.display_name === 'string' ? body.display_name.trim().slice(0, 40) : '';
-  if (displayName) await db.from('profiles').update({ display_name: displayName }).eq('id', user.id);
+  if (input.display_name) await db.from('profiles').update({ display_name: input.display_name }).eq('id', user.id);
 
   // The DB trigger also caps this at two; losing that race returns an error here.
   const { error: joinErr } = await db.from('connection_members').insert({ connection_id: conn.id, user_id: user.id });
-  if (joinErr) {
-    return NextResponse.json({ error: 'That connection just filled up.', code: 'invalid_input', recoverable: false }, { status: 409 });
-  }
+  if (joinErr) throw new ActionError('conflict', 'That connection just filled up.', 409, false);
   await db.from('profiles').update({ default_connection_id: conn.id }).eq('id', user.id);
-  return NextResponse.json({ ok: true });
-}
+  return { ok: true as const, already: false };
+});
