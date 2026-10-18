@@ -18,7 +18,7 @@ export function HomeView({ name, partner }: { name: string; partner: string }) {
   const pending = usePendingCheckin();
 
   // Fill Grow and Glow in the background, so they open already showing something.
-  useEffect(() => { warmJson('/api/grow'); warmJson('/api/glow'); }, []);
+  useEffect(() => { warmJson('/api/today'); warmJson('/api/grow'); warmJson('/api/glow'); }, []);
 
   function feed() {
     if (feeding) return;
@@ -43,7 +43,7 @@ export function HomeView({ name, partner }: { name: string; partner: string }) {
         </div></div>
       )}
 
-      <Link href="/today" className="checkin" aria-label="Check in: tell Yini about your day">
+      <Link href="/today" prefetch className="checkin" aria-label="Check in: tell Yini about your day">
         <span className="checkin-in">
           <MicBig />
           <span className="checkin-label">Check in</span>

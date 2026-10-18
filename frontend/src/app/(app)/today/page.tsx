@@ -1,34 +1,14 @@
-import { redirect } from 'next/navigation';
-import { headers } from 'next/headers';
-import type { TodayResponse } from '@/contract';
-import { createServerSupabase } from '@/lib/supabase/server';
-import { env } from '@/lib/env';
-import { CheckIn } from '@/components/CheckIn';
-import { DailyFeedback } from '@/components/DailyFeedback';
-import { SetupNeeded } from '@/components/SetupNeeded';
+import type { Metadata } from 'next';
+import { CheckInPage } from '@/components/CheckInPage';
 
-export const dynamic = 'force-dynamic';
+export const metadata: Metadata = { title: 'Check in · Yini' };
 
-export default async function TodayPage() {
-  if (!env.isSupabaseConfigured()) return <SetupNeeded />;
-
-  const supabase = await createServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/');
-
-  const h = await headers();
-  const res = await fetch(
-    `${h.get('x-forwarded-proto') ?? 'http'}://${h.get('host')}/api/today`,
-    { headers: { cookie: h.get('cookie') ?? '' }, cache: 'no-store' },
-  );
-  // Signed in but no partner yet -> pairing, not a dead end.
-  if (!res.ok) redirect('/pair');
-  const today = (await res.json()) as TodayResponse;
-
-  return (
-    <>
-      <CheckIn today={today} />
-      {env.demoMode() && <div className="reply"><DailyFeedback demo /></div>}
-    </>
-  );
+/**
+ * Nothing here waits on the server: the page is the same for everyone, so it can be sent
+ * ahead of time and opens the moment Check in is tapped. The little bits about you (your
+ * name, the cat's line at the bottom) fill in a beat later; the mic never waits for them.
+ * Signed-out or not-yet-paired people are sent on by CheckInPage once the API says so.
+ */
+export default function TodayPage() {
+  return <CheckInPage />;
 }

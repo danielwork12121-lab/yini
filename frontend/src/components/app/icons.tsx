@@ -128,3 +128,6 @@ export const PlantIcon = () => (
     <path d="M30 100 H100 L92 183 H38 Z" fill="#E1A283" />
   </svg>
 );
+export const ChevronDownIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3.5 6 L8 10.5 L12.5 6" /></svg>
+);
