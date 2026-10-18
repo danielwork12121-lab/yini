@@ -9,7 +9,7 @@
  * It fabricates NOTHING that the real pipeline would not produce: concerns and
  * care acts are drawn from the input text, never invented about a partner.
  */
-import type { ClassifyOutput, ComposeOutput, ContextSignalOutput, LeakCheckOutput } from '@/contract';
+import type { ClassifyOutput, ComposeOutput, ContextSignalOutput, DaySummary, LeakCheckOutput } from '@/contract';
 import type { EmotionalState, Theme } from '@/contract';
 
 const ROUGH = /\b(brutal|exhausted|awful|terrible|drained|wiped|overwhelmed|hard|rough|stressed|crying|burnt? out)\b/i;
@@ -71,6 +71,16 @@ export function mockClassify(raw: string): ClassifyOutput {
     safety: FEAR.test(raw)
       ? { flag: 'fear_coercion_abuse', rationale: 'mock: fear/control language detected' }
       : { flag: 'none', rationale: '' },
+  };
+}
+
+/** Keyless stand-in for the calendar summary. */
+export function mockDaySummary(raw: string): DaySummary {
+  const state = pickState(raw);
+  return {
+    headline: state === 'rough' ? 'A heavy one.' : state === 'great' ? 'A good one.' : 'An ordinary day.',
+    emoji: DAY_EMOJI[state],
+    jots: mockJots(raw),
   };
 }
 

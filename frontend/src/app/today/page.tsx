@@ -28,7 +28,8 @@ export default async function TodayPage() {
 
   return (
     <main className="phone" style={{ paddingTop: 36 }}>
-      <p style={{ textAlign: 'right', margin: '-12px 0 8px' }}>
+      <p style={{ display: 'flex', justifyContent: 'space-between', margin: '-12px 0 8px' }}>
+        <Link href="/home" className="small" style={{ textDecoration: 'none' }}>← Home</Link>
         <Link href="/calendar" className="small" style={{ textDecoration: 'none' }}>📅 Calendar</Link>
       </p>
       <CheckIn today={today} />

@@ -10,14 +10,14 @@
  */
 import 'server-only';
 import {
-  ClassifyOutputSchema, ComposeOutputSchema, ContextSignalOutputSchema,
+  ClassifyOutputSchema, ComposeOutputSchema, ContextSignalOutputSchema, DaySummarySchema,
   decideDelivery, derivePetState, isVerbatimSpan, shouldReveal, shouldSendContextSignal,
   type CheckinRequest, type CheckinResponse, type EmotionalState, type OpenConcern, type Theme,
 } from '@/contract';
 import { generateJSON } from '@/lib/llm/provider';
-import { mockClassify, mockCompose, mockContextSignal } from '@/lib/llm/mock';
+import { mockClassify, mockCompose, mockContextSignal, mockDaySummary } from '@/lib/llm/mock';
 import {
-  CLASSIFY_SYSTEM, classifyUser, COMPOSE_SYSTEM, composeUser, CONTEXT_SIGNAL_SYSTEM,
+  CLASSIFY_SYSTEM, classifyUser, COMPOSE_SYSTEM, composeUser, CONTEXT_SIGNAL_SYSTEM, DAY_SUMMARY_SYSTEM, daySummaryUser,
 } from '@/lib/prompts';
 import { createAdminSupabase } from '@/lib/supabase/admin';
 import { leakCheckAndRewrite } from '@/lib/leakcheck';
@@ -71,15 +71,30 @@ export async function runCheckin(
 
   // ── 2. classify. The only call that sees raw_text. ──
   const recent = await recentStates(db, userId, req.local_date, 7);
-  const cls = await generateJSON({
-    schema: ClassifyOutputSchema, kind: 'classify',
-    system: CLASSIFY_SYSTEM,
-    user: classifyUser({
-      raw_text: req.text, recent_states: recent,
-      author_display_name: me.display_name, partner_display_name: partner.display_name,
+  // The calendar summary runs alongside classify (same text, author-only output), so it adds no wait.
+  const [cls, daySummary] = await Promise.all([
+    generateJSON({
+      schema: ClassifyOutputSchema, kind: 'classify',
+      system: CLASSIFY_SYSTEM,
+      user: classifyUser({
+        raw_text: req.text, recent_states: recent,
+        author_display_name: me.display_name, partner_display_name: partner.display_name,
+      }),
+      mockFn: () => mockClassify(req.text),
+    }).catch((e) => { // the entry is already safe; degrade, don't fail
+      console.error('[checkin] classify fell back to the keyless mock:', (e as Error).message);
+      return mockClassify(req.text);
     }),
-    mockFn: () => mockClassify(req.text),
-  }).catch(() => mockClassify(req.text)); // the entry is already safe; degrade, don't fail
+    generateJSON({
+      schema: DaySummarySchema, kind: 'classify',
+      system: DAY_SUMMARY_SYSTEM,
+      user: daySummaryUser({ raw_text: req.text, author_display_name: me.display_name }),
+      mockFn: () => mockDaySummary(req.text),
+    }).catch((e) => {
+      console.error('[checkin] day summary fell back to the keyless mock:', (e as Error).message);
+      return mockDaySummary(req.text);
+    }),
+  ]);
 
   await db.from('entries').update({
     state: cls.state, severity: cls.severity, themes: cls.themes, mood_face: cls.mood_face,
@@ -94,8 +109,8 @@ export async function runCheckin(
   const dayNote = mergeDayNotes(
     existingDay ? decodeDayNote(existingDay.note, existingDay.mood_face) : null,
     {
-      emoji: isSingleEmoji(cls.day_emoji) ? cls.day_emoji.trim() : faceEmoji(dayFace),
-      headline: cls.day_note, jots: normalizeJots(cls.jots),
+      emoji: isSingleEmoji(daySummary.emoji) ? daySummary.emoji.trim() : faceEmoji(dayFace),
+      headline: daySummary.headline || cls.day_note, jots: normalizeJots(daySummary.jots.length ? daySummary.jots : cls.jots),
     },
   );
   await db.from('mood_days').upsert({
@@ -106,7 +121,7 @@ export async function runCheckin(
   // This entry's own memory, so the nightly joint analysis can read it straight away.
   // Separate from the classification write: a missing column must never cost the calendar.
   await db.from('entries').update({
-    ai_summary: noteAsSummary({ emoji: dayNote.emoji, headline: cls.day_note, jots: normalizeJots(cls.jots) }),
+    ai_summary: noteAsSummary({ emoji: dayNote.emoji, headline: daySummary.headline || cls.day_note, jots: normalizeJots(daySummary.jots) }),
   }).eq('id', entry.id);
 
   // ── 3. feeding. Participation only — a brutal day feeds it exactly as well. ──
