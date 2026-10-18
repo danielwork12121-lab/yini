@@ -25,7 +25,9 @@ export const env = {
 
   anthropicKey: () => opt('ANTHROPIC_API_KEY'),
   openaiKey: () => opt('OPENAI_API_KEY'),
-  geminiKey: () => opt('GEMINI_API_KEY'),
+  /** The main key, then the spare. See lib/llm/geminiFetch.ts for how they are used. */
+  geminiKeys: (): string[] => [...new Set([opt('GEMINI_API_KEY'), opt('GEMINI_API_KEY_BACKUP')].filter((k): k is string => Boolean(k)))],
+  geminiKey: () => env.geminiKeys()[0],
 
   hasKeyFor(p: 'anthropic' | 'openai' | 'gemini' | 'mock'): boolean {
     return p === 'mock' ? true

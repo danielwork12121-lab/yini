@@ -10,6 +10,7 @@ import type { z } from 'zod';
 import Anthropic from '@anthropic-ai/sdk';
 import OpenAI from 'openai';
 import { env } from '@/lib/env';
+import { geminiFetch } from './geminiFetch';
 
 export type Provider = 'anthropic' | 'openai' | 'gemini' | 'mock';
 
@@ -46,20 +47,12 @@ async function callOpenAI(model: string, system: string, user: string): Promise<
 }
 
 async function callGemini(model: string, system: string, user: string): Promise<string> {
-  const key = env.geminiKey();
-  if (!key) throw new ModelError('GEMINI_API_KEY not set');
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
-    {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-goog-api-key': key },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: system }] },
-        contents: [{ role: 'user', parts: [{ text: user }] }],
-        generationConfig: { responseMimeType: 'application/json', temperature: 0.4 },
-      }),
-    },
-  );
+  if (!env.geminiKey()) throw new ModelError('GEMINI_API_KEY not set');
+  const res = await geminiFetch(model, {
+    systemInstruction: { parts: [{ text: system }] },
+    contents: [{ role: 'user', parts: [{ text: user }] }],
+    generationConfig: { responseMimeType: 'application/json', temperature: 0.4 },
+  });
   if (!res.ok) throw new ModelError(`Gemini ${res.status}: ${(await res.text()).slice(0, 300)}`);
   const json = await res.json();
   return json?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? '').join('') ?? '';

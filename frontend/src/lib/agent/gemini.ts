@@ -6,7 +6,7 @@
  * notes; COMPOSE then runs through `generateJSON` against the Zod schema.
  */
 import 'server-only';
-import { env } from '@/lib/env';
+import { geminiFetch } from '@/lib/llm/geminiFetch';
 import { toFunctionDeclaration, type AgentTool } from './tools';
 
 type Part = { text?: string; functionCall?: { name: string; args?: unknown }; [k: string]: unknown };
@@ -15,11 +15,7 @@ type Content = { role: 'user' | 'model'; parts: Part[] };
 export const MAX_TOOL_ROUNDS = 4;
 
 async function generate(model: string, body: unknown): Promise<Part[]> {
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-goog-api-key': env.geminiKey() ?? '' },
-    body: JSON.stringify(body),
-  });
+  const res = await geminiFetch(model, body);
   if (!res.ok) throw new Error(`Gemini ${res.status}: ${(await res.text()).slice(0, 300)}`);
   const json = await res.json();
   return json?.candidates?.[0]?.content?.parts ?? [];

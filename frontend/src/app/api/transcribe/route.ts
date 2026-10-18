@@ -11,6 +11,7 @@ import type { TranscribeResponse } from '@/contract';
 import { actionTypes } from '@/ontology';
 import { actionRoute } from '@/lib/http/action-route';
 import { env } from '@/lib/env';
+import { geminiFetch } from '@/lib/llm/geminiFetch';
 
 export const maxDuration = 60;
 
@@ -29,22 +30,15 @@ export const POST = actionRoute(actionTypes.transcribe, async ({ input }): Promi
     if (env.geminiKey()) {
       // Gemini takes audio natively, so one key covers transcription and reasoning.
       const b64 = Buffer.from(await file.arrayBuffer()).toString('base64');
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${process.env.GEMINI_TRANSCRIBE_MODEL ?? 'gemini-2.5-flash'}:generateContent`,
-        {
-          method: 'POST',
-          headers: { 'content-type': 'application/json', 'x-goog-api-key': env.geminiKey()! },
-          body: JSON.stringify({
-            contents: [{
-              role: 'user',
-              parts: [
-                { text: 'Transcribe this audio verbatim. Return only the words spoken, with no commentary, labels or timestamps.' },
-                { inlineData: { mimeType: file.type || 'audio/webm', data: b64 } },
-              ],
-            }],
-          }),
-        },
-      );
+      const res = await geminiFetch(process.env.GEMINI_TRANSCRIBE_MODEL ?? 'gemini-2.5-flash', {
+        contents: [{
+          role: 'user',
+          parts: [
+            { text: 'Transcribe this audio verbatim. Return only the words spoken, with no commentary, labels or timestamps.' },
+            { inlineData: { mimeType: file.type || 'audio/webm', data: b64 } },
+          ],
+        }],
+      });
       if (!res.ok) return miss();
       const json = await res.json();
       const text = json?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? '').join('').trim() ?? '';
