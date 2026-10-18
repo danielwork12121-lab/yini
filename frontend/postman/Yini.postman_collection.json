@@ -1,6 +1,6 @@
 {
   "info": {
-    "name": "Corner (Next.js)",
+    "name": "Yini (Next.js)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "description": "Every API route of the merged Next.js app, in run order. Needs `npm run dev` with NEXT_PUBLIC_DEMO_MODE=true.\n\nPostman keeps one cookie jar per host, so signing in as Sam replaces Avery's session. Run the folders top to bottom (or use the Collection Runner). Each route is one ontology action: see docs/ontology/actions/."
   },

@@ -150,7 +150,7 @@ function renderIndex(): string {
     `| ${actLink(a, 'root')} | \`${a.route.method} ${a.route.path}\` | ${a.actor} |`);
   const graph = ontology.links.map((l) => `  ${l.from} ${l.cardinality === 'many' ? '||--o{' : '}o--||'} ${l.to} : ${l.foreignKey}`);
   return HEADER + [
-    '# Corner ontology', '',
+    '# Yini ontology', '',
     'Everything the app knows about, as three kinds of thing:', '',
     '- **Objects**: the nouns. Each is a Zod schema with a doc string on every field, stored in one table.',
     '- **Links**: typed relationships between objects, each backed by a foreign key.',

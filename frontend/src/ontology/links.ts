@@ -1,5 +1,5 @@
 /**
- * Corner — link types. Every relationship between object types, with the column
+ * Yini — link types. Every relationship between object types, with the column
  * that backs it. `ontology.test.ts` checks each foreign key exists on the schema.
  */
 import { defineLink } from './define';

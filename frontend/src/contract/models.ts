@@ -1,5 +1,5 @@
 /**
- * Corner — database row shapes.
+ * Yini — database row shapes.
  *
  * The definitions moved to `src/ontology/objects/`, one file per object type, each
  * with field-level docs. This file re-exports them so `@/contract` stays the single

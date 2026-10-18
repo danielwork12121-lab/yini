@@ -56,7 +56,7 @@ export default function PairPage() {
     <main className="phone" style={{ paddingTop: 56 }}>
       <p className="display h1" style={{ marginBottom: 6 }}>Who&apos;s your person?</p>
       <p className="body" style={{ color: 'var(--ink-muted)', marginTop: 0 }}>
-        Corner only works with two. Everything you write stays yours — they never see it.
+        Yini only works with two. Everything you write stays yours — they never see it.
       </p>
 
       <div className="card" style={{ marginTop: 20 }}>

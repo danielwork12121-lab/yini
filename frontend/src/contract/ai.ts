@@ -1,5 +1,5 @@
 /**
- * Corner — model I/O contracts.
+ * Yini — model I/O contracts.
  *
  * Separate, narrow calls. Each gets the least input that can do its job, which is
  * a privacy property before it is a cost one.

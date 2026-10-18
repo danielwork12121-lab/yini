@@ -1,10 +1,10 @@
-# Corner Architecture
+# Yini Architecture
 
 Owners: Ethan Pan, Daniel Li · Last updated: 2026-10-17
 
-## 1. What Corner is
+## 1. What Yini is
 
-Corner is a companion app for two people in a relationship. Each person keeps a private daily journal: how they feel, what is going right, what is going wrong. The app helps them understand each other without either one ever reading the other's words.
+Yini is a companion app for two people in a relationship. Each person keeps a private daily journal: how they feel, what is going right, what is going wrong. The app helps them understand each other without either one ever reading the other's words.
 
 It does that in two ways:
 
@@ -13,7 +13,7 @@ It does that in two ways:
 
 ## 2. One app
 
-Corner used to be two codebases: a Next.js app, and a Python FastAPI service that ran the nightly agent. They are now one Next.js app in `frontend/`, deployed to Vercel, with Supabase for auth and Postgres. The reasons are in issue #1: one deploy target, one database, and both people sharing state from their phones during a demo.
+Yini used to be two codebases: a Next.js app, and a Python FastAPI service that ran the nightly agent. They are now one Next.js app in `frontend/`, deployed to Vercel, with Supabase for auth and Postgres. The reasons are in issue #1: one deploy target, one database, and both people sharing state from their phones during a demo.
 
 Every Python feature was ported:
 

@@ -24,7 +24,7 @@ export default function Home() {
 
   return (
     <main className="phone" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-      <p className="display" style={{ fontSize: 44, margin: '0 0 6px' }}>Corner</p>
+      <p className="display" style={{ fontSize: 44, margin: '0 0 6px' }}>Yini</p>
       <p className="body" style={{ color: 'var(--ink-muted)', marginTop: 0, maxWidth: '32ch' }}>
         Two private journals. One quiet thing a day worth doing. Neither of you ever reads the other.
       </p>

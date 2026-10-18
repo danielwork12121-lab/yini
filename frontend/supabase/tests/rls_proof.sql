@@ -1,11 +1,11 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- Corner — executable proof that a partner cannot read the other's journal.
+-- Yini — executable proof that a partner cannot read the other's journal.
 --
 -- Seeds two real users in one connection, then logs in as each and attacks.
 -- Every assertion runs as the `authenticated` role, which is exactly the role
 -- the browser holds when it uses the public anon key.
 --
---   psql -d corner -f supabase/tests/rls_proof.sql
+--   psql -d yini -f supabase/tests/rls_proof.sql
 -- ═══════════════════════════════════════════════════════════════════════════
 
 \set ON_ERROR_STOP on

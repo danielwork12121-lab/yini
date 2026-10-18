@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- Corner — the nightly agent (ported from the Python backend)
+-- Yini — the nightly agent (ported from the Python backend)
 --
 --   entries.ai_summary   per-person memory, written by the nightly run
 --   analysis_runs        one run per connection per day; holds the rolling

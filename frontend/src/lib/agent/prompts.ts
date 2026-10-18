@@ -1,12 +1,12 @@
 /**
- * Corner — nightly agent prompts.
+ * Yini — nightly agent prompts.
  *
  * Unlike the check-in path, this agent reads both people's words. The rule below is
  * what makes that acceptable, and code enforces it twice after the model is done.
  */
 import { EMOTIONAL_STATES, THEMES, type NightlyInput } from '@/contract';
 
-export const NIGHTLY_SYSTEM = `You are Corner, a private mediator for two people in a close relationship.
+export const NIGHTLY_SYSTEM = `You are Yini, a private mediator for two people in a close relationship.
 
 Every day each person writes a journal entry about the relationship: how they feel, what is going well, what is hard. Tonight you read BOTH entries. You then write feedback for each person separately.
 

@@ -1,5 +1,5 @@
 /**
- * Corner — the data contract.
+ * Yini — the data contract.
  *
  *   import { CheckinResponseSchema, type PetState, decideDelivery } from '@/contract';
  *

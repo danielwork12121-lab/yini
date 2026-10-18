@@ -1,5 +1,5 @@
 /**
- * Corner — the ontology registry.
+ * Yini — the ontology registry.
  *
  *   import { ontology, actions } from '@/ontology';
  *

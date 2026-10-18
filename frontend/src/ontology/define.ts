@@ -1,5 +1,5 @@
 /**
- * Corner — the ontology primitives.
+ * Yini — the ontology primitives.
  *
  * The app is described as three kinds of thing, and nothing else:
  *

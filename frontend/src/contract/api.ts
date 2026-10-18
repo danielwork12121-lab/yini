@@ -1,5 +1,5 @@
 /**
- * Corner — HTTP contract. This is the file the screens build against.
+ * Yini — HTTP contract. This is the file the screens build against.
  *
  * Rule for every shape here: if a field could tell you something about your partner
  * that they did not choose to send you, it is not in the shape. There is no
