@@ -42,7 +42,8 @@ export function PairFlow() {
       const me = await res.json();
       if (cancelled) return;
       if (me.paired) { router.replace('/today'); return; }
-      name.current = me.display_name || (await googleFirstName());
+      // 'You' is the database default for a profile with no name, so it counts as unset.
+      name.current = me.display_name && me.display_name !== 'You' ? me.display_name : await googleFirstName();
       if (me.invite_code) { setCode(me.invite_code); return; }
       const made = await postJson('/api/connection', { display_name: name.current });
       if (cancelled) return;

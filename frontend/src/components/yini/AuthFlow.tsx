@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { YiniScreen, type ActHandler } from './YiniScreen';
 import { signInWithGoogle } from './google';
+import { createClient } from '@/lib/supabase/client';
+import { checkCredentials, usernameToEmail } from '@/lib/auth/username';
 import { useToast } from './useToast';
 import type { ScreenKey } from './screens';
 
@@ -20,6 +22,42 @@ export function AuthFlow({ screen, demo = false }: { screen: Extract<ScreenKey, 
     toast('Opening Google…');
     const err = await signInWithGoogle('/pair');
     if (err) { toast(err); setBusy(false); }
+  }
+
+  const field = (id: string) => (document.getElementById(id) as HTMLInputElement | null)?.value ?? '';
+
+  /** Sign in with the username mapped to its private address. */
+  async function passwordSignIn(username: string, password: string) {
+    const { error } = await createClient().auth.signInWithPassword({ email: usernameToEmail(username), password });
+    if (error) throw new Error('That username and password do not match.');
+  }
+
+  async function usernameSignIn() {
+    if (busy) return;
+    const username = field('si-email'), password = field('si-pw');
+    if (!username.trim() || !password) { toast('Enter your username and password.'); return; }
+    setBusy(true);
+    try {
+      await passwordSignIn(username, password);
+      router.push('/pair'); router.refresh();
+    } catch (e) { toast(e instanceof Error ? e.message : 'Could not sign in.'); setBusy(false); }
+  }
+
+  async function usernameSignUp() {
+    if (busy) return;
+    const username = field('ca-user'), password = field('ca-pw');
+    const problem = checkCredentials(username, password);
+    if (problem) { toast(problem); return; }
+    if (!lover) { toast('Pick who you’re here with first.'); return; }
+    setBusy(true);
+    try {
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username, password }),
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? 'Could not create your account.');
+      await passwordSignIn(username, password);
+      router.push('/pair'); router.refresh();
+    } catch (e) { toast(e instanceof Error ? e.message : 'Could not create your account.'); setBusy(false); }
   }
 
   async function enterDemo(role: 'avery' | 'sam') {
@@ -41,12 +79,8 @@ export function AuthFlow({ screen, demo = false }: { screen: Extract<ScreenKey, 
       case 'to-create': e.preventDefault(); router.push('/create'); break;
       case 'pick-lover': setLover((v) => !v); break;
       case 'auth-google': void google(); break;
-      // Email and password sign-in is not built yet; Google is the one way in.
-      case 'signin-go':
-        toast('Email sign-in is coming soon. Continue with Google for now.'); break;
-      case 'create-go':
-        if (!lover) { toast('Pick who you’re here with first.'); break; }
-        void google(); break;
+      case 'signin-go': void usernameSignIn(); break;
+      case 'create-go': void usernameSignUp(); break;
     }
   };
 
