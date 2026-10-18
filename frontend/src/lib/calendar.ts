@@ -14,10 +14,10 @@ export type DayNote = { emoji: string; headline: string; jots: string[]; /** Set
 
 /**
  * The three faces a day can have on the calendar, and how a day is sorted into one:
- *   happy    (yellow)  positive: good, calm, proud, warm, content
- *   neutral  (green)   in between: ordinary, flat, mixed, nothing much happened
- *   sad      (grey)    negative: sad, lonely, hurt, stressed, anxious, frustrated, angry, overwhelmed
- * Stress and anger count as negative: they are not "in the middle".
+ *   happy    (yellow)  relatively positive: good, fine, calm, content, warm, productive
+ *   neutral  (green)   in between: ordinary, flat, mixed, or a small low (tired, missing someone, a little hurt, mild stress)
+ *   sad      (grey)    a genuinely hard day: real sadness, crying, a fight, overwhelmed, anxiety or anger that took over
+ * Sad has to be earned. A passing feeling is neutral.
  */
 export type DayMood = 'happy' | 'neutral' | 'sad';
 /** The one emoji each mood is stored as (the day summary writes exactly one of these). */

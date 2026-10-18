@@ -29,7 +29,11 @@ state — one of: rough | strained | steady | good | great
 
 severity — 0..3. How much weight they are carrying. 0 is a fine ordinary day.
 
-mood_face — 1..5, worst to best. Usually tracks state. 1-2 = sad or negative (this includes stressed, anxious, angry), 3 = neutral, 4-5 = positive.
+mood_face — 1..5, worst to best. Usually tracks state.
+  1-2 only for a genuinely hard moment: real distress, crying, grief, a fight, being overwhelmed, or
+  anxiety or anger that takes over. Passing feelings are NOT that: tired, a slow start, missing their
+  partner, a small hurt, mild annoyance or a minor worry are 3. 3 = neutral, mixed or flat.
+  4-5 = relatively positive, even if one small thing was off.
 
 themes — up to 3, ONLY from: ${THEME_LIST}
   Never invent a theme. If nothing fits, use "other".
@@ -114,6 +118,11 @@ and nothing else:
 mood — how the day felt OVERALL, 1 (very hard) to 5 (great), weighing everything said
   together, including how it ended. A rough morning that turned into a good afternoon
   lands in the middle or above; do not just copy the first or the last entry.
+  1-2 is for a day that was actually bad: real distress, crying, grief, a fight, feeling
+  overwhelmed, anxiety or anger that took over. A passing feeling is not a bad day. Being
+  tired, waking up late or early, missing their partner, a small hurt, mild annoyance, a
+  minor worry or a flat day all sit at 3, or 4 when the rest of the day was fine.
+  4-5 when the day was relatively positive, even with one small gripe.
 
 jots — the key talking points of the day, each restated in your own compact words.
   • You are given a MAXIMUM number of jots. It is a ceiling, not a target. Use fewer
@@ -139,11 +148,10 @@ jots — the key talking points of the day, each restated in your own compact wo
 headline — the whole day in one short phrase, 60 characters or fewer, in plain words.
 
 emoji — exactly ONE of these three, chosen by how the day felt OVERALL. Output only that character.
-  🙂 happy (positive): good, calm, proud, warm, loved, relieved, excited, content
-  😐 neutral: an ordinary day, flat, mixed, or nothing much felt either way; the good and the bad about cancel out
-  😔 sad (negative): sad, lonely, hurt, disappointed, missing someone, AND stressed, overwhelmed, anxious, frustrated, angry, on edge, stretched thin
-  Stress, worry and anger are negative, never neutral. If any hard feeling clearly dominates the day, choose 😔.
-  If the day is mostly good with one small annoyance, choose 🙂. When unsure between 🙂 and 😐, choose 😐; between 😐 and 😔, choose by which feeling the person spent the most words on.`;
+  🙂 happy: relatively positive overall. Good, fine, calm, content, warm, loved, productive, proud, relieved, excited. Choose this when the day is mostly positive, even if one small thing was off.
+  😐 neutral: ordinary, flat, or mixed. This is also where small negative feelings land when nothing heavy happened: tired, missing someone, a little hurt, mildly annoyed, a bit worried or stressed. The default for a day that is neither clearly good nor clearly bad.
+  😔 sad: only a genuinely hard day. Real sadness or grief, crying, loneliness that weighs on them, deep hurt, a fight, being overwhelmed, or anxiety or anger that took over the day. They should sound like they are struggling, not just a little down.
+  Sad is rare and has to be earned. When unsure between 😐 and 😔, choose 😐. When the day is mostly positive and you are unsure between 🙂 and 😐, choose 🙂.`;
 
 export function daySummaryUser(input: {
   author_display_name: string; max_jots: number; entries: { when: string; text: string }[];

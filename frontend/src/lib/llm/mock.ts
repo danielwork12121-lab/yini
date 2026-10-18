@@ -23,9 +23,10 @@ function pickState(t: string): EmotionalState {
   if (GREAT.test(t)) return 'great';
   return /\b(good|nice|fine|better|lighter)\b/i.test(t) ? 'good' : 'steady';
 }
-const FACE: Record<EmotionalState, number> = { rough: 1, strained: 2, steady: 3, good: 4, great: 5 };
+const FACE: Record<EmotionalState, number> = { rough: 1, strained: 3, steady: 3, good: 4, great: 5 };
 
-const DAY_EMOJI: Record<EmotionalState, string> = { rough: '😔', strained: '😔', steady: '😐', good: '🙂', great: '🙂' };
+// Only a rough day is sad. Tired or strained is a neutral day.
+const DAY_EMOJI: Record<EmotionalState, string> = { rough: '😔', strained: '😐', steady: '😐', good: '🙂', great: '🙂' };
 
 /** Keyless stand-in for the AI's cut-down: the first few real sentences, trimmed. Never invents. */
 function mockJots(raw: string, max = 6): string[] {
