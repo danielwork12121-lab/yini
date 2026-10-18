@@ -1,6 +1,8 @@
 'use client';
 import Link from 'next/link';
-import { BookmarkIcon, CheckIcon, SproutBig, SproutSmall } from '@/components/app/icons';
+import { BookmarkIcon, CheckIcon, MicSmall, SproutBig, SproutSmall } from '@/components/app/icons';
+import { LiveBars } from '@/components/app/LiveBars';
+import { clock, useVoiceNote } from '@/components/love/useVoiceNote';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { DailyFeedbackView, GrowItemRequest, GrowItemResponse, GrowItemView, GrowOutcome, GrowResponse } from '@/contract';
 import { fetchJson, HttpError, peekJson, putJson } from '@/lib/cachedJson';
@@ -308,6 +310,15 @@ function ReflectSheet({ text, mode, initialOutcome, initialNote, onSave, onClose
 }) {
   const [outcome, setOutcome] = useState<GrowOutcome | null>(initialOutcome);
   const [note, setNote] = useState(initialNote);
+  const [typing, setTyping] = useState(initialNote.length > 0);
+  const voice = useVoiceNote();
+  const spoken = useRef('');
+  useEffect(() => {
+    if (voice.phase === 'ready' && voice.transcript && spoken.current !== voice.transcript) {
+      spoken.current = voice.transcript;
+      setNote((n) => (n.trim() ? `${n.trim()} ${voice.transcript}` : voice.transcript).slice(0, 600));
+    }
+  }, [voice.phase, voice.transcript]);
   const skipped = mode === 'skipped';
   const options = skipped ? SKIP_OUTCOMES : DONE_OUTCOMES;
   return (
@@ -324,10 +335,35 @@ function ReflectSheet({ text, mode, initialOutcome, initialNote, onSave, onClose
             </button>
           ))}
         </div>
-        <label>Anything you’d like Yini to remember?
-          <textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={600} placeholder="Optional. Only you and Yini see this" />
-        </label>
-        <button type="button" className="cta-big" disabled={!outcome} onClick={() => outcome && onSave(outcome, note)}>Save reflection</button>
+        <div className="rf-why">
+          <span className="rf-q">Why did you pick that?</span>
+          {voice.phase === 'recording' ? (
+            <div className="rf-rec" role="status" aria-label="Recording">
+              <LiveBars stream={voice.stream} />
+              <span className="rf-time">{clock(voice.elapsed)}</span>
+              <button type="button" className="rf-stop" onClick={voice.stop}>Done</button>
+            </div>
+          ) : voice.phase === 'transcribing' ? (
+            <p className="rf-wait" role="status"><span className="dots" aria-hidden="true"><i /><i /><i /></span>Writing it down…</p>
+          ) : (
+            <>
+              {!typing && (
+                <div className="rf-row">
+                  <button type="button" className="rf-voice" onClick={() => { setTyping(true); void voice.start(); }}><MicSmall />Voice input</button>
+                  <button type="button" className="linkbtn" onClick={() => setTyping(true)}>or type</button>
+                </div>
+              )}
+              {typing && (
+                <>
+                  <textarea aria-label="Why did you pick that?" value={note} onChange={(e) => setNote(e.target.value)} maxLength={600} placeholder="A few words is plenty. Only you and Yini see this" />
+                  <button type="button" className="rf-again" onClick={() => void voice.start()}><MicSmall />{note ? 'Say it again' : 'Voice input'}</button>
+                </>
+              )}
+            </>
+          )}
+          {voice.error && <p className="rf-err" role="alert">{voice.error}</p>}
+        </div>
+        <button type="button" className="cta-big" disabled={!outcome || voice.phase === 'recording' || voice.phase === 'transcribing'} onClick={() => outcome && onSave(outcome, note)}>Save reflection</button>
         <button type="button" className="cta-quiet" onClick={onClose}>Skip for now</button>
       </div>
     </>
