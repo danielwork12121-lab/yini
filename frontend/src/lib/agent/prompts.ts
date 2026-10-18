@@ -5,6 +5,7 @@
  * what makes that acceptable, and code enforces it twice after the model is done.
  */
 import { EMOTIONAL_STATES, THEMES, type NightlyInput } from '@/contract';
+import { questBudget } from '@/lib/quest';
 
 export const NIGHTLY_SYSTEM = `You are Yini, a private mediator for two people in a close relationship.
 
@@ -43,8 +44,10 @@ NOTICE quest. Never write a notice quest that tells the person what their partne
 
 WHAT GOOD FEEDBACK LOOKS LIKE
   - Addressed to the recipient in the second person, warm, plain, short. No therapy jargon, no lectures.
-  - 3 to 5 bullets: at least one DO quest, and at least one NOTICE quest whenever the partner wrote anything
-    or is plausibly easing something for them. DO quests start from something the RECIPIENT wrote (their own
+  - The number of bullets for each person is set by their QUEST BUDGET (shown with their entry): the less they
+    wrote, the fewer quests. Write exactly that many. With a budget of 1, write the single best quest (a NOTICE
+    quest if the partner is carrying more tonight, otherwise a DO quest). With 2 or more, include at least one
+    DO quest and, whenever the partner wrote anything or is plausibly easing something for them, one NOTICE quest. DO quests start from something the RECIPIENT wrote (their own
     words are theirs to see again) and turn it into one specific, doable action. Name the situation in their
     terms, then the action. A NOTICE quest needs no situation: it is a gentle pause to look back.
   - Let the partner's entry decide which kind of act would land, never which facts you mention.
@@ -73,17 +76,17 @@ export const COMPOSE_INSTRUCTIONS = `Using the entries, history and your working
   "side_a": { "summary": string, "state": string, "themes": string[] },
   "side_b": { "summary": string, "state": string, "themes": string[] },
   "pair_summary": string,
-  "feedback_for_a": { "headline": string, "bullets": string[3..5] },
-  "feedback_for_b": { "headline": string, "bullets": string[3..5] }
+  "feedback_for_a": { "headline": string, "bullets": string[1..5] },
+  "feedback_for_b": { "headline": string, "bullets": string[1..5] }
 }
-Each bullets array holds DO quests and NOTICE quests. Start every NOTICE quest with "[notice] " and leave DO quests unmarked. Pair them across the two people as described: a DO quest that eases the partner's load goes with a NOTICE quest for the partner.
+Each bullets array has exactly as many entries as that person's QUEST BUDGET, most important first. It holds DO quests and NOTICE quests. Start every NOTICE quest with "[notice] " and leave DO quests unmarked. Pair them across the two people as described: a DO quest that eases the partner's load goes with a NOTICE quest for the partner.
 Remember the one rule: feedback_for_a must not reveal side B's entry, and feedback_for_b must not reveal side A's entry.`;
 
 export function renderNightlyInput(p: NightlyInput): string {
   const side = (s: NightlyInput['side_a']) => {
     const mood = s.mood_face ? ` (mood ${s.mood_face}/5)` : '';
     const hist = s.recent_summaries.map((h) => `  - ${h}`).join('\n') || '  (none yet)';
-    return `SIDE ${s.label} — ${s.display_name}${mood}\nToday's entry:\n${s.entries_text ?? '(no entry today)'}\n\nRecent summaries (most recent first):\n${hist}\n`;
+    return `SIDE ${s.label} — ${s.display_name}${mood}\nQUEST BUDGET for ${s.display_name}'s feedback: ${questBudget(s.entries_text)}\nToday's entry:\n${s.entries_text ?? '(no entry today)'}\n\nRecent summaries (most recent first):\n${hist}\n`;
   };
   return `DATE: ${p.local_date}\n\nRELATIONSHIP SUMMARY FROM LAST RUN:\n${p.previous_pair_summary ?? '(first run for this pair)'}\n\n${side(p.side_a)}\n${side(p.side_b)}`;
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeQuest, questOf } from './quest';
+import { fitQuests, normalizeQuest, questBudget, questOf } from './quest';
 
 describe('quests: do and notice', () => {
   it('treats an unmarked bullet, including every older one, as something to do', () => {
@@ -17,5 +17,21 @@ describe('quests: do and notice', () => {
     expect(normalizeQuest('Notice: Look back.')).toBe('[notice] Look back.');
     expect(normalizeQuest('[notice] Look back.')).toBe('[notice] Look back.');
     expect(normalizeQuest('Cook dinner.')).toBe('Cook dinner.');
+  });
+
+  it('scales the number of quests with how much was said', () => {
+    expect(questBudget(null)).toBe(1);
+    expect(questBudget('Rough day. Tired.')).toBe(1);
+    expect(questBudget('word '.repeat(40))).toBe(2);
+    expect(questBudget('word '.repeat(100))).toBe(3);
+    expect(questBudget('word '.repeat(200))).toBe(4);
+    expect(questBudget('word '.repeat(400))).toBe(5);
+  });
+  it('trims to the budget but keeps a notice quest when there is room for a pair', () => {
+    const q = ['Do one', 'Do two', 'Do three', '[notice] Look back'];
+    expect(fitQuests(q, 1)).toEqual(['Do one']);
+    expect(fitQuests(q, 2)).toEqual(['Do one', '[notice] Look back']);
+    expect(fitQuests(q, 3)).toEqual(['Do one', 'Do two', '[notice] Look back']);
+    expect(fitQuests(q, 9)).toEqual(q);
   });
 });

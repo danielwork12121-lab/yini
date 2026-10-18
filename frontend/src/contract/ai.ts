@@ -310,7 +310,7 @@ const clampFeedback = (v: unknown) => {
 };
 export const FeedbackForSchema = z.preprocess(clampFeedback, z.object({
   headline: z.string().min(1).max(160),
-  bullets: z.array(z.string().min(1).max(400)).min(2).max(5),
+  bullets: z.array(z.string().min(1).max(400)).min(1).max(5),
 }));
 export type FeedbackFor = z.infer<typeof FeedbackForSchema>;
 

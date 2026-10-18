@@ -48,6 +48,17 @@ describe('analyzeConnection', () => {
     expect(forSam.bullets.join(' ').toLowerCase()).not.toContain('forgot to call me back');
   });
 
+  it('keeps Grow small when little was said, and bigger when a lot was', async () => {
+    const long = 'We talked about the move, my mother visiting, money, and how tired I have been lately. '.repeat(14);
+    const m = memoryNightlyStore({ connections: [conn()], entries: [entry('u-avery', '2026-10-17', 'Rough day.'), entry('u-sam', '2026-10-17', long)] });
+    await analyzeConnection(m.store, conn(), '2026-10-17', deps());
+    const forAvery = m.feedback.find((f) => f.recipient_id === 'u-avery')!;
+    const forSam = m.feedback.find((f) => f.recipient_id === 'u-sam')!;
+    expect(forAvery.bullets).toHaveLength(1);
+    expect(forSam.bullets.length).toBeGreaterThan(forAvery.bullets.length);
+    expect(forSam.bullets.some((b) => b.startsWith('[notice] '))).toBe(true);
+  });
+
   it('writes the memory chain: ai_summary per entry and pair_summary on the run', async () => {
     const m = memoryNightlyStore({ connections: [conn()], entries: [entry('u-avery', '2026-10-17', AVERY_TEXT), entry('u-sam', '2026-10-17', SAM_TEXT)] });
     await analyzeConnection(m.store, conn(), '2026-10-17', deps());
