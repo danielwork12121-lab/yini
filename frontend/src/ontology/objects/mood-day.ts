@@ -8,7 +8,7 @@ export const MoodDaySchema = z.object({
   local_date: zLocalDate,
   mood_face: z.number().int().min(1).max(5),
   source: z.enum(['self', 'derived']).default('derived'),
-  note: z.string().max(400).nullable().describe("The coach's short private note on that day."),
+  note: z.string().max(4000).nullable().describe('The day\'s emoji, headline and jot notes, as a small JSON document (see lib/calendar.ts). Older rows are plain text.'),
   created_at: zTimestamp,
 }).describe('One face per day on your own calendar.');
 export type MoodDay = z.infer<typeof MoodDaySchema>;

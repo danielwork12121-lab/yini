@@ -42,6 +42,7 @@ Regenerate these pages with `npm run ontology:docs` (in `frontend/`). The test s
 | [Check in](actions/checkIn.md) | `POST /api/checkin` | user |
 | [Create connection](actions/createConnection.md) | `POST /api/connection` | user |
 | [Demo login](actions/demoLogin.md) | `POST /api/demo/login` | public |
+| [Get my calendar month](actions/getCalendar.md) | `GET /api/calendar` | user |
 | [Get connection status](actions/getConnection.md) | `GET /api/connection` | user |
 | [Get latest feedback](actions/getLatestFeedback.md) | `GET /api/feedback/latest` | user |
 | [Get today](actions/getToday.md) | `GET /api/today` | user |

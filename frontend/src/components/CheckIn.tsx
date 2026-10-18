@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CheckinResponse, TodayResponse } from '@/contract';
 import { Pet } from './Pet';
@@ -288,7 +289,10 @@ function Reply({ reply, pet, partner }: { reply: CheckinResponse; pet: CheckinRe
         )}
       </div>
 
-      <p className="caption" style={{ textAlign: 'center', marginTop: 18 }}>
+      <p style={{ textAlign: 'center', marginTop: 18 }}>
+        <Link href="/calendar" className="link">📅 See today on your calendar</Link>
+      </p>
+      <p className="caption" style={{ textAlign: 'center', marginTop: 4 }}>
         {partner} will never see what you wrote.
       </p>
     </div>

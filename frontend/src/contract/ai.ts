@@ -73,6 +73,13 @@ export const ClassifyOutputSchema = z.object({
   themes: z.array(z.enum(THEMES)).max(3),
   /** One short private line for the author's own calendar. Never crosses over. */
   day_note: z.string().max(200),
+  /**
+   * The day, cut into short specific notes for the author's own calendar: only what
+   * matters, in plain words. Private like `day_note`. Older callers may omit it.
+   */
+  jots: z.array(z.string().min(1).max(160)).max(10).default([]),
+  /** One emoji that stands for the whole day. Falls back to the mood face when missing or invalid. */
+  day_emoji: z.string().max(16).optional(),
 
   /** A RECOMMENDATION. `decideDelivery()` holds the final say. */
   deliver_today: z.boolean(),

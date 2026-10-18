@@ -25,6 +25,17 @@ function pickState(t: string): EmotionalState {
 }
 const FACE: Record<EmotionalState, number> = { rough: 1, strained: 2, steady: 3, good: 4, great: 5 };
 
+const DAY_EMOJI: Record<EmotionalState, string> = { rough: '😮‍💨', strained: '😕', steady: '🙂', good: '😊', great: '🎉' };
+
+/** Keyless stand-in for the AI's cut-down: the first few real sentences, trimmed. Never invents. */
+function mockJots(raw: string): string[] {
+  return raw.split(/(?<=[.!?])\s+|\n+/)
+    .map((s) => s.replace(/^\s*(and|so|then|but|well|um|uh)\b[,\s]*/i, '').replace(/\s+/g, ' ').trim())
+    .filter((s) => s.length >= 12)
+    .slice(0, 6)
+    .map((s) => (s.length > 90 ? s.slice(0, 87).trimEnd() + '…' : s));
+}
+
 function firstSentenceAbout(t: string, re: RegExp): string | null {
   for (const s of t.split(/(?<=[.!?])\s+|\n+/)) if (re.test(s) && s.trim().length >= 8) return s.trim();
   return null;
@@ -46,6 +57,8 @@ export function mockClassify(raw: string): ClassifyOutput {
     mood_face: FACE[state],
     themes: [theme],
     day_note: state === 'rough' ? 'A heavy one.' : state === 'great' ? 'A good one.' : 'An ordinary day.',
+    jots: mockJots(raw),
+    day_emoji: DAY_EMOJI[state],
     deliver_today: !['rough', 'strained'].includes(state),
     deliver_reason: `mock: state=${state}`,
     concerns: wantSentence

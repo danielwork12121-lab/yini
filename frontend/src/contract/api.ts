@@ -172,17 +172,6 @@ export const NudgeChatResponseSchema = z.object({
 });
 export type NudgeChatResponse = z.infer<typeof NudgeChatResponseSchema>;
 
-/* ── GET /api/calendar?month=YYYY-MM ────────────────────────────────── */
-export const CalendarResponseSchema = z.object({
-  month: z.string().regex(/^\d{4}-\d{2}$/),
-  days: z.array(z.object({
-    local_date: zLocalDate,
-    mood_face: z.number().int().min(1).max(5),
-    note: z.string().nullable(),
-  })),
-});
-export type CalendarResponse = z.infer<typeof CalendarResponseSchema>;
-
 /* ── quests ─────────────────────────────────────────────────────────── */
 export const QuestViewSchema = z.object({
   id: zUuid,
@@ -257,6 +246,33 @@ export const EntryViewSchema = z.object({
 export type EntryView = z.infer<typeof EntryViewSchema>;
 export const EntriesResponseSchema = z.object({ entries: z.array(EntryViewSchema) });
 export type EntriesResponse = z.infer<typeof EntriesResponseSchema>;
+
+/* ── calendar ───────────────────────────────────────────────────────── */
+
+/** One month of your own calendar. `month` is YYYY-MM in the viewer's own calendar. */
+export const CalendarQuerySchema = z.object({ month: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'expected YYYY-MM') });
+export type CalendarQuery = z.infer<typeof CalendarQuerySchema>;
+export const CalendarEntryViewSchema = z.object({
+  id: zUuid,
+  text: z.string(),
+  input_mode: z.enum(INPUT_MODES),
+  created_at: z.string(),
+});
+export const CalendarDaySchema = z.object({
+  local_date: zLocalDate,
+  mood_face: z.number().int().min(1).max(5),
+  /** One emoji standing for the day. */
+  emoji: z.string(),
+  /** One plain line summing up the day. May be empty on older days. */
+  headline: z.string(),
+  /** The day cut into short notes: only the crucial things said. */
+  jots: z.array(z.string()),
+  /** What was actually said that day, as the author wrote or spoke it. Theirs alone. */
+  entries: z.array(CalendarEntryViewSchema),
+});
+export type CalendarDay = z.infer<typeof CalendarDaySchema>;
+export const CalendarResponseSchema = z.object({ month: z.string(), days: z.array(CalendarDaySchema) });
+export type CalendarResponse = z.infer<typeof CalendarResponseSchema>;
 
 /* ── nightly feedback ───────────────────────────────────────────────── */
 

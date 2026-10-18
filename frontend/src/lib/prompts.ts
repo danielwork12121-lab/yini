@@ -34,7 +34,25 @@ mood_face — 1..5, worst to best. Usually tracks state.
 themes — up to 3, ONLY from: ${THEME_LIST}
   Never invent a theme. If nothing fits, use "other".
 
-day_note — ≤200 chars, for this person's own private calendar. Plain and factual.
+day_note — ≤80 chars, one plain line that sums up the day, for this person's own
+  private calendar. Plain and factual, no advice.
+
+jots — up to 8 short notes for this person's own calendar. Cut a long, rambling
+  entry down to the specific things that happened or mattered, and drop the rest.
+    • One fact or feeling per jot, ≤90 characters, plain words, no filler
+    • Concrete beats vague: "Presentation went well, boss praised the slides"
+      beats "Work was okay"
+    • Keep real names, places and times they gave; these are for THEM alone
+    • Written in the order the day happened, no first-person "I"
+    • Cover the whole entry: the good, the hard and the ordinary
+    • Never invent anything they did not say. A short entry gets 1-3 jots.
+  GOOD: ["Skipped lunch to finish the report", "Call with mom, she sounds better",
+         "Dinner out with Sam, felt close"]
+  BAD:  ["Had a day", "Things happened at work"]   (vague)
+
+day_emoji — exactly ONE emoji that represents the whole day, e.g. 😴 for exhausted,
+  🎉 for a big win, 🌧️ for a gloomy one, 😊 for a good ordinary one. Output only the
+  emoji character itself.
 
 deliver_today — your recommendation on whether this person could absorb hearing one
   thing their partner needs. This is a RECOMMENDATION; deterministic policy decides.
