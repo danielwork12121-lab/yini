@@ -163,25 +163,29 @@ export async function runCheckin(
 
   // ── 5. derive. Verbatim claims are verified, never trusted. ──
   if (cls.concerns.length && !mediationPaused) {
-    await db.from('concerns').insert(cls.concerns.map((c) => ({
+    const { error } = await db.from('concerns').insert(cls.concerns.map((c) => ({
       connection_id: connectionId, author_id: userId, source_entry_id: entry.id,
       distilled_text: c.distilled_text, theme: c.theme, severity: c.severity,
     })));
+    if (error) console.error('[checkin] could not save concerns:', error.message);
   }
   const verifiedWords = cls.kind_words.filter((k) => isVerbatimSpan(k.text, req.text));
   if (verifiedWords.length) {
-    await db.from('kind_words').insert(verifiedWords.map((k) => ({
+    // A failed save must not cost the check-in, but it must not vanish either: Glow would just look empty.
+    const { error } = await db.from('kind_words').insert(verifiedWords.map((k) => ({
       connection_id: connectionId, author_id: userId, recipient_id: partner.id,
       source_entry_id: entry.id, source: 'entry', text: k.text, verbatim: true, status: 'approved',
     })));
+    if (error) console.error('[checkin] could not save kind words:', error.message);
   }
   const verifiedActs = cls.care_acts.filter((a) => isVerbatimSpan(a.source_span, req.text));
   if (verifiedActs.length) {
-    await db.from('care_acts').insert(verifiedActs.map((a) => ({
+    const { error } = await db.from('care_acts').insert(verifiedActs.map((a) => ({
       connection_id: connectionId, actor_id: userId, beneficiary_id: partner.id,
       source: 'entry', source_entry_id: entry.id,
       source_span: a.source_span, description: a.description, occurred_on: req.local_date,
     })));
+    if (error) console.error('[checkin] could not save care acts:', error.message);
   }
 
   // ── 6. what do I get today? ──

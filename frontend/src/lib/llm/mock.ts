@@ -57,7 +57,7 @@ export function mockClassify(raw: string): ClassifyOutput {
     severity: state === 'rough' ? 2 : state === 'strained' ? 1 : 0,
     mood_face: FACE[state],
     themes: [theme],
-    day_note: state === 'rough' ? 'A heavy one.' : state === 'great' ? 'A good one.' : 'An ordinary day.',
+    day_note: 'A day in your words.', // the keyless stand-in does not judge the day, so it never contradicts the face
     jots: mockJots(raw),
     day_emoji: DAY_EMOJI[state],
     deliver_today: !['rough', 'strained'].includes(state),
@@ -79,7 +79,7 @@ export function mockClassify(raw: string): ClassifyOutput {
 export function mockDaySummary(raw: string, maxJots = 6): DaySummary {
   const state = pickState(raw);
   return {
-    headline: state === 'rough' ? 'A heavy one.' : state === 'great' ? 'A good one.' : 'An ordinary day.',
+    headline: 'A day in your words.',
     emoji: DAY_EMOJI[state],
     mood: FACE[state],
     jots: mockJots(raw, maxJots),
