@@ -1,18 +1,27 @@
 'use client';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CheckinResponse, TodayResponse } from '@/contract';
 import { Pet } from './Pet';
 
-const CAP_MS = 10_000;  // the 10-second constraint is a pitch advantage; say the number
-const MIN_MS = 1_000;   // tap-to-start raises accidental-recording risk
+// No pitch-deck timer: people talk as long as they need. The only limits are
+// practical. Ten minutes of 24 kbps audio is about 1.8 MB, well inside the 4.5 MB
+// request limit, and about 1,500 words, which is what the 8,000-character entry
+// cap in the database allows.
+const MAX_MS = 10 * 60_000;
+const WARN_MS = MAX_MS - 60_000;
+const MIN_MS = 1_000;               // tap-to-start raises accidental-recording risk
+const MAX_CHARS = 8_000;            // journal_entries.raw_text check
+const AUDIO_BITS_PER_SECOND = 24_000; // plenty for speech, keeps long takes small
 
-type Phase = 'capture' | 'preview' | 'sending' | 'reply';
+type Phase = 'capture' | 'transcribing' | 'preview' | 'sending' | 'reply';
 
 export function CheckIn({ today }: { today: TodayResponse }) {
   const [phase, setPhase] = useState<Phase>('capture');
   const [recording, setRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [blob, setBlob] = useState<Blob | null>(null);
+  const [durationMs, setDurationMs] = useState<number | null>(null);
+  const [transcriptFailed, setTranscriptFailed] = useState(false);
   const [text, setText] = useState('');
   const [typing, setTyping] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,6 +33,9 @@ export function CheckIn({ today }: { today: TodayResponse }) {
   const startedAt = useRef(0);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const audioUrl = useMemo(() => (blob ? URL.createObjectURL(blob) : null), [blob]);
+  useEffect(() => () => { if (audioUrl) URL.revokeObjectURL(audioUrl); }, [audioUrl]);
+
   const stop = useCallback(() => {
     if (timer.current) { clearInterval(timer.current); timer.current = null; }
     recorder.current?.state === 'recording' && recorder.current.stop();
@@ -33,6 +45,31 @@ export function CheckIn({ today }: { today: TodayResponse }) {
 
   useEffect(() => () => stop(), [stop]);
 
+  /** Words from audio. A failure keeps the recording and lets the person type. */
+  async function transcribe(b: Blob, ms: number) {
+    setPhase('transcribing');
+    setError(null);
+    try {
+      const fd = new FormData();
+      fd.append('audio', b, b.type.includes('mp4') ? 'entry.m4a' : 'entry.webm');
+      fd.append('duration_ms', String(ms));
+      const res = await fetch('/api/transcribe', { method: 'POST', body: fd });
+      const t = await res.json();
+      const words = String(t.text ?? '').trim();
+      if (!res.ok || t.failed || !words) {
+        setTranscriptFailed(true);
+        setError("I couldn't make out the audio. Your recording is safe. Type what you said below.");
+      } else {
+        setTranscriptFailed(false);
+        setText(words);
+      }
+    } catch {
+      setTranscriptFailed(true);
+      setError('Could not reach the transcriber. Your recording is safe. Type what you said below.');
+    }
+    setPhase('preview');
+  }
+
   async function start() {
     setError(null);
     try {
@@ -40,68 +77,57 @@ export function CheckIn({ today }: { today: TodayResponse }) {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: true, noiseSuppression: true },
       });
-      const mr = new MediaRecorder(stream);
+      const mr = new MediaRecorder(stream, { audioBitsPerSecond: AUDIO_BITS_PER_SECOND });
       chunks.current = [];
       mr.ondataavailable = (e) => e.data.size && chunks.current.push(e.data);
       mr.onstop = () => {
-        const b = new Blob(chunks.current, { type: mr.mimeType || 'audio/webm' });
-        if (Date.now() - startedAt.current < MIN_MS) {
-          setError('That was too short to hear — hold on a beat longer.');
+        const ms = Date.now() - startedAt.current;
+        if (ms < MIN_MS) {
+          setError('That was too short to hear. Hold on a beat longer.');
           return;
         }
+        const b = new Blob(chunks.current, { type: mr.mimeType || 'audio/webm' });
         setBlob(b);
-        setPhase('preview');
+        setDurationMs(ms);
+        void transcribe(b, ms);
       };
       recorder.current = mr;
       startedAt.current = Date.now();
-      mr.start();
+      mr.start(1000); // a chunk a second, so a long take is never held in one buffer
       setRecording(true);
       setElapsed(0);
-      // Hard cap only. We never auto-stop on silence: people pause mid-thought
-      // when they are talking about someone they love.
+      // We never auto-stop on silence: people pause mid-thought when they are
+      // talking about someone they love. Only the safety limit stops a take.
       timer.current = setInterval(() => {
         const e = Date.now() - startedAt.current;
         setElapsed(e);
-        if (e >= CAP_MS) stop();
-      }, 50);
+        if (e >= MAX_MS) stop();
+      }, 250);
     } catch {
       setError('No microphone available. You can type instead.');
       setTyping(true);
     }
   }
 
+  function discard() {
+    setBlob(null); setDurationMs(null); setText(''); setError(null);
+    setTranscriptFailed(false); setElapsed(0); setPhase('capture');
+  }
+
   async function send() {
+    const body = text.trim();
+    if (!body) { setError('There is nothing to send yet. Say or type something first.'); return; }
+    if (body.length > MAX_CHARS) { setError(`That is a long one. Trim it under ${MAX_CHARS.toLocaleString()} characters.`); return; }
+
     setPhase('sending');
     setError(null);
-    let body = text.trim();
-    let transcriptFailed = false;
-    let durationMs: number | null = null;
-
     try {
-      if (blob && !body) {
-        const fd = new FormData();
-        fd.append('audio', blob, 'entry.webm');
-        fd.append('duration_ms', String(elapsed));
-        const tr = await fetch('/api/transcribe', { method: 'POST', body: fd });
-        const t = await tr.json();
-        body = (t.text ?? '').trim();
-        durationMs = t.duration_ms ?? elapsed;
-        transcriptFailed = Boolean(t.failed) || !body;
-      }
-      if (!body) {
-        // The recording is the artifact; a failed transcript must never lose it.
-        setError("I couldn't make out the audio. Your recording is safe — type what you said and send.");
-        setTyping(true);
-        setPhase('preview');
-        return;
-      }
-
       const res = await fetch('/api/checkin', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           text: body,
-          input_mode: blob && !text.trim() ? 'voice' : 'text',
+          input_mode: blob ? 'voice' : 'text',
           audio_duration_ms: durationMs,
           transcript_failed: transcriptFailed,
           connection_id: null,
@@ -110,20 +136,20 @@ export function CheckIn({ today }: { today: TodayResponse }) {
         }),
       });
       const json = await res.json();
-      if (!res.ok) { setError(json.error ?? 'Something went wrong.'); setPhase('preview'); return; }
+      if (!res.ok) { setError(json.error ?? 'Something went wrong.'); setPhase(blob ? 'preview' : 'capture'); return; }
       setReply(json as CheckinResponse);
       setPet((json as CheckinResponse).pet);
       setPhase('reply');
     } catch {
-      setError('Network hiccup. Your words are still here — try send again.');
-      setPhase('preview');
+      setError('Network hiccup. Your words are still here. Try send again.');
+      setPhase(blob ? 'preview' : 'capture');
     }
   }
 
   if (phase === 'reply' && reply) return <Reply reply={reply} pet={pet} partner={today.partner_display_name} />;
 
-  const remaining = Math.max(0, CAP_MS - elapsed);
-  const pct = Math.min(100, (elapsed / CAP_MS) * 100);
+  const overLimit = text.trim().length > MAX_CHARS;
+  const nearCap = recording && elapsed >= WARN_MS;
 
   return (
     <div>
@@ -131,7 +157,7 @@ export function CheckIn({ today }: { today: TodayResponse }) {
         {greeting()}, {today.display_name}.
       </p>
       <p className="body" style={{ color: 'var(--ink-muted)', marginTop: 0 }}>
-        Ten seconds. How did today actually go?
+        How did today actually go? Say it out loud or type it. Take as long as you like.
       </p>
 
       <div className="card" style={{ textAlign: 'center', marginTop: 20 }}>
@@ -146,52 +172,63 @@ export function CheckIn({ today }: { today: TodayResponse }) {
                 ? <span style={{ width: 26, height: 26, background: '#fff', borderRadius: 4, display: 'block' }} />
                 : <MicGlyph />}
             </button>
-            <p className="caption" style={{ marginTop: 14, fontVariantNumeric: 'tabular-nums' }}>
-              {recording ? `${(remaining / 1000).toFixed(1)}s left` : 'Tap to start, tap to stop'}
+            <p className="caption" style={{ marginTop: 14, fontVariantNumeric: 'tabular-nums' }} aria-live="polite">
+              {recording ? `Recording ${formatClock(elapsed)}` : 'Tap to start, tap to stop'}
             </p>
-            {recording && (
-              <div className="bond-track" style={{ marginTop: 10 }}>
-                <div className="bond-fill" style={{ width: `${100 - pct}%`, background: '#D63A3A' }} />
-              </div>
+            {nearCap && (
+              <p className="caption" style={{ marginTop: 4, color: '#9E4A33' }}>
+                One minute left. Recording stops at {MAX_MS / 60_000} minutes.
+              </p>
             )}
           </>
         )}
 
-        {phase === 'preview' && (
+        {phase === 'transcribing' && (
+          <p className="body" style={{ margin: 0 }} aria-live="polite">Turning your voice into words…</p>
+        )}
+
+        {phase === 'preview' && audioUrl && (
+          <audio controls src={audioUrl} style={{ width: '100%' }} />
+        )}
+
+        {(typing || phase === 'preview') && phase !== 'transcribing' && (
           <>
-            {blob && <audio controls src={URL.createObjectURL(blob)} style={{ width: '100%' }} />}
-            <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-              <button className="btn btn-quiet" onClick={() => { setBlob(null); setText(''); setPhase('capture'); }}>
-                Re-record
-              </button>
-              <button className="btn" onClick={send}>Send</button>
-            </div>
+            <textarea
+              className="entry" value={text} onChange={(e) => setText(e.target.value)}
+              aria-label={blob ? 'What you said. Edit it if anything is off.' : 'Your entry'}
+              placeholder={blob ? 'Your words will show up here.' : 'Type it here.'}
+              style={{ marginTop: 14 }}
+            />
+            <p className="caption" style={{ textAlign: 'right', margin: '4px 2px 0', color: overLimit ? '#9E4A33' : undefined }}>
+              {blob && !transcriptFailed && text ? 'Edit anything that sounds off. ' : ''}
+              {text.length.toLocaleString()} / {MAX_CHARS.toLocaleString()}
+            </p>
           </>
+        )}
+
+        {phase === 'preview' && (
+          <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+            <button className="btn btn-quiet" onClick={discard}>Re-record</button>
+            <button className="btn" onClick={send} disabled={!text.trim() || overLimit}>Send</button>
+          </div>
         )}
 
         {phase === 'sending' && <p className="body" style={{ margin: 0 }}>Thinking about your day…</p>}
 
-        {(typing || phase === 'preview') && (
-          <textarea
-            className="entry" value={text} onChange={(e) => setText(e.target.value)}
-            placeholder="Or type it here." style={{ marginTop: 14 }}
-          />
-        )}
-
         {typing && phase === 'capture' && text.trim().length > 0 && (
-          <button className="btn" style={{ marginTop: 12 }} onClick={send}>Send</button>
+          <button className="btn" style={{ marginTop: 12 }} onClick={send} disabled={overLimit}>Send</button>
         )}
       </div>
 
       {/* Non-negotiable: you cannot speak a reflection about your partner while
           sitting next to them, or on a bus. */}
-      {!typing && phase === 'capture' && (
+      {!typing && phase === 'capture' && !recording && (
         <p style={{ textAlign: 'center', marginTop: 6 }}>
           <button className="link" onClick={() => setTyping(true)}>⌨ Type instead</button>
         </p>
       )}
 
-      {error && <p className="small" style={{ color: '#9E4A33', textAlign: 'center' }}>{error}</p>}
+      {error && <p className="small" style={{ color: '#9E4A33', textAlign: 'center' }} role="alert">{error}</p>}
 
       <div className="card card-warm" style={{ marginTop: 22 }}>
         <Pet pet={pet} />
@@ -264,6 +301,12 @@ const MicGlyph = () => (
     <rect x="9" y="2" width="6" height="12" rx="3" /><path d="M5 11a7 7 0 0 0 14 0" /><path d="M12 18v4" />
   </svg>
 );
+
+/** m:ss for the running clock. */
+function formatClock(ms: number) {
+  const total = Math.floor(ms / 1000);
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
+}
 
 function greeting() {
   const h = new Date().getHours();
