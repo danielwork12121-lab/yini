@@ -133,6 +133,12 @@ export type CareActSource = (typeof CARE_ACT_SOURCES)[number];
 export const LEAK_VERDICTS = ['pass', 'fail', 'skipped', 'error'] as const;
 export type LeakVerdict = (typeof LEAK_VERDICTS)[number];
 
+/* ───────────────────────────── nightly agent ───────────────────────────── */
+
+/** Lifecycle of one nightly run. `skipped` is not a failure: nobody wrote, or no partner yet. */
+export const ANALYSIS_STATUSES = ['running', 'done', 'skipped', 'failed'] as const;
+export type AnalysisStatus = (typeof ANALYSIS_STATUSES)[number];
+
 /* ───────────────────────────── the pet ───────────────────────────── */
 
 /**

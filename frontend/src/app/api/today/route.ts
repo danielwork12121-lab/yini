@@ -1,20 +1,13 @@
-import { NextResponse } from 'next/server';
 import { derivePetState, localDateFor, type TodayResponse } from '@/contract';
-import { createServerSupabase } from '@/lib/supabase/server';
+import { actionTypes } from '@/ontology';
+import { actionRoute, ActionError } from '@/lib/http/action-route';
 import { createAdminSupabase } from '@/lib/supabase/admin';
 
-
-export async function GET() {
-  const supabase = await createServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Sign in first', code: 'unauthenticated', recoverable: false }, { status: 401 });
-
+export const GET = actionRoute(actionTypes.getToday, async ({ user }) => {
   const db = createAdminSupabase();
   const { data: me } = await db.from('profiles').select('*').eq('id', user.id).single();
   const connectionId = me?.default_connection_id;
-  if (!me || !connectionId) {
-    return NextResponse.json({ error: 'Not connected yet', code: 'no_connection', recoverable: false }, { status: 400 });
-  }
+  if (!me || !connectionId) throw new ActionError('no_connection', 'Not connected yet', 400, false);
 
   const today = localDateFor(me.timezone);
   const [{ data: conn }, { data: members }, { data: petRow }, { count: total }, { data: todayFeeds }, { data: entryToday }, { data: nudge }] =
@@ -65,5 +58,5 @@ export async function GET() {
     today_nudge: nudge ?? null,
     shared_streak: streak,
   };
-  return NextResponse.json(body);
-}
+  return body;
+});

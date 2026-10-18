@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Corner
 
-## Getting Started
+Two private journals, one quiet thing a day worth doing. Neither person ever reads the other.
 
-First, run the development server:
+This folder is the whole app: Next.js UI, API routes, the nightly agent, and the Supabase schema. Architecture: [`docs/design_doc/architecture.md`](../docs/design_doc/architecture.md). Every object and API action has its own page in [`docs/ontology/`](../docs/ontology/README.md).
+
+## Run it locally
 
 ```bash
+npm install
+supabase start          # needs Docker; applies supabase/migrations
+cp .env.example .env.local
+# fill NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
+# from `supabase status`, and set ADMIN_TOKEN / CRON_SECRET to any long random strings
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+With no model key set, everything runs on a deterministic mock. Add `GEMINI_API_KEY` to use Gemini.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Open http://localhost:3000 and tap **I'm Avery**, then open a private window and tap **I'm Sam**. Check in as both people. Then use **Demo: run tonight's reflection now** to watch the overnight feedback arrive on both screens.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Test it
 
-## Learn More
+| | |
+|---|---|
+| `npm test` | Ontology vs migrations and RLS, nightly pipeline, policy, route wrapper |
+| `npm run contract:test` | Policy self-test |
+| `npm run db:proof` | RLS attack proof against the local database |
+| `npm run typecheck && npm run build` | Types and production build |
+| `postman/` | Import both files, set `adminToken` / `cronSecret`, run the folders in order |
 
-To learn more about Next.js, take a look at the following resources:
+## Change something
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Edit or add an object in `src/ontology/objects/`, or an action in `src/ontology/actions/`.
+2. Add a migration in `supabase/migrations/` if the database changes.
+3. Bind the action to its route with `actionRoute(actionTypes.yourAction, handler)`.
+4. Run `npm run ontology:docs`, then `npm test`. The tests name anything that has drifted.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deploy
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+On Vercel, with the project root set to `frontend/`. Set the variables from `.env.example`, including `CRON_SECRET`; `vercel.json` schedules the nightly sweep. Apply migrations to the hosted project with `npm run db:migrate`.

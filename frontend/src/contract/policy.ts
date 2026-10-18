@@ -294,3 +294,75 @@ export function stripsClean(
 }
 
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/* ─────────────────────── nightly: shingle leak check ─────────────────────── */
+
+/**
+ * Any run of this many consecutive words shared with the partner's raw text means
+ * the feedback is quoting them. Cheap, deterministic, explainable on one slide, and
+ * it catches a different failure from the adversarial check: literal copying.
+ */
+export const LEAK_SHINGLE_SPAN = 6;
+
+/** Replaces the headline when the headline itself leaks. */
+export const SAFE_HEADLINE = 'A few thoughts for you tonight.';
+/** Ships when every bullet leaked. Self-care only: a worse product, a correct outcome. */
+export const SAFE_BULLETS = [
+  'Take a quiet moment for yourself tonight. You showed up and wrote, and that matters.',
+  'Pick one small thing that would make tomorrow a little easier, and do just that.',
+] as const;
+
+const words = (t: string) =>
+  t.toLowerCase().replace(/[‘’]/g, "'").match(/[a-z0-9']+/g) ?? [];
+
+export function wordShingles(text: string, n: number = LEAK_SHINGLE_SPAN): Set<string> {
+  const w = words(text);
+  const out = new Set<string>();
+  for (let i = 0; i + n <= w.length; i++) out.add(w.slice(i, i + n).join(' '));
+  return out;
+}
+
+/** True when `candidate` shares any n-word run with `source`. */
+export function sharesSpan(candidate: string, source: string | null, n: number = LEAK_SHINGLE_SPAN): boolean {
+  if (!source) return false;
+  const src = wordShingles(source, n);
+  if (src.size === 0) return false;
+  for (const s of wordShingles(candidate, n)) if (src.has(s)) return true;
+  return false;
+}
+
+/** Drop every bullet (and the headline) that quotes the partner. Never returns zero bullets. */
+export function scrubFeedback(
+  fb: { headline: string; bullets: readonly string[] },
+  partnerRawText: string | null,
+  n: number = LEAK_SHINGLE_SPAN,
+): { headline: string; bullets: string[]; dropped: number } {
+  let dropped = 0;
+  let headline = fb.headline;
+  if (sharesSpan(headline, partnerRawText, n)) { headline = SAFE_HEADLINE; dropped++; }
+  const bullets = fb.bullets.filter((b) => {
+    const leak = sharesSpan(b, partnerRawText, n);
+    if (leak) dropped++;
+    return !leak;
+  });
+  return { headline, bullets: bullets.length ? bullets : [...SAFE_BULLETS], dropped };
+}
+
+/* ─────────────────────── nightly: which day to analyse ─────────────────────── */
+
+/**
+ * `previous_day` (default): the cron fires after midnight and analyses the day that
+ * just ended, so both people had the whole evening to write.
+ * `same_day`: for demos and an evening schedule.
+ *
+ * Computed in the connection's timezone (side A's), never UTC.
+ */
+export type NightlyTarget = 'previous_day' | 'same_day';
+
+export function nightlyTargetDay(timezone: string, target: NightlyTarget, at: Date = new Date()): string {
+  const today = localDateFor(timezone, at);
+  if (target === 'same_day') return today;
+  const d = new Date(`${today}T12:00:00Z`); // noon avoids DST edges when stepping a day
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10);
+}

@@ -6,35 +6,24 @@
  * the client keeps the recording and lets the user type instead. It never 500s
  * in a way that loses what someone just said.
  */
-import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import type { TranscribeResponse } from '@/contract';
-import { createServerSupabase } from '@/lib/supabase/server';
+import { actionTypes } from '@/ontology';
+import { actionRoute } from '@/lib/http/action-route';
 import { env } from '@/lib/env';
 
 export const maxDuration = 60;
 
-export async function POST(request: Request) {
-  const supabase = await createServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Sign in first', code: 'unauthenticated', recoverable: false }, { status: 401 });
-
-  const form = await request.formData();
-  const file = form.get('audio');
-  const durationMs = Number(form.get('duration_ms') ?? 0);
-  if (!(file instanceof File)) {
-    return NextResponse.json({ error: 'No audio', code: 'invalid_input', recoverable: true }, { status: 400 });
-  }
-
-  const miss = (): NextResponse =>
-    NextResponse.json({ text: '', duration_ms: durationMs, audio_path: null, failed: true } satisfies TranscribeResponse);
+export const POST = actionRoute(actionTypes.transcribe, async ({ input }): Promise<TranscribeResponse> => {
+  const { audio: file, duration_ms: durationMs } = input;
+  const miss = (): TranscribeResponse => ({ text: '', duration_ms: durationMs, audio_path: null, failed: true });
 
   try {
     if (env.openaiKey()) {
       const out = await new OpenAI({ apiKey: env.openaiKey()! }).audio.transcriptions.create({
         file, model: process.env.OPENAI_TRANSCRIBE_MODEL ?? 'whisper-1',
       });
-      return NextResponse.json({ text: out.text ?? '', duration_ms: durationMs, audio_path: null, failed: false } satisfies TranscribeResponse);
+      return { text: out.text ?? '', duration_ms: durationMs, audio_path: null, failed: false };
     }
 
     if (env.geminiKey()) {
@@ -59,7 +48,7 @@ export async function POST(request: Request) {
       if (!res.ok) return miss();
       const json = await res.json();
       const text = json?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? '').join('').trim() ?? '';
-      return NextResponse.json({ text, duration_ms: durationMs, audio_path: null, failed: !text } satisfies TranscribeResponse);
+      return { text, duration_ms: durationMs, audio_path: null, failed: !text };
     }
 
     return miss();
@@ -67,4 +56,4 @@ export async function POST(request: Request) {
     console.error('[transcribe]', e);
     return miss();
   }
-}
+});

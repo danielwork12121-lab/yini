@@ -225,3 +225,58 @@ export function scoreLeak(out: LeakCheckOutput, attempt: number): LeakCheckResul
   const failed = out.confidence >= LEAK_CONFIDENCE_THRESHOLD || out.leaked_specifics.length > 0;
   return { ...out, attempt, verdict: failed ? 'fail' : 'pass' };
 }
+
+/* ─────────────────────── 6. NIGHTLY MEDIATION ─────────────────────── */
+
+/**
+ * The nightly agent is the one call that reads BOTH people's words. Nobody triggers it
+ * from a request, its output is per-recipient, and every bullet is checked twice
+ * before it lands: a deterministic shingle check against the partner's raw text
+ * (`scrubFeedback`) and, with a real provider, the adversarial reconstruction above.
+ *
+ * Memory is deliberately small: today's text, each person's recent `ai_summary`
+ * lines, and the last `pair_summary`. Anything older the agent fetches with tools.
+ */
+export const NightlySideSchema = z.object({
+  label: z.enum(['A', 'B']),
+  display_name: z.string().max(40),
+  /** All of this person's entries for the day, oldest first. Null when they did not write. */
+  entries_text: z.string().max(24000).nullable(),
+  /** Lowest mood face of the day, when the classifier set one. */
+  mood_face: z.number().int().min(1).max(5).nullable(),
+  /** `YYYY-MM-DD: summary` lines from earlier days, most recent first. */
+  recent_summaries: z.array(z.string()).max(30),
+});
+export type NightlySide = z.infer<typeof NightlySideSchema>;
+
+export const NightlyInputSchema = z.object({
+  local_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  side_a: NightlySideSchema,
+  side_b: NightlySideSchema,
+  previous_pair_summary: z.string().nullable(),
+});
+export type NightlyInput = z.infer<typeof NightlyInputSchema>;
+
+export const SideAnalysisSchema = z.object({
+  /** 2-3 sentences, third person, faithful. Becomes that entry's `ai_summary`. */
+  summary: z.string().min(1).max(600),
+  state: z.enum(EMOTIONAL_STATES),
+  themes: z.array(z.enum(THEMES)).max(3),
+});
+export type SideAnalysis = z.infer<typeof SideAnalysisSchema>;
+
+export const FeedbackForSchema = z.object({
+  headline: z.string().min(1).max(160),
+  bullets: z.array(z.string().min(1).max(400)).min(2).max(5),
+});
+export type FeedbackFor = z.infer<typeof FeedbackForSchema>;
+
+export const NightlyOutputSchema = z.object({
+  side_a: SideAnalysisSchema,
+  side_b: SideAnalysisSchema,
+  /** 2-3 sentences carried into tomorrow's run. Server-only; never shown to either person. */
+  pair_summary: z.string().min(1).max(1200),
+  feedback_for_a: FeedbackForSchema,
+  feedback_for_b: FeedbackForSchema,
+});
+export type NightlyOutput = z.infer<typeof NightlyOutputSchema>;
