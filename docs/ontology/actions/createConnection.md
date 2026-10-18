@@ -18,6 +18,7 @@ Start a connection and get a 6-character code to hand to the other person. Idemp
 | Field | Type | Required | Default | Bounds | Description |
 |---|---|---|---|---|---|
 | `display_name` | string | no |  | len 0..40 | Optional. Sets your display name in the same step. |
+| `species` | `corgi` \| `poodle` \| `golden` \| `tuxedo` \| `fluffy` \| `calico` \| `bunny` \| `hamster` \| `hedgehog` | no |  |  |  |
 
 ## Output
 

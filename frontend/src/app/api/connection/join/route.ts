@@ -18,6 +18,10 @@ export const POST = actionRoute(actionTypes.joinConnection, async ({ input, user
 
   if (input.display_name) await db.from('profiles').update({ display_name: input.display_name }).eq('id', user.id);
 
+  // A fresh pair picks its buddy together: clear any solo pick first, so the other phone
+  // (which polls for the pick) cannot see a stale one the instant we are paired.
+  await db.from('pets').update({ species: null }).eq('connection_id', conn.id);
+
   // The DB trigger also caps this at two; losing that race returns an error here.
   const { error: joinErr } = await db.from('connection_members').insert({ connection_id: conn.id, user_id: user.id });
   if (joinErr) throw new ActionError('conflict', 'That connection just filled up.', 409, false);

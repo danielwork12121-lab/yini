@@ -11,7 +11,7 @@ Am I paired, what is my invite code, and what is my partner called.
 | Who can call | A signed-in user (Supabase session cookie). |
 | Input from | nothing |
 | Writes | — |
-| Reads | [Profile](../objects/profile.md), [Connection](../objects/connection.md), [Connection member](../objects/connectionMember.md) |
+| Reads | [Profile](../objects/profile.md), [Connection](../objects/connection.md), [Connection member](../objects/connectionMember.md), [Pet](../objects/pet.md) |
 
 ## Output
 
@@ -21,5 +21,6 @@ Am I paired, what is my invite code, and what is my partner called.
 | `display_name` | string \| null | yes |  |  |  |
 | `invite_code` | string \| null | yes |  |  |  |
 | `partner_display_name` | string \| null | yes |  |  |  |
+| `pet_species` | string \| null | yes |  |  |  |
 
 Errors use one envelope: `{ "error": string, "code": ApiErrorCode, "recoverable": boolean }`.

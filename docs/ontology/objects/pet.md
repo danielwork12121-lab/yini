@@ -20,7 +20,7 @@ The only honest shared object in the product. It reveals nothing private about e
 |---|---|---|---|---|---|
 | `connection_id` | string (uuid) | yes |  |  |  |
 | `name` | string | yes |  | len 1..24 |  |
-| `species` | `blob-bird` \| `cat` \| `bunny` \| `frog` \| `axolotl` \| `capybara` \| `penguin` \| `fox` \| null | yes |  |  | Null until chosen. The egg defers the decision. |
+| `species` | `corgi` \| `poodle` \| `golden` \| `tuxedo` \| `fluffy` \| `calico` \| `bunny` \| `hamster` \| `hedgehog` \| null | yes |  |  | The buddy picked at sign-up. Null only if none was picked. Not shown until the egg hatches. |
 | `hatched_at` | string \| null | yes |  |  | Set on the first day BOTH people logged. |
 | `xp` | integer | yes | `0` | ≥ 0 | Follow-through on nudges and quests. Separate from feedings, which are attendance. |
 | `created_at` | string | yes |  |  |  |
@@ -36,4 +36,4 @@ The only honest shared object in the product. It reveals nothing private about e
 ## Actions
 
 - Written by: [Check in](../actions/checkIn.md), [Create connection](../actions/createConnection.md), [Demo login](../actions/demoLogin.md)
-- Read by: [Check in](../actions/checkIn.md), [Get today](../actions/getToday.md)
+- Read by: [Check in](../actions/checkIn.md), [Get connection status](../actions/getConnection.md), [Get today](../actions/getToday.md)

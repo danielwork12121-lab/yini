@@ -15,7 +15,7 @@ export const getConnection = defineAction({
   inputFrom: 'none',
   output: ConnectionStatusResponseSchema,
   writes: [],
-  reads: ['profile', 'connection', 'connectionMember'],
+  reads: ['profile', 'connection', 'connectionMember', 'pet'],
 });
 
 export const createConnection = defineAction({
