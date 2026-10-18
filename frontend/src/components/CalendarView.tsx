@@ -2,11 +2,10 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CalendarDay, CalendarResponse } from '@/contract';
+import { useAppToday } from '@/lib/appClock';
 
 const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
-/** The device's local day. Never a UTC slice. */
-const localToday = () => new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 const monthOf = (date: string) => date.slice(0, 7);
 const shiftMonth = (month: string, by: number) => {
   const [y, m] = month.split('-').map(Number);
@@ -21,8 +20,10 @@ const timeOf = (iso: string) => new Date(iso).toLocaleTimeString(undefined, { ho
 
 /** Your own calendar: one emoji per day. Tap a day to read what you said, cut down to the notes that matter. */
 export function CalendarView() {
-  const today = useMemo(() => localToday(), []);
-  const [month, setMonth] = useState(monthOf(today));
+  // The app's own "today": the device's day, moved by the testing clock when a demo is fast-forwarded.
+  const today = useAppToday();
+  const [picked, setMonth] = useState<string | null>(null);
+  const month = picked ?? (today ? monthOf(today) : '');
   const [cache, setCache] = useState<Record<string, CalendarDay[]>>({});
   const [error, setError] = useState('');
   const [open, setOpen] = useState<CalendarDay | null>(null);
@@ -31,7 +32,7 @@ export function CalendarView() {
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    if (cache[month]) return;
+    if (!month || cache[month]) return;
     let cancelled = false;
     fetch(`/api/calendar?month=${month}`, { cache: 'no-store' })
       .then((res) => { if (!res.ok) throw new Error(); return res.json() as Promise<CalendarResponse>; })
@@ -47,8 +48,10 @@ export function CalendarView() {
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
 
-  const days = cache[month];
+  const days = month ? cache[month] : undefined;
   const byDate = useMemo(() => new Map((days ?? []).map((d) => [d.local_date, d])), [days]);
+
+  if (!month) return <div className="cal"><p className="caption" style={{ textAlign: 'center' }}>Loading…</p></div>;
 
   const first = parse(`${month}-01`);
   const lead = first.getDay();
@@ -61,7 +64,7 @@ export function CalendarView() {
   return (
     <div className="cal">
       <header className="cal-head">
-        <Link href="/today" className="cal-back">← Today</Link>
+        <Link href="/home" className="cal-back">← Home</Link>
         <h1 className="display cal-title">Your calendar</h1>
         <p className="small cal-sub">A little emoji for every day you told Yini about. Tap one to see what you said.</p>
       </header>

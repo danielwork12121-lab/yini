@@ -1,9 +1,11 @@
 'use client';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 import { AnimatedPet } from '@/components/pets/AnimatedPet';
 import { ReplyCards } from '@/components/ReplyCards';
 import { dismissCheckin, retryCheckin, usePendingCheckin } from '@/lib/pendingCheckin';
+import { useAppClock } from '@/lib/appClock';
 
 const greeting = () => { const h = new Date().getHours(); return h < 12 ? 'Morning' : h < 18 ? 'Afternoon' : 'Evening'; };
 
@@ -13,6 +15,17 @@ export function HomeView({ name, partner }: { name: string; partner: string }) {
   const [feeding, setFeeding] = useState(false);
   const [fed, setFed] = useState(false);
   const pending = usePendingCheckin();
+
+  // When the app is fast-forwarded to a new day, ask the server to look again: that is what
+  // starts the overnight read behind Grow. The first reading of the clock is not a change.
+  const router = useRouter();
+  const clock = useAppClock();
+  const seen = useRef<number | null>(null);
+  useEffect(() => {
+    if (!clock.loaded) return;
+    if (seen.current !== null && seen.current !== clock.offset) router.refresh();
+    seen.current = clock.offset;
+  }, [clock.loaded, clock.offset, router]);
 
   function feed() {
     if (feeding) return;
@@ -62,6 +75,10 @@ export function HomeView({ name, partner }: { name: string; partner: string }) {
       <div className="yhome-links">
         <Link href="/today" className="yhome-btn">🎙 Tell Yini about your day</Link>
         <Link href="/calendar" className="yhome-btn">📅 Calendar</Link>
+        <div className="yhome-pair">
+          <Link href="/grow" className="yhome-btn yhome-grow">🌱 Grow</Link>
+          <Link href="/glow" className="yhome-btn yhome-glow">✨ Glow</Link>
+        </div>
       </div>
     </main>
   );

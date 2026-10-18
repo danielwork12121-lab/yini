@@ -1,7 +1,8 @@
-import { derivePetState, localDateFor, type TodayResponse } from '@/contract';
+import { derivePetState, type TodayResponse } from '@/contract';
 import { actionTypes } from '@/ontology';
 import { actionRoute, ActionError } from '@/lib/http/action-route';
 import { createAdminSupabase } from '@/lib/supabase/admin';
+import { appToday } from '@/lib/clock';
 
 export const GET = actionRoute(actionTypes.getToday, async ({ user }) => {
   const db = createAdminSupabase();
@@ -9,7 +10,7 @@ export const GET = actionRoute(actionTypes.getToday, async ({ user }) => {
   const connectionId = me?.default_connection_id;
   if (!me || !connectionId) throw new ActionError('no_connection', 'Not connected yet', 400, false);
 
-  const today = localDateFor(me.timezone);
+  const today = await appToday(me.timezone);
   const [{ data: conn }, { data: members }, { data: petRow }, { count: total }, { data: todayFeeds }, { data: entryToday }, { data: nudge }] =
     await Promise.all([
       db.from('connections').select('kind').eq('id', connectionId).single(),

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { TodayResponse } from '@/contract';
 import { startCheckin } from '@/lib/pendingCheckin';
+import { fetchAppToday } from '@/lib/appClock';
 import { Pet } from './Pet';
 
 // No pitch-deck timer: people talk as long as they need. The only limits are
@@ -123,9 +124,11 @@ export function CheckIn({ today }: { today: TodayResponse }) {
 
     // Hand the words to the background and go Home: nobody should sit and wait on the AI.
     setError(null);
+    // The day comes from the app's clock, so a fast-forwarded demo files this under the new day.
+    const local_date = await fetchAppToday();
     startCheckin({
       text: body, input_mode: blob ? 'voice' : 'text', audio_duration_ms: durationMs,
-      transcript_failed: transcriptFailed, local_date: localDate(),
+      transcript_failed: transcriptFailed, local_date,
     });
     router.push('/home');
   }
@@ -235,7 +238,3 @@ function greeting() {
   return h < 12 ? 'Morning' : h < 18 ? 'Afternoon' : 'Evening';
 }
 
-/** The device's local day. Never a UTC slice — that rolls over at 5pm Pacific. */
-function localDate() {
-  return new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
-}

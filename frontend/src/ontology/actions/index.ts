@@ -8,3 +8,5 @@ export * from './entries';
 export * from './feedback';
 export * from './nightly';
 export * from './calendar';
+export * from './clock';
+export * from './grow-glow';

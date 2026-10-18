@@ -42,5 +42,5 @@ The nightly agent's bookkeeping and the pair-level memory chain.
 
 ## Actions
 
-- Written by: [Analyse now (admin)](../actions/analyzeNow.md), [Run tonight's analysis now (demo)](../actions/runMyAnalysis.md), [Nightly sweep (cron)](../actions/runNightlySweep.md)
-- Read by: [Analyse now (admin)](../actions/analyzeNow.md), [Run tonight's analysis now (demo)](../actions/runMyAnalysis.md), [Nightly sweep (cron)](../actions/runNightlySweep.md)
+- Written by: [Analyse now (admin)](../actions/analyzeNow.md), [Get my Grow](../actions/getGrow.md), [Run tonight's analysis now (demo)](../actions/runMyAnalysis.md), [Nightly sweep (cron)](../actions/runNightlySweep.md)
+- Read by: [Analyse now (admin)](../actions/analyzeNow.md), [Get my Grow](../actions/getGrow.md), [Run tonight's analysis now (demo)](../actions/runMyAnalysis.md), [Nightly sweep (cron)](../actions/runNightlySweep.md)

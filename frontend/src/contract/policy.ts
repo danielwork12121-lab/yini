@@ -21,6 +21,24 @@ export function localDateFor(timezone: string, at: Date = new Date()): string {
   }).format(at); // en-CA formats as YYYY-MM-DD
 }
 
+/**
+ * Step a `YYYY-MM-DD` day forwards or backwards by whole days. Built at noon UTC so a
+ * daylight-saving change can never land the result on a neighbouring day.
+ */
+export function addDays(date: string, days: number): string {
+  const d = new Date(`${date}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * The app's "today": the local day, moved by the testing clock's offset. The offset is
+ * 0 in normal life; fast-forwarding for a demo raises it by one per day, for everyone.
+ */
+export function appDateFor(timezone: string, dayOffset: number, at: Date = new Date()): string {
+  return addDays(localDateFor(timezone, at), dayOffset);
+}
+
 /* ──────────────────────── the delivery decision ─────────────────────── */
 
 /** Consecutive rough/strained days after which we stop waiting and send the small one. */
@@ -361,8 +379,5 @@ export type NightlyTarget = 'previous_day' | 'same_day';
 
 export function nightlyTargetDay(timezone: string, target: NightlyTarget, at: Date = new Date()): string {
   const today = localDateFor(timezone, at);
-  if (target === 'same_day') return today;
-  const d = new Date(`${today}T12:00:00Z`); // noon avoids DST edges when stepping a day
-  d.setUTCDate(d.getUTCDate() - 1);
-  return d.toISOString().slice(0, 10);
+  return target === 'same_day' ? today : addDays(today, -1);
 }

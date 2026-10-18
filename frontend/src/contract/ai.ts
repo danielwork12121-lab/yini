@@ -86,8 +86,9 @@ export const ClassifyOutputSchema = z.object({
   deliver_reason: z.string().max(200),
 
   concerns: z.array(DistilledConcernSchema).max(3),
-  kind_words: z.array(ExtractedKindWordSchema).max(3),
-  care_acts: z.array(ExtractedCareActSchema).max(3),
+  // A model that lists a few too many is not worth losing the whole classification over: keep the first few.
+  kind_words: z.array(ExtractedKindWordSchema).transform((a) => a.slice(0, 5)),
+  care_acts: z.array(ExtractedCareActSchema).transform((a) => a.slice(0, 3)),
 
   safety: z.object({
     flag: z.enum(SAFETY_FLAGS),
@@ -290,10 +291,21 @@ export const SideAnalysisSchema = z.object({
 });
 export type SideAnalysis = z.infer<typeof SideAnalysisSchema>;
 
-export const FeedbackForSchema = z.object({
+/** What a model returns is trimmed to fit before it is checked: a bullet a few words too long is not worth a failed night. */
+const clampFeedback = (v: unknown) => {
+  if (!v || typeof v !== 'object') return v;
+  const o = v as { headline?: unknown; bullets?: unknown };
+  return {
+    headline: typeof o.headline === 'string' ? o.headline.trim().slice(0, 160) : o.headline,
+    bullets: Array.isArray(o.bullets)
+      ? o.bullets.filter((b): b is string => typeof b === 'string' && b.trim().length > 0).map((b) => b.trim().slice(0, 400)).slice(0, 5)
+      : o.bullets,
+  };
+};
+export const FeedbackForSchema = z.preprocess(clampFeedback, z.object({
   headline: z.string().min(1).max(160),
   bullets: z.array(z.string().min(1).max(400)).min(2).max(5),
-});
+}));
 export type FeedbackFor = z.infer<typeof FeedbackForSchema>;
 
 export const NightlyOutputSchema = z.object({

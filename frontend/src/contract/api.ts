@@ -296,6 +296,60 @@ export type FeedbackListQuery = z.infer<typeof FeedbackListQuerySchema>;
 export const FeedbackListResponseSchema = z.object({ feedback: z.array(DailyFeedbackViewSchema) });
 export type FeedbackListResponse = z.infer<typeof FeedbackListResponseSchema>;
 
+/* ── Grow ───────────────────────────────────────────────────────────── */
+
+/**
+ * A heads-up that came through the mediator: already abstracted and leak-checked,
+ * so it says what would help and never who said it or what happened.
+ */
+export const PartnerNeedViewSchema = z.object({
+  id: zUuid,
+  kind: z.enum(['partner_need', 'partner_context']),
+  body_text: z.string(),
+  delivered_on: zLocalDate,
+});
+export type PartnerNeedView = z.infer<typeof PartnerNeedViewSchema>;
+
+/**
+ * GET /api/grow. Things you could do to grow the relationship, worked out overnight
+ * from both people's logs. `working` means a day is still being read, so the client
+ * polls; `empty` means nothing has been logged yet.
+ */
+export const GrowResponseSchema = z.object({
+  partner_display_name: z.string(),
+  status: z.enum(['empty', 'working', 'ready', 'failed']),
+  feedback: z.array(DailyFeedbackViewSchema),
+  from_partner: z.array(PartnerNeedViewSchema),
+});
+export type GrowResponse = z.infer<typeof GrowResponseSchema>;
+
+/* ── Glow ───────────────────────────────────────────────────────────── */
+
+/** One kind thing your partner said about you, in their own words. */
+export const ComplimentViewSchema = z.object({
+  id: zUuid,
+  /** Their exact words. Verified as a literal slice of what they wrote before it was stored. */
+  text: z.string(),
+  /** The day they said it. */
+  said_on: zLocalDate.nullable(),
+  /** True the first time you see it. */
+  is_new: z.boolean(),
+});
+export type ComplimentView = z.infer<typeof ComplimentViewSchema>;
+
+/** GET /api/glow */
+export const GlowResponseSchema = z.object({
+  partner_display_name: z.string(),
+  compliments: z.array(ComplimentViewSchema),
+});
+export type GlowResponse = z.infer<typeof GlowResponseSchema>;
+
+/* ── the testing clock ──────────────────────────────────────────────── */
+
+/** GET /api/clock. Whole days the app has been fast-forwarded. 0 in normal life. */
+export const ClockResponseSchema = z.object({ day_offset: z.number().int() });
+export type ClockResponse = z.infer<typeof ClockResponseSchema>;
+
 /* ── running the nightly agent ──────────────────────────────────────── */
 
 /** Operator view of a run. Deliberately omits `pair_summary`, which describes both people. */

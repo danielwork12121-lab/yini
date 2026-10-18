@@ -47,4 +47,4 @@ The immediate, same-breath output of a check-in that is meant for one person.
 ## Actions
 
 - Written by: [Check in](../actions/checkIn.md)
-- Read by: [Check in](../actions/checkIn.md), [Get today](../actions/getToday.md)
+- Read by: [Check in](../actions/checkIn.md), [Get my Grow](../actions/getGrow.md), [Get today](../actions/getToday.md)
