@@ -1,11 +1,20 @@
 'use client';
-import { CalendarBig, ChevLeft, ChevRight, SparkIcon } from '@/components/app/icons';
+import { CalendarBig, CheckIcon, ChevLeft, ChevRight, SparkIcon } from '@/components/app/icons';
 import { useEffect, useMemo, useState } from 'react';
-import type { CalendarDay, CalendarResponse } from '@/contract';
+import type { CalendarDay, CalendarResponse, DayMood, GrowOutcome } from '@/contract';
 import { useAppToday } from '@/lib/appClock';
 
 const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const CLAMP = 150;
+
+const MOODS: { key: DayMood; label: string }[] = [
+  { key: 'happy', label: 'Happy' }, { key: 'down', label: 'Down' }, { key: 'stressed', label: 'Stressed' },
+];
+const MOOD_LABEL: Record<DayMood, string> = { happy: 'Happy', down: 'Down', stressed: 'Stressed' };
+const OUTCOME_LINE: Record<GrowOutcome, string> = {
+  went_well: 'It went well!', okay: 'It was okay', hard: 'It was a little hard', no_time: 'Ran out of time', not_right: 'Did not feel right',
+};
+const moodSrc = (m: DayMood) => `/yini/mood-${m}.png`;
 
 const monthOf = (date: string) => date.slice(0, 7);
 const shiftMonth = (month: string, by: number) => {
@@ -30,16 +39,39 @@ export function CalendarView() {
   const [openDate, setOpenDate] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [attempt, setAttempt] = useState(0);
+  const [picking, setPicking] = useState(false);
+  const [moodError, setMoodError] = useState('');
 
   useEffect(() => {
     if (!month || cache[month]) return;
     let cancelled = false;
     fetch(`/api/calendar?month=${month}`, { cache: 'no-store' })
-      .then((res) => { if (!res.ok) throw new Error(); return res.json() as Promise<CalendarResponse>; })
+      .then((res) => {
+        if (res.status === 401) { window.location.href = '/'; throw new Error('signed out'); }
+        if (!res.ok) throw new Error();
+        return res.json() as Promise<CalendarResponse>;
+      })
       .then((body) => { if (!cancelled) { setError(''); setCache((c) => ({ ...c, [month]: body.days })); } })
       .catch(() => { if (!cancelled) setError('Could not load your calendar. Check your connection and try again.'); });
     return () => { cancelled = true; };
   }, [month, cache, attempt]);
+
+  /** Change a day's face. It shows at once and goes back if the server says no. */
+  async function changeMood(date: string, mood: DayMood) {
+    setMoodError('');
+    const m = monthOf(date);
+    const before = cache[m];
+    const set = (list: CalendarDay[] | undefined) => list && setCache((c) => ({ ...c, [m]: list }));
+    set(before?.map((d) => (d.local_date === date ? { ...d, mood, mood_by: 'you' as const } : d)));
+    setPicking(false);
+    try {
+      const res = await fetch('/api/calendar/mood', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ local_date: date, mood }) });
+      if (!res.ok) throw new Error();
+    } catch {
+      set(before);
+      setMoodError('That did not save. Try again in a moment.');
+    }
+  }
 
   const days = month ? cache[month] : undefined;
   const byDate = useMemo(() => new Map((days ?? []).map((d) => [d.local_date, d])), [days]);
@@ -80,10 +112,11 @@ export function CalendarView() {
             const cls = `cal-cell${today && date <= today ? ' past' : ''}${today && date > today ? ' future' : ''}${day ? ' has' : ''}${date === today ? ' today' : ''}${open?.local_date === date ? ' sel' : ''}`;
             return day ? (
               <button key={date} type="button" role="gridcell" className={cls} aria-selected={open?.local_date === date}
-                onClick={() => setOpenDate(date)}
-                aria-label={`${longDate(date)}, ${day.emoji}, ${day.jots.length} ${day.jots.length === 1 ? 'note' : 'notes'}`}>
+                onClick={() => { setOpenDate(date); setPicking(false); setMoodError(''); }}
+                aria-label={`${longDate(date)}, ${MOOD_LABEL[day.mood]}`}>
                 <span className="n">{n}</span>
-                <span className="em" aria-hidden="true">{day.emoji}</span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="mood-img" src={moodSrc(day.mood)} alt="" />
               </button>
             ) : (
               <span key={date} role="gridcell" className={cls} aria-label={longDate(date)}><span className="n">{n}</span></span>
@@ -98,9 +131,28 @@ export function CalendarView() {
       {open ? (
         <section className="day" aria-label={longDate(open.local_date)}>
           <div className="day-row">
-            <span className="day-em" aria-hidden="true">{open.emoji}</span>
-            <span className="day-date">{longDate(open.local_date)}</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="day-mood" src={moodSrc(open.mood)} alt={`${MOOD_LABEL[open.mood]} mood`} />
+            <div className="day-meta">
+              <span className="day-date">{longDate(open.local_date)}</span>
+              <span className="day-tags">
+                <span className="mood-chip" data-m={open.mood}>{MOOD_LABEL[open.mood]}</span>
+                <span className="day-src">{open.mood_by === 'you' ? 'Changed by you' : 'Set by Yini'}</span>
+              </span>
+            </div>
+            <button type="button" className="day-change" aria-expanded={picking} onClick={() => setPicking((p) => !p)}>{picking ? 'Done' : 'Change'}</button>
           </div>
+          {picking && (
+            <div className="mood-picker" role="radiogroup" aria-label="Choose your mood">
+              {MOODS.map((m) => (
+                <button key={m.key} type="button" role="radio" aria-checked={open.mood === m.key} className="mood-opt" onClick={() => void changeMood(open.local_date, m.key)}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={moodSrc(m.key)} alt="" />{m.label}
+                </button>
+              ))}
+            </div>
+          )}
+          {moodError && <p role="alert" style={{ color: '#9E4A33' }}>{moodError}</p>}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(10 * var(--u))' }}>
             <span className="day-sum"><SparkIcon />Yini’s summary</span>
@@ -131,6 +183,17 @@ export function CalendarView() {
                   </div>
                 );
               })}
+            </div>
+          )}
+          {open.grow.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(12 * var(--u))' }}>
+              <span className="steps-h">Little steps you took</span>
+              {open.grow.map((g, i) => (
+                <div key={i} className="step-row">
+                  <span className="step-tick"><CheckIcon /></span>
+                  <span className="step-body"><b>{g.text}</b>{g.outcome && <small>{OUTCOME_LINE[g.outcome]}</small>}</span>
+                </div>
+              ))}
             </div>
           )}
         </section>

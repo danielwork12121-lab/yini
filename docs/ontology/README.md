@@ -23,9 +23,10 @@ Regenerate these pages with `npm run ontology:docs` (in `frontend/`). The test s
 | [Connection member](objects/connectionMember.md) | `connection_members` | members |  |
 | [Connection peer (view)](objects/connectionPeer.md) | `connection_peers` | members | yes |
 | [Daily feedback](objects/dailyFeedback.md) | `daily_feedback` | recipient | yes |
-| [Grow: done](objects/growDone.md) | `grow_done` | server |  |
+| [Grow: what you did](objects/growDone.md) | `grow_done` | server |  |
 | [Journal entry](objects/journalEntry.md) | `entries` | author |  |
 | [Kind word](objects/kindWord.md) | `kind_words` | recipient | yes |
+| [Love note](objects/loveNote.md) | `love_notes` | server | yes |
 | [Mood day](objects/moodDay.md) | `mood_days` | author |  |
 | [Nudge](objects/nudge.md) | `nudges` | recipient | yes |
 | [Nudge message](objects/nudgeMessage.md) | `nudge_messages` | recipient |  |
@@ -50,14 +51,19 @@ Regenerate these pages with `npm run ontology:docs` (in `frontend/`). The test s
 | [Get my Glow](actions/getGlow.md) | `GET /api/glow` | user |
 | [Get my Grow](actions/getGrow.md) | `GET /api/grow` | user |
 | [Get latest feedback](actions/getLatestFeedback.md) | `GET /api/feedback/latest` | user |
+| [Get my love notes](actions/getLoveNotes.md) | `GET /api/love` | user |
 | [Get today](actions/getToday.md) | `GET /api/today` | user |
 | [Join connection](actions/joinConnection.md) | `POST /api/connection/join` | user |
 | [List my entries](actions/listEntries.md) | `GET /api/entries` | user |
 | [List feedback](actions/listFeedback.md) | `GET /api/feedback` | user |
 | [Run tonight's analysis now (demo)](actions/runMyAnalysis.md) | `POST /api/feedback/run` | user |
 | [Nightly sweep (cron)](actions/runNightlySweep.md) | `GET /api/cron/nightly` | cron |
+| [Send a love note](actions/sendLoveNote.md) | `POST /api/love` | user |
+| [Change a day's mood](actions/setDayMood.md) | `POST /api/calendar/mood` | user |
 | [Tick off a Grow suggestion](actions/setGrowDone.md) | `POST /api/grow/done` | user |
+| [Favorite a love note](actions/setLoveFavorite.md) | `POST /api/love/favorite` | user |
 | [Transcribe audio](actions/transcribe.md) | `POST /api/transcribe` | user |
+| [Bookmark, do, skip or reflect on a Grow suggestion](actions/updateGrowItem.md) | `POST /api/grow/item` | user |
 
 ## Links
 

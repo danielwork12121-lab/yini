@@ -2,7 +2,7 @@
 
 # Get my calendar month
 
-One month of your own calendar: an emoji and short jot notes per day, plus what you said that day.
+One month of your own calendar: a mood face and short jot notes per day, what you said that day, and the little steps from Grow you did.
 
 | | |
 |---|---|
@@ -11,7 +11,7 @@ One month of your own calendar: an emoji and short jot notes per day, plus what 
 | Who can call | A signed-in user (Supabase session cookie). |
 | Input from | query string |
 | Writes | — |
-| Reads | [Mood day](../objects/moodDay.md), [Journal entry](../objects/journalEntry.md) |
+| Reads | [Mood day](../objects/moodDay.md), [Journal entry](../objects/journalEntry.md), [Grow: what you did](../objects/growDone.md) |
 
 ## Input
 

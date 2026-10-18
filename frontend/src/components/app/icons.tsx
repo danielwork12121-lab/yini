@@ -23,8 +23,8 @@ export const GrowTabIcon = () => (
   </svg>
 );
 export const GlowTabIcon = () => (
-  <svg viewBox="0 0 66 62" stroke="#3A2418" strokeWidth="3.6" {...base}>
-    <path d="M33 56 C14 42 5 32 5 20 A13 13 0 0 1 33 14 A13 13 0 0 1 61 20 C61 32 52 42 33 56 Z" fill="#FBE6DC" />
+  <svg className="glow-pulse" viewBox="0 0 66 62" stroke="#3A2418" strokeWidth="3.6" {...base}>
+    <path d="M33 56 C14 42 5 32 5 20 A13 13 0 0 1 33 14 A13 13 0 0 1 61 20 C61 32 52 42 33 56 Z" fill="#F8B9AC" />
   </svg>
 );
 export const CalendarTabIcon = ({ fill }: { fill?: string }) => (
@@ -39,8 +39,8 @@ export const SproutBig = () => (
   </svg>
 );
 export const GlowBig = () => (
-  <svg viewBox="0 0 120 104" stroke="#3A2418" strokeWidth="5" {...base}>
-    <path d="M60 92 C34 74 22 60 22 44 A18 18 0 0 1 60 34 A18 18 0 0 1 98 44 C98 60 86 74 60 92 Z" fill="#FBE6DC" />
+  <svg className="glow-pulse" viewBox="0 0 120 104" stroke="#3A2418" strokeWidth="5" {...base}>
+    <path d="M60 92 C34 74 22 60 22 44 A18 18 0 0 1 60 34 A18 18 0 0 1 98 44 C98 60 86 74 60 92 Z" fill="#F8B9AC" />
   </svg>
 );
 export const CalendarBig = () => <CalendarTabIcon fill="#FFFCF7" />;
@@ -130,4 +130,21 @@ export const PlantIcon = () => (
 );
 export const ChevronDownIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3.5 6 L8 10.5 L12.5 6" /></svg>
+);
+export const PlusIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" aria-hidden="true"><path d="M10 3 V17" /><path d="M3 10 H17" /></svg>
+);
+export const BookmarkIcon = ({ on }: { on: boolean }) => (
+  <svg width="26" height="30" viewBox="0 0 26 30" fill={on ? '#F0857A' : 'none'} stroke={on ? '#F0857A' : '#9A8A7F'} strokeWidth="2.8" strokeLinejoin="round" strokeLinecap="round" aria-hidden="true"><path d="M4 3 H22 V27 L13 20 L4 27 Z" /></svg>
+);
+export const HeartToggle = ({ on }: { on: boolean }) => (
+  <svg width="34" height="30" viewBox="0 0 34 30" stroke="#F0857A" strokeWidth="3" strokeLinejoin="round" aria-hidden="true"><path d="M17 27 C7 20 3 15 3 9.5 A6.5 6.5 0 0 1 17 6 A6.5 6.5 0 0 1 31 9.5 C31 15 27 20 17 27 Z" fill={on ? '#F0857A' : 'none'} /></svg>
+);
+export const PlayIcon = () => (<svg width="22" height="24" viewBox="0 0 22 24" fill="#fff" aria-hidden="true"><path d="M5 2 L20 12 L5 22 Z" /></svg>);
+export const PauseIcon = () => (<svg width="20" height="22" viewBox="0 0 20 22" fill="#fff" aria-hidden="true"><rect x="2" y="2" width="5" height="18" rx="2" /><rect x="13" y="2" width="5" height="18" rx="2" /></svg>);
+export const PencilIcon = () => (
+  <svg width="30" height="30" viewBox="0 0 30 30" fill="none" stroke="#C9483A" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 25 L7 18 L20 5 L25 10 L12 23 Z" /><path d="M17 8 L22 13" /></svg>
+);
+export const MicRecord = () => (
+  <svg width="70" height="100" viewBox="0 0 70 100" fill="none" stroke="#fff" strokeWidth="7" strokeLinecap="round" aria-hidden="true"><rect x="19" y="4" width="32" height="56" rx="16" fill="#fff" stroke="none" /><path d="M6 44 a29 29 0 0 0 58 0" /><path d="M35 76 V92" /></svg>
 );

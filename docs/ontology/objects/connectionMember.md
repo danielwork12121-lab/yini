@@ -34,4 +34,4 @@ Join table between profiles and connections.
 ## Actions
 
 - Written by: [Create connection](../actions/createConnection.md), [Demo login](../actions/demoLogin.md), [Join connection](../actions/joinConnection.md)
-- Read by: [Analyse now (admin)](../actions/analyzeNow.md), [Check in](../actions/checkIn.md), [Get connection status](../actions/getConnection.md), [Get my Glow](../actions/getGlow.md), [Get my Grow](../actions/getGrow.md), [Get today](../actions/getToday.md), [Join connection](../actions/joinConnection.md), [Run tonight's analysis now (demo)](../actions/runMyAnalysis.md), [Nightly sweep (cron)](../actions/runNightlySweep.md)
+- Read by: [Analyse now (admin)](../actions/analyzeNow.md), [Check in](../actions/checkIn.md), [Get connection status](../actions/getConnection.md), [Get my Glow](../actions/getGlow.md), [Get my Grow](../actions/getGrow.md), [Get my love notes](../actions/getLoveNotes.md), [Get today](../actions/getToday.md), [Join connection](../actions/joinConnection.md), [Run tonight's analysis now (demo)](../actions/runMyAnalysis.md), [Nightly sweep (cron)](../actions/runNightlySweep.md), [Send a love note](../actions/sendLoveNote.md)

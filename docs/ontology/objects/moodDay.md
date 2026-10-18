@@ -32,5 +32,5 @@ Your calendar. There is no partner-visible view.
 
 ## Actions
 
-- Written by: [Check in](../actions/checkIn.md)
-- Read by: [Get my calendar month](../actions/getCalendar.md)
+- Written by: [Check in](../actions/checkIn.md), [Change a day's mood](../actions/setDayMood.md)
+- Read by: [Get my calendar month](../actions/getCalendar.md), [Change a day's mood](../actions/setDayMood.md)

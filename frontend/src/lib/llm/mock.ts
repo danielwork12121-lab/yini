@@ -25,7 +25,7 @@ function pickState(t: string): EmotionalState {
 }
 const FACE: Record<EmotionalState, number> = { rough: 1, strained: 2, steady: 3, good: 4, great: 5 };
 
-const DAY_EMOJI: Record<EmotionalState, string> = { rough: '😮‍💨', strained: '😕', steady: '🙂', good: '😊', great: '🎉' };
+const DAY_EMOJI: Record<EmotionalState, string> = { rough: '😔', strained: '😣', steady: '🙂', good: '🙂', great: '🙂' };
 
 /** Keyless stand-in for the AI's cut-down: the first few real sentences, trimmed. Never invents. */
 function mockJots(raw: string, max = 6): string[] {

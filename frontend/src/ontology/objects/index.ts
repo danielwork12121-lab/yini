@@ -18,3 +18,4 @@ export * from './analysis-run';
 export * from './daily-feedback';
 export * from './app-clock';
 export * from './grow-done';
+export * from './love-note';

@@ -138,8 +138,10 @@ jots — the key talking points of the day, each restated in your own compact wo
 
 headline — the whole day in one short phrase, 60 characters or fewer, in plain words.
 
-emoji — exactly ONE emoji that stands for the whole day (😴 worn out, 🎉 a win, 🌧️ gloomy,
-  😊 good and ordinary). Output only the emoji character.`;
+emoji — exactly ONE of these three, chosen by how the day felt OVERALL. Output only that character.
+  🙂 happy: good, calm, proud, warm, content, or an ordinary okay day
+  😔 down: sad, lonely, low, disappointed, missing someone, drained of joy
+  😣 stressed: overwhelmed, anxious, frustrated, on edge, stretched thin`;
 
 export function daySummaryUser(input: {
   author_display_name: string; max_jots: number; entries: { when: string; text: string }[];

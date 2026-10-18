@@ -11,7 +11,7 @@ Small things you could do for the relationship, written overnight from both peop
 | Who can call | A signed-in user (Supabase session cookie). |
 | Input from | nothing |
 | Writes | [Analysis run](../objects/analysisRun.md), [Daily feedback](../objects/dailyFeedback.md), [Journal entry](../objects/journalEntry.md) |
-| Reads | [Daily feedback](../objects/dailyFeedback.md), [Nudge](../objects/nudge.md), [Analysis run](../objects/analysisRun.md), [Journal entry](../objects/journalEntry.md), [Grow: done](../objects/growDone.md), [Profile](../objects/profile.md), [Connection member](../objects/connectionMember.md) |
+| Reads | [Daily feedback](../objects/dailyFeedback.md), [Nudge](../objects/nudge.md), [Analysis run](../objects/analysisRun.md), [Journal entry](../objects/journalEntry.md), [Grow: what you did](../objects/growDone.md), [Profile](../objects/profile.md), [Connection member](../objects/connectionMember.md) |
 
 ## What a model sees
 
@@ -26,6 +26,7 @@ Only when it starts the overnight read, and then exactly what runNightlySweep se
 | `feedback` | object[] | yes |  |  |  |
 | `from_partner` | object[] | yes |  |  |  |
 | `done` | object[] | yes |  |  |  |
+| `items` | object[] | yes |  |  |  |
 | `problem` | string \| null | yes |  |  |  |
 
 Errors use one envelope: `{ "error": string, "code": ApiErrorCode, "recoverable": boolean }`.
